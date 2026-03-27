@@ -1,4 +1,4 @@
-# PaddleSpeechTTS集成xiaozhi服务
+﻿# PaddleSpeechTTS集成xiaozhi服务
 
 ## 重点说明
 - 优点：本地离线部署、速度快
@@ -69,9 +69,9 @@ INFO:     Uvicorn running on http://0.0.0.0:8092 (Press CTRL+C to quit)
 ```
 
 ## 三、修改小智的配置文件
-### 1.```main/xiaozhi-server/core/providers/tts/paddle_speech.py```
+### 1.```main/device-server/core/providers/tts/paddle_speech.py```
 
-### 2.```main/xiaozhi-server/data/.config.yaml```
+### 2.```main/device-server/data/.config.yaml```
 使用单模块部署
 ```yaml
 selected_module:

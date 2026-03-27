@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   // 登錄頁面相關提示文本
   'login.requiredUsername': '用戶名不能為空',
   'login.requiredPassword': '密碼不能為空',
@@ -714,7 +714,7 @@ export default {
   'paramManagement.deleteFailed': '刪除失敗，請重試',
   'paramManagement.operationCancelled': '已取消刪除操作',
   'paramManagement.operationClosed': '操作已關閉',
-  'paramManagement.updateSuccess': '修改成功，部分配置需重啟xiaozhi-server模組才生效',
+  'paramManagement.updateSuccess': '修改成功，部分配置需重啟device-server模組才生效',
   'paramManagement.addSuccess': '新增成功',
   'paramManagement.updateFailed': '更新失敗',
   'paramManagement.addFailed': '新增失敗',
@@ -875,7 +875,7 @@ export default {
   'modelConfig.enableSuccess': '啟用成功',
   'modelConfig.disableSuccess': '禁用成功',
   'modelConfig.operationFailed': '操作失敗',
-  'modelConfig.setDefaultSuccess': '設置默認模型成功，請及時手動重啟xiaozhi-server模組',
+  'modelConfig.setDefaultSuccess': '設置默認模型成功，請及時手動重啟device-server模組',
   'modelConfig.itemsPerPage': '{items}條/頁',
   'modelConfig.firstPage': '首頁',
   'modelConfig.prevPage': '上一頁',

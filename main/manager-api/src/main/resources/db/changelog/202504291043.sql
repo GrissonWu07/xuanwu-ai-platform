@@ -1,4 +1,4 @@
--- 增加FunASR服务语音识别模型供应器和配置
+﻿-- 增加FunASR服务语音识别模型供应器和配置
 DELETE FROM `ai_model_provider` WHERE `id` = 'SYSTEM_ASR_FunASRServer';
 INSERT INTO `ai_model_provider` (`id`, `model_type`, `provider_code`, `name`, `fields`, `sort`, `creator`, `create_date`, `updater`, `update_date`) VALUES
 ('SYSTEM_ASR_FunASRServer', 'ASR', 'fun_server', 'FunASR服务语音识别', '[{"key":"host","label":"服务地址","type":"string"},{"key":"port","label":"端口号","type":"number"}]', 4, 1, NOW(), 1, NOW());
@@ -25,7 +25,7 @@ UPDATE `ai_model_config` SET
 UPDATE `ai_model_config` SET 
 `doc_link` = 'https://github.com/modelscope/FunASR',
 `remark` = 'FunASR本地模型配置说明：
-1. 需要下载模型文件到xiaozhi-server/models/SenseVoiceSmall目录
+1. 需要下载模型文件到device-server/models/SenseVoiceSmall目录
 2. 支持中日韩粤语音识别
 3. 本地推理，无需网络连接
 4. 待识别文件保存在tmp/目录' WHERE `id` = 'ASR_FunASR';

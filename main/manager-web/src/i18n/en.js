@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   // Login page related prompt text
   'login.requiredUsername': 'Username cannot be empty',
   'login.requiredPassword': 'Password cannot be empty',
@@ -714,7 +714,7 @@ export default {
   'paramManagement.deleteFailed': 'Deletion failed, please try again',
   'paramManagement.operationCancelled': 'Deletion cancelled',
   'paramManagement.operationClosed': 'Operation closed',
-  'paramManagement.updateSuccess': 'Update successful. Some configurations will take effect only after restarting the xiaozhi-server module.',
+  'paramManagement.updateSuccess': 'Update successful. Some configurations will take effect only after restarting the device-server module.',
   'paramManagement.addSuccess': 'Add successful',
   'paramManagement.updateFailed': 'Update failed',
   'paramManagement.addFailed': 'Add failed',
@@ -875,7 +875,7 @@ export default {
   'modelConfig.enableSuccess': 'Enable successful',
   'modelConfig.disableSuccess': 'Disable successful',
   'modelConfig.operationFailed': 'Operation failed',
-  'modelConfig.setDefaultSuccess': 'Set default model successful, please restart the xiaozhi-server module manually in time',
+  'modelConfig.setDefaultSuccess': 'Set default model successful, please restart the device-server module manually in time',
   'modelConfig.itemsPerPage': '{items} items/page',
   'modelConfig.firstPage': 'First Page',
   'modelConfig.prevPage': 'Previous Page',

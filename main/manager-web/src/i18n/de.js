@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   // Login page related prompt text
   'login.requiredUsername': 'Benutzername darf nicht leer sein',
   'login.requiredPassword': 'Passwort darf nicht leer sein',
@@ -714,7 +714,7 @@ export default {
   'paramManagement.deleteFailed': 'Löschen fehlgeschlagen, bitte versuchen Sie es erneut',
   'paramManagement.operationCancelled': 'Löschen abgebrochen',
   'paramManagement.operationClosed': 'Operation geschlossen',
-  'paramManagement.updateSuccess': 'Aktualisierung erfolgreich. Einige Konfigurationen werden erst nach Neustart des xiaozhi-server-Moduls wirksam.',
+  'paramManagement.updateSuccess': 'Aktualisierung erfolgreich. Einige Konfigurationen werden erst nach Neustart des device-server-Moduls wirksam.',
   'paramManagement.addSuccess': 'Hinzufügen erfolgreich',
   'paramManagement.updateFailed': 'Aktualisierung fehlgeschlagen',
   'paramManagement.addFailed': 'Hinzufügen fehlgeschlagen',
@@ -875,7 +875,7 @@ export default {
   'modelConfig.enableSuccess': 'Aktivieren erfolgreich',
   'modelConfig.disableSuccess': 'Deaktivieren erfolgreich',
   'modelConfig.operationFailed': 'Operation fehlgeschlagen',
-  'modelConfig.setDefaultSuccess': 'Standardmodell erfolgreich gesetzt, bitte starten Sie das xiaozhi-server-Modul zeitnah manuell neu',
+  'modelConfig.setDefaultSuccess': 'Standardmodell erfolgreich gesetzt, bitte starten Sie das device-server-Modul zeitnah manuell neu',
   'modelConfig.itemsPerPage': '{items} Einträge/Seite',
   'modelConfig.firstPage': 'Erste Seite',
   'modelConfig.prevPage': 'Vorherige Seite',

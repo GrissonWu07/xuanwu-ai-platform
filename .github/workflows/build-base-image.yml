@@ -1,11 +1,11 @@
-name: Build Base Image
+﻿name: Build Base Image
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'main/xiaozhi-server/requirements.txt'
+      - 'main/device-server/requirements.txt'
       - 'Dockerfile-server-base'
       - '.github/workflows/build-base-image.yml'
 

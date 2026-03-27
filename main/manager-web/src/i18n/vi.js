@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   // Login page related prompt text
   'login.requiredUsername': 'Tên đăng nhập không được để trống',
   'login.requiredPassword': 'Mật khẩu không được để trống',
@@ -714,7 +714,7 @@ export default {
   'paramManagement.deleteFailed': 'Xóa thất bại, vui lòng thử lại',
   'paramManagement.operationCancelled': 'Đã hủy xóa',
   'paramManagement.operationClosed': 'Đã đóng thao tác',
-  'paramManagement.updateSuccess': 'Cập nhật thành công. Một số cấu hình chỉ có hiệu lực sau khi khởi động lại mô-đun xiaozhi-server.',
+  'paramManagement.updateSuccess': 'Cập nhật thành công. Một số cấu hình chỉ có hiệu lực sau khi khởi động lại mô-đun device-server.',
   'paramManagement.addSuccess': 'Thêm thành công',
   'paramManagement.updateFailed': 'Cập nhật thất bại',
   'paramManagement.addFailed': 'Thêm thất bại',
@@ -875,7 +875,7 @@ export default {
   'modelConfig.enableSuccess': 'Bật thành công',
   'modelConfig.disableSuccess': 'Tắt thành công',
   'modelConfig.operationFailed': 'Thao tác thất bại',
-  'modelConfig.setDefaultSuccess': 'Đặt mô hình mặc định thành công, vui lòng khởi động lại module xiaozhi-server thủ công kịp thời',
+  'modelConfig.setDefaultSuccess': 'Đặt mô hình mặc định thành công, vui lòng khởi động lại module device-server thủ công kịp thời',
   'modelConfig.itemsPerPage': '{items} mục/trang',
   'modelConfig.firstPage': 'Trang đầu',
   'modelConfig.prevPage': 'Trang trước',

@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   // Texto da página de login
   'login.requiredUsername': 'O nome de usuário não pode estar vazio',
   'login.requiredPassword': 'A senha não pode estar vazia',
@@ -714,7 +714,7 @@ export default {
   'paramManagement.deleteFailed': 'Falha na exclusão. Por favor, tente novamente',
   'paramManagement.operationCancelled': 'Exclusão cancelada',
   'paramManagement.operationClosed': 'Operação fechada',
-  'paramManagement.updateSuccess': 'Atualizado com sucesso. Algumas configurações só terão efeito após reiniciar o módulo xiaozhi-server.',
+  'paramManagement.updateSuccess': 'Atualizado com sucesso. Algumas configurações só terão efeito após reiniciar o módulo device-server.',
   'paramManagement.addSuccess': 'Adicionado com sucesso',
   'paramManagement.updateFailed': 'Falha na atualização',
   'paramManagement.addFailed': 'Falha ao adicionar',
@@ -875,7 +875,7 @@ export default {
   'modelConfig.enableSuccess': 'Ativado com sucesso',
   'modelConfig.disableSuccess': 'Desativado com sucesso',
   'modelConfig.operationFailed': 'Falha na operação',
-  'modelConfig.setDefaultSuccess': 'Modelo padrão definido com sucesso. Por favor, reinicie o módulo xiaozhi-server manualmente',
+  'modelConfig.setDefaultSuccess': 'Modelo padrão definido com sucesso. Por favor, reinicie o módulo device-server manualmente',
   'modelConfig.itemsPerPage': '{items} itens/página',
   'modelConfig.firstPage': 'Primeira Página',
   'modelConfig.prevPage': 'Página Anterior',
