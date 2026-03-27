@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 @time: 2026/01/08
 @file: powermem.py
-@desc: PowerMem memory provider for xiaozhi-esp32-server
+@desc: PowerMem memory provider for device-server
        PowerMem is an open-source agent memory component from OceanBase
        GitHub: https://github.com/oceanbase/powermem
        Website: https://www.powermem.ai/

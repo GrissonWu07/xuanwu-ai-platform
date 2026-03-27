@@ -19,7 +19,7 @@ docker 安装全模块有两种方式，你可以[使用懒人脚本](./Deployme
 
 使用SSH工具连接到服务器，以root权限执行如下脚本
 ```bash
-sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/main/docker-setup.sh)"
+sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/main/docker-setup.sh)"
 ```
 
 脚本会自动完成以下操作：
@@ -30,7 +30,7 @@ sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/x
 > 5. 引导配置服务端
 >
 
-执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启xiaozhi-esp32-server](#5.重启xiaozhi-esp32-server)里提到的最重要的3件事情，完成3这三项配置后即可使用。
+执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启device-server](#5.重启device-server)里提到的最重要的3件事情，完成3这三项配置后即可使用。
 
 ### 1.2 手动部署
 
@@ -71,7 +71,7 @@ device-server
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`docker-compose_all.yml`文件。 把文件下载到你的
 `device-server`中。
 
-或者直接执行 `wget https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/docker-compose_all.yml` 下载。
+或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/docker-compose_all.yml` 下载。
 
 下载完后，回到本教程继续往下。
 
@@ -82,7 +82,7 @@ device-server
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`config_from_api.yaml`文件。 把文件下载到你的
 `device-server`下面的`data`文件夹中，然后把`config_from_api.yaml`文件重命名为`.config.yaml`。
 
-或者直接执行 `wget https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/config_from_api.yaml` 下载保存。
+或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/config_from_api.yaml` 下载保存。
 
 下载完配置文件后，我们确认一下整个`device-server`里面的文件如下所示：
 
@@ -108,20 +108,20 @@ device-server
 ```
 docker compose -f docker-compose_all.yml down
 
-docker stop xiaozhi-esp32-server
-docker rm xiaozhi-esp32-server
+docker stop device-server
+docker rm device-server
 
-docker stop xiaozhi-esp32-server-web
-docker rm xiaozhi-esp32-server-web
+docker stop device-server-web
+docker rm device-server-web
 
-docker stop xiaozhi-esp32-server-db
-docker rm xiaozhi-esp32-server-db
+docker stop device-server-db
+docker rm device-server-db
 
-docker stop xiaozhi-esp32-server-redis
-docker rm xiaozhi-esp32-server-redis
+docker stop device-server-redis
+docker rm device-server-redis
 
-docker rmi ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:server_latest
-docker rmi ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
+docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
+docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ```
 
 ## 4. 运行程序
@@ -134,7 +134,7 @@ docker compose -f docker-compose_all.yml up -d
 执行完后，再执行以下命令，查看日志信息。
 
 ```
-docker logs -f xiaozhi-esp32-server-web
+docker logs -f device-server-web
 ```
 
 当你看到输出日志时，说明你的`智控台`启动成功了。
@@ -145,7 +145,7 @@ docker logs -f xiaozhi-esp32-server-web
 http://localhost:8002/xiaozhi/doc.html
 ```
 
-请注意此刻仅是`智控台`能运行，如果8000端口`xiaozhi-esp32-server`报错，先不要理会。
+请注意此刻仅是`智控台`能运行，如果8000端口`device-server`报错，先不要理会。
 
 这时，你需要使用浏览器，打开`智控台`，链接：http://127.0.0.1:8002 ，注册第一个用户。第一个用户即是超级管理员，以后的用户都是普通用户。普通用户只能绑定设备和配置智能体;超级管理员可以进行模型管理、用户管理、参数配置等功能。
 
@@ -166,16 +166,16 @@ manager-api:
 ```
 1、把你刚才从`智控台`复制过来的`server.secret`的`参数值`复制到`.config.yaml`文件里的`secret`里。
 
-2、因为你是docker部署，把`url`改成下面的`http://xiaozhi-esp32-server-web:8002/xiaozhi`
+2、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
 
-3、因为你是docker部署，把`url`改成下面的`http://xiaozhi-esp32-server-web:8002/xiaozhi`
+3、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
 
-4、因为你是docker部署，把`url`改成下面的`http://xiaozhi-esp32-server-web:8002/xiaozhi`
+4、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
 
 类似这样的效果
 ```
 manager-api:
-  url: http://xiaozhi-esp32-server-web:8002/xiaozhi
+  url: http://device-server-web:8002/xiaozhi
   secret: 12345678-xxxx-xxxx-xxxx-123456789000
 ```
 
@@ -186,12 +186,12 @@ manager-api:
 使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
 弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
 
-## 5.重启xiaozhi-esp32-server
+## 5.重启device-server
 
 接下来打开命令行工具，使用`终端`或`命令行`工具 输入
 ```
-docker restart xiaozhi-esp32-server
-docker logs -f xiaozhi-esp32-server
+docker restart device-server
+docker logs -f device-server
 ```
 如果你能看到，类似以下日志,则是Server启动成功的标志。
 
@@ -240,7 +240,7 @@ CREATE DATABASE xiaozhi_esp32_server CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 如果还没有MySQL，你可以通过docker安装mysql
 
 ```
-docker run --name xiaozhi-esp32-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xiaozhi_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
+docker run --name device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xiaozhi_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
 ```
 
 ## 2.安装redis
@@ -248,7 +248,7 @@ docker run --name xiaozhi-esp32-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:
 如果还没有Redis，你可以通过docker安装redis
 
 ```
-docker run --name xiaozhi-esp32-server-redis -d -p 6379:6379 redis
+docker run --name device-server-redis -d -p 6379:6379 redis
 ```
 
 ## 3.运行manager-api程序
@@ -344,9 +344,9 @@ npm run serve
 ![conda_env](./images/conda_env_2.png)
 
 ```
-conda remove -n xiaozhi-esp32-server --all -y
-conda create -n xiaozhi-esp32-server python=3.10 -y
-conda activate xiaozhi-esp32-server
+conda remove -n device-server --all -y
+conda create -n device-server python=3.10 -y
+conda activate device-server
 
 # 添加清华源通道
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
@@ -366,16 +366,16 @@ conda install libiconv -y
 
 你先要下载本项目源码，源码可以通过`git clone`命令下载，如果你不熟悉`git clone`命令。
 
-你可以用浏览器打开这个地址`https://github.com/xinnan-tech/xiaozhi-esp32-server.git`
+你可以用浏览器打开这个地址`https://github.com/GrissonWu07/ai-assist-deviceserver.git`
 
 打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
 
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xiaozhi-esp32-server-main`
-你需要把它重命名成`xiaozhi-esp32-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
+点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`device-server-main`
+你需要把它重命名成`device-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
 
 ```
 # 继续使用conda环境
-conda activate xiaozhi-esp32-server
+conda activate device-server
 # 进入到你的项目根目录，再进入main/device-server
 cd main/device-server
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
@@ -422,7 +422,7 @@ manager-api:
 
 ```
 # 确保在device-server目录下执行
-conda activate xiaozhi-esp32-server
+conda activate device-server
 python app.py
 ```
 
@@ -472,7 +472,7 @@ ws://你电脑局域网的ip:8000/xiaozhi/v1/
 ## 部署相关教程
 1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
 2、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
-3、[如何与Nginx集成](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/791)<br/>
+3、[如何与Nginx集成](https://github.com/GrissonWu07/ai-assist-deviceserver/issues/791)<br/>
 ## 拓展相关教程
 1、[如何开启手机号码注册智控台](./ali-sms-integration.md)<br/>
 2、[如何集成HomeAssistant实现智能家居控制](./homeassistant-integration.md)<br/>

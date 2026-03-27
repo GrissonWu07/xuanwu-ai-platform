@@ -1,6 +1,6 @@
 ﻿# MQTT 网关部署教程
 
-`xiaozhi-esp32-server`项目，可结合虾哥开源的[xiaozhi-mqtt-gateway](https://github.com/78/xiaozhi-mqtt-gateway) 项目进行简单改造，即可实现小智硬件MQTT+UDP连接。
+`device-server`项目，可结合虾哥开源的[xiaozhi-mqtt-gateway](https://github.com/78/xiaozhi-mqtt-gateway) 项目进行简单改造，即可实现小智硬件MQTT+UDP连接。
 本教程分为三部分，你可以根据你是全模块部署还是单模块部署，选择对应的部分接入MQTT网关：
 - 第一部分：部署MQTT网关
 - 第二部分：全模块运行实现小智硬件MQTT+UDP连接

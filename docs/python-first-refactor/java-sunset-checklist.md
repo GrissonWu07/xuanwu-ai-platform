@@ -1,4 +1,4 @@
-# Java 下线检查清单
+﻿# Java 下线检查清单
 
 ## 目标
 
@@ -81,7 +81,7 @@ devices:
 ```powershell
 python main/xiaozhi-server/scripts/import_control_plane_bundle.py `
   C:\path\to\bundle.yaml `
-  --output-dir C:\Projects\githubs\xiaozhi-esp32-server\main\xiaozhi-server\data\control_plane
+  --output-dir C:\Projects\githubs\ai-assist-deviceserver\main\xiaozhi-server\data\control_plane
 ```
 
 ## 验收口径

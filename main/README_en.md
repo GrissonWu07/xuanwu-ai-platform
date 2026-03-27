@@ -1,4 +1,4 @@
-﻿# Technical Documentation: `xiaozhi-esp32-server`
+﻿# Technical Documentation: `device-server`
 
 **Table of Contents:**
 
@@ -17,13 +17,13 @@
 
 ## 1. Introduction
 
-The `xiaozhi-esp32-server` project is a **comprehensive backend system** designed to support intelligent hardware based on ESP32. Its core goal is to enable developers to quickly build a robust server infrastructure that can understand natural language commands, interact efficiently with various AI services (for speech recognition, natural language understanding, and speech synthesis), manage IoT devices, and provide a web-based user interface for system configuration and management. By integrating multiple cutting-edge technologies into a cohesive and extensible platform, this project aims to simplify and accelerate the development process of customizable voice assistants and intelligent control systems. It is not just a simple server, but a bridge connecting hardware, AI capabilities, and user management.
+The `device-server` project is a **comprehensive backend system** designed to support intelligent hardware based on ESP32. Its core goal is to enable developers to quickly build a robust server infrastructure that can understand natural language commands, interact efficiently with various AI services (for speech recognition, natural language understanding, and speech synthesis), manage IoT devices, and provide a web-based user interface for system configuration and management. By integrating multiple cutting-edge technologies into a cohesive and extensible platform, this project aims to simplify and accelerate the development process of customizable voice assistants and intelligent control systems. It is not just a simple server, but a bridge connecting hardware, AI capabilities, and user management.
 
 ---
 
 ## 2. Overall Architecture
 
-The `xiaozhi-esp32-server` system adopts a **distributed, multi-component collaborative** architectural design, ensuring modularity, maintainability, and scalability. Each core component has its specific role and works in coordination. The main components include:
+The `device-server` system adopts a **distributed, multi-component collaborative** architectural design, ensuring modularity, maintainability, and scalability. Each core component has its specific role and works in coordination. The main components include:
 
 1.  **ESP32 Hardware (Client Device):**
     This is the physical smart hardware device that end-users directly interact with. Its main responsibilities include:
@@ -69,7 +69,7 @@ The `xiaozhi-esp32-server` system adopts a **distributed, multi-component collab
 This **frontend-backend separation, core service and management service separation** architectural design allows `device-server` to focus on efficient real-time AI processing tasks, while `manager-api` and `manager-web` together provide a powerful and easy-to-use management and configuration platform. Each component has clear responsibilities, facilitating independent development, testing, deployment, and expansion.
 
 ```
-xiaozhi-esp32-server
+device-server
   ├─ device-server Port 8000 Python development Responsible for ESP32 communication
   ├─ manager-web Port 8001 Node.js+Vue development Responsible for providing web interface for console
   ├─ manager-api Port 8002 Java development Responsible for providing console API
@@ -195,7 +195,7 @@ The `manager-web` is a Single Page Application (SPA) providing the administrativ
     7.  **Environment Configuration (`.env` files):**
         *   The `.env` (and `.env.development`, `.env.production`, etc.) files in the project root directory are used to define environment variables. These variables (such as `VUE_APP_API_BASE_URL` to specify the base URL of `manager-api`) can be accessed in the application code through `process.env.VUE_APP_XXX`, allowing configuration of different parameters for different build environments (development, testing, production).
 
-`manager-web` constructs a powerful, maintainable, and user-friendly management interface through the comprehensive application of these technologies, providing solid frontend support for the configuration and monitoring of the `xiaozhi-esp32-server` system.
+`manager-web` constructs a powerful, maintainable, and user-friendly management interface through the comprehensive application of these technologies, providing solid frontend support for the configuration and monitoring of the `device-server` system.
 
 ### 3.4. `manager-mobile` (Mobile Management Console - uni-app Implementation)
 
@@ -261,7 +261,7 @@ The `manager-mobile` component is a cross-platform mobile management application
 
 ## 4. Data Flow and Interaction Mechanisms
 
-The `xiaozhi-esp32-server` system coordinates work through well-defined data flows and interaction protocols between components. The main communication methods rely on WebSocket protocol optimized for real-time interaction and RESTful API suitable for client-server requests.
+The `device-server` system coordinates work through well-defined data flows and interaction protocols between components. The main communication methods rely on WebSocket protocol optimized for real-time interaction and RESTful API suitable for client-server requests.
 
 **4.1. Core Voice Interaction Flow (ESP32 Device <-> `device-server`)**
 
@@ -343,7 +343,7 @@ This multi-protocol communication strategy ensures that different types of inter
 
 ## 5. Key Features Summary
 
-The `xiaozhi-esp32-server` system provides a series of rich features aimed at supporting developers in building advanced voice control applications:
+The `device-server` system provides a series of rich features aimed at supporting developers in building advanced voice control applications:
 
 1.  **Comprehensive Voice Interaction Backend:** Provides an end-to-end solution from voice capture guidance to response generation and action execution.
 2.  **Modular and Pluggable AI Services:**
@@ -382,13 +382,13 @@ The `xiaozhi-esp32-server` system provides a series of rich features aimed at su
 13. **Detailed API Documentation:**
     *   `manager-api` provides OpenAPI (Swagger) documentation through Knife4j for clear understanding and testing of its RESTful endpoints.
 
-These features together make `xiaozhi-esp32-server` a powerful, adaptable, and user-friendly platform for building complex voice interaction applications.
+These features together make `device-server` a powerful, adaptable, and user-friendly platform for building complex voice interaction applications.
 
 ---
 
 ## 6. Deployment and Configuration Overview
 
-The `xiaozhi-esp32-server` system is designed with flexibility in mind, providing multiple deployment methods and comprehensive configuration options to adapt to different usage scenarios and requirements.
+The `device-server` system is designed with flexibility in mind, providing multiple deployment methods and comprehensive configuration options to adapt to different usage scenarios and requirements.
 
 **Deployment Options:**
 

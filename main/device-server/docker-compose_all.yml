@@ -1,14 +1,14 @@
-# Docker安装全模块
+﻿# Docker安装全模块
 
 version: '3'
 services:
   # Server模块
-  xiaozhi-esp32-server:
-    image: ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:server_latest
-    container_name: xiaozhi-esp32-server
+  device-server:
+    image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
+    container_name: device-server
     depends_on:
-      - xiaozhi-esp32-server-db
-      - xiaozhi-esp32-server-redis
+      - device-server-db
+      - device-server-redis
     restart: always
     networks:
       - default
@@ -23,40 +23,40 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       # 配置文件目录
-      - ./data:/opt/xiaozhi-esp32-server/data
+      - ./data:/opt/device-server/data
       # 模型文件挂接，很重要
-      - ./models/SenseVoiceSmall/model.pt:/opt/xiaozhi-esp32-server/models/SenseVoiceSmall/model.pt
+      - ./models/SenseVoiceSmall/model.pt:/opt/device-server/models/SenseVoiceSmall/model.pt
 
   # manager-api和manager-web模块
-  xiaozhi-esp32-server-web:
-    image: ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
-    container_name: xiaozhi-esp32-server-web
+  device-server-web:
+    image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
+    container_name: device-server-web
     restart: always
     networks:
       - default
     depends_on:
-      xiaozhi-esp32-server-db:
+      device-server-db:
         condition: service_healthy
-      xiaozhi-esp32-server-redis:
+      device-server-redis:
         condition: service_healthy
     ports:
       # 智控台
       - "8002:8002"
     environment:
       - TZ=Asia/Shanghai
-      - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://xiaozhi-esp32-server-db:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&connectTimeout=30000&socketTimeout=30000&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+      - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://device-server-db:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&connectTimeout=30000&socketTimeout=30000&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
       - SPRING_DATASOURCE_DRUID_USERNAME=root
       - SPRING_DATASOURCE_DRUID_PASSWORD=123456
-      - SPRING_DATA_REDIS_HOST=xiaozhi-esp32-server-redis
+      - SPRING_DATA_REDIS_HOST=device-server-redis
       - SPRING_DATA_REDIS_PASSWORD=
       - SPRING_DATA_REDIS_PORT=6379
     volumes:
       # 配置文件目录
       - ./uploadfile:/uploadfile
   # 数据库模块
-  xiaozhi-esp32-server-db:
+  device-server-db:
     image: mysql:latest
-    container_name: xiaozhi-esp32-server-db
+    container_name: device-server-db
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
       timeout: 45s
@@ -75,11 +75,11 @@ services:
       - MYSQL_DATABASE=xiaozhi_esp32_server
       - MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
   # redis模块
-  xiaozhi-esp32-server-redis:
+  device-server-redis:
     image: redis:8.0
     expose:
       - 6379
-    container_name: xiaozhi-esp32-server-redis
+    container_name: device-server-redis
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

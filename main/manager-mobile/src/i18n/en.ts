@@ -1,4 +1,4 @@
-// English language pack
+﻿// English language pack
 export default {
   // TabBar
   'tabBar.home': 'Home',
@@ -316,7 +316,7 @@ export default {
   'settings.restartLater': 'Later',
   // About us
   'settings.aboutApp': 'About XiaoZhi Console',
-  'settings.aboutContent': 'XiaoZhi Console\n\nA cross-platform mobile management app built with Vue.js 3 + uni-app, providing device management, agent configuration and other functions for xiaozhi ESP32 smart hardware.\n\n© 2025 xiaozhi-esp32-server {version}',
+  'settings.aboutContent': 'XiaoZhi Console\n\nA cross-platform mobile management app built with Vue.js 3 + uni-app, providing device management, agent configuration and other functions for xiaozhi ESP32 smart hardware.\n\n© 2025 device-server {version}',
   'settings.restartSuccess': 'Saved, you can manually restart the app later',
   'settings.serverUrlSavedAndCacheCleared': 'Server URL saved and cache cleared',
   'settings.resetToDefaultAndCacheCleared': 'Reset to default and cache cleared',

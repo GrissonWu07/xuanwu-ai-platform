@@ -22,11 +22,11 @@
 
 ## 文档清单
 
-1. [AtlasClaw 主对话引擎专项设计](C:\Projects\githubs\xiaozhi-esp32-server\docs\python-first-refactor\atlasclaw-main-dialogue-engine-design.md)
-2. [协议与接口冻结设计](C:\Projects\githubs\xiaozhi-esp32-server\docs\python-first-refactor\protocol-and-interface-freeze.md)
-3. [xiaozhi-runtime Provider 设计](C:\Projects\githubs\xiaozhi-esp32-server\docs\python-first-refactor\xiaozhi-runtime-provider-design.md)
-4. [xiaozhi-server 主链路切换设计](C:\Projects\githubs\xiaozhi-esp32-server\docs\python-first-refactor\xiaozhi-mainline-cutover-design.md)
-5. [Fallback、本地配置中心与 Java 下线设计](C:\Projects\githubs\xiaozhi-esp32-server\docs\python-first-refactor\fallback-config-center-and-java-sunset.md)
+1. [AtlasClaw 主对话引擎专项设计](C:\Projects\githubs\ai-assist-deviceserver\docs\python-first-refactor\atlasclaw-main-dialogue-engine-design.md)
+2. [协议与接口冻结设计](C:\Projects\githubs\ai-assist-deviceserver\docs\python-first-refactor\protocol-and-interface-freeze.md)
+3. [xiaozhi-runtime Provider 设计](C:\Projects\githubs\ai-assist-deviceserver\docs\python-first-refactor\xiaozhi-runtime-provider-design.md)
+4. [xiaozhi-server 主链路切换设计](C:\Projects\githubs\ai-assist-deviceserver\docs\python-first-refactor\xiaozhi-mainline-cutover-design.md)
+5. [Fallback、本地配置中心与 Java 下线设计](C:\Projects\githubs\ai-assist-deviceserver\docs\python-first-refactor\fallback-config-center-and-java-sunset.md)
 
 ## 实施顺序
 

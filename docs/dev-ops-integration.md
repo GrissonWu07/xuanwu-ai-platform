@@ -31,10 +31,10 @@
 
 ```
 cd /home/system/xiaozhi
-git clone https://ghproxy.net/https://github.com/xinnan-tech/xiaozhi-esp32-server.git
+git clone https://ghproxy.net/https://github.com/GrissonWu07/ai-assist-deviceserver.git
 ```
 
-执行完后，你的项目目录会多了一个文件夹`xiaozhi-esp32-server`，这个就是项目的源码
+执行完后，你的项目目录会多了一个文件夹`device-server`，这个就是项目的源码
 
 # 第三步 复制基础的文件
 
@@ -43,10 +43,10 @@ git clone https://ghproxy.net/https://github.com/xinnan-tech/xiaozhi-esp32-serve
 此刻你需要把`model.pt`文件复制到新的目录去，你可以这样
 ```
 # 创建需要的目录
-mkdir -p /home/system/xiaozhi/xiaozhi-esp32-server/main/device-server/data/
+mkdir -p /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/data/
 
-cp 你原来的.config.yaml完整路径 /home/system/xiaozhi/xiaozhi-esp32-server/main/device-server/data/.config.yaml
-cp 你原来的model.pt完整路径 /home/system/xiaozhi/xiaozhi-esp32-server/main/device-server/models/SenseVoiceSmall/model.pt
+cp 你原来的.config.yaml完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/data/.config.yaml
+cp 你原来的model.pt完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/models/SenseVoiceSmall/model.pt
 ```
 
 # 第四步 建立三个自动编译文件
@@ -55,17 +55,17 @@ cp 你原来的model.pt完整路径 /home/system/xiaozhi/xiaozhi-esp32-server/ma
 在`/home/system/xiaozhi/`目录下，创建名字为`update_8001.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/xiaozhi-esp32-server
+cd /home/system/xiaozhi/ai-assist-deviceserver
 git fetch --all
 git reset --hard
 git pull origin main
 
 
-cd /home/system/xiaozhi/xiaozhi-esp32-server/main/manager-web
+cd /home/system/xiaozhi/ai-assist-deviceserver/main/manager-web
 npm install
 npm run build
 rm -rf /home/system/xiaozhi/manager-web
-mv /home/system/xiaozhi/xiaozhi-esp32-server/main/manager-web/dist /home/system/xiaozhi/manager-web
+mv /home/system/xiaozhi/ai-assist-deviceserver/main/manager-web/dist /home/system/xiaozhi/manager-web
 ```
 
 保存好后执行赋权命令
@@ -78,11 +78,11 @@ chmod 777 update_8001.sh
 在`/home/system/xiaozhi/`目录下，创建名字为`update_8002.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/xiaozhi-esp32-server
+cd /home/system/xiaozhi/ai-assist-deviceserver
 git pull origin main
 
 
-cd /home/system/xiaozhi/xiaozhi-esp32-server/main/manager-api
+cd /home/system/xiaozhi/ai-assist-deviceserver/main/manager-api
 rm -rf target
 mvn clean package -Dmaven.test.skip=true
 cd /home/system/xiaozhi/
@@ -91,7 +91,7 @@ cd /home/system/xiaozhi/
 PID=$(sudo netstat -tulnp | grep 8002 | awk '{print $7}' | cut -d'/' -f1)
 
 rm -rf /home/system/xiaozhi/xiaozhi-esp32-api.jar
-mv /home/system/xiaozhi/xiaozhi-esp32-server/main/manager-api/target/xiaozhi-esp32-api.jar /home/system/xiaozhi/xiaozhi-esp32-api.jar
+mv /home/system/xiaozhi/ai-assist-deviceserver/main/manager-api/target/xiaozhi-esp32-api.jar /home/system/xiaozhi/xiaozhi-esp32-api.jar
 
 # 检查是否找到进程号
 if [ -z "$PID" ]; then
@@ -119,7 +119,7 @@ chmod 777 update_8002.sh
 在`/home/system/xiaozhi/`目录下，创建名字为`update_8000.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/xiaozhi-esp32-server
+cd /home/system/xiaozhi/ai-assist-deviceserver
 git pull origin main
 
 # 查找占用8000端口的进程号
@@ -138,10 +138,10 @@ fi
 cd main/device-server
 # 初始化conda环境
 source ~/.bashrc
-conda activate xiaozhi-esp32-server
+conda activate device-server
 pip install -r requirements.txt
 nohup python app.py >/dev/null &
-tail -f /home/system/xiaozhi/xiaozhi-esp32-server/main/device-server/tmp/server.log
+tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/tmp/server.log
 ```
 
 保存好后执行赋权命令
@@ -167,11 +167,11 @@ cd /home/system/xiaozhi
 # 后期想查看java日志，执行以下命令
 tail -f nohup.out
 # 后期想查看python日志，执行以下命令
-tail -f /home/system/xiaozhi/xiaozhi-esp32-server/main/device-server/tmp/server.log
+tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/tmp/server.log
 ```
 
 # 注意事项
-测试平台`https://2662r3426b.vicp.fun`，是使用nginx做了反向代理。nginx.conf详细配置可以[参考这里](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/791)
+测试平台`https://2662r3426b.vicp.fun`，是使用nginx做了反向代理。nginx.conf详细配置可以[参考这里](https://github.com/GrissonWu07/ai-assist-deviceserver/issues/791)
 
 ## 常见问题
 

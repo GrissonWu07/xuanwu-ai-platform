@@ -34,7 +34,7 @@ telnet 127.0.0.1 3306
 
 修改前
 ```
-  xiaozhi-esp32-server-db:
+  device-server-db:
     ...
     networks:
       - default
@@ -44,7 +44,7 @@ telnet 127.0.0.1 3306
 
 修改后
 ```
-  xiaozhi-esp32-server-db:
+  device-server-db:
     ...
     networks:
       - default
@@ -52,7 +52,7 @@ telnet 127.0.0.1 3306
       - "3306:3306"
 ```
 
-注意是将`xiaozhi-esp32-server-db`下面的`expose`改成`ports`。改完后，需要重新启动。以下是重启mysql的命令：
+注意是将`device-server-db`下面的`expose`改成`ports`。改完后，需要重新启动。以下是重启mysql的命令：
 
 ```
 # 进入你docker-compose_all.yml所在的文件夹，例如我的是device-server

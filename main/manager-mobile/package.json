@@ -1,10 +1,10 @@
-{
+﻿{
   "name": "xiaozhi-mobile-admin",
   "type": "commonjs",
   "version": "3.4.0",
   "unibest-version": "3.4.0",
   "packageManager": "pnpm@10.10.0",
-  "description": "xiaozhi-esp32-server的移动端管理后台",
+  "description": "device-server的移动端管理后台",
   "generate-time": "2025-08-04",
   "author": {
     "name": "huangjunsen",
@@ -14,10 +14,10 @@
     "gitee": "https://gitee.com/huang-jun-sen"
   },
   "license": "MIT",
-  "homepage": "https://github.com/xinnan-tech/xiaozhi-esp32-server",
-  "repository": "https://github.com/xinnan-tech/xiaozhi-esp32-server",
+  "homepage": "https://github.com/GrissonWu07/ai-assist-deviceserver",
+  "repository": "https://github.com/GrissonWu07/ai-assist-deviceserver",
   "bugs": {
-    "url": "https://github.com/xinnan-tech/xiaozhi-esp32-server/issues"
+    "url": "https://github.com/GrissonWu07/ai-assist-deviceserver/issues"
   },
   "engines": {
     "node": ">=18",

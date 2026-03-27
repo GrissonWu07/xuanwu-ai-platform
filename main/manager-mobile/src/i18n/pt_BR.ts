@@ -1,4 +1,4 @@
-// Pacote de idioma Português Brasileiro
+﻿// Pacote de idioma Português Brasileiro
 export default {
   // TabBar
   'tabBar.home': 'Início',
@@ -316,7 +316,7 @@ export default {
   'settings.restartLater': 'Depois',
   // About us
   'settings.aboutApp': 'Sobre o Console XiaoZhi',
-  'settings.aboutContent': 'Console XiaoZhi\n\nUm aplicativo móvel de gerenciamento multiplataforma construído com Vue.js 3 + uni-app, oferecendo gerenciamento de dispositivos, configuração de agentes e outras funcionalidades para o hardware inteligente xiaozhi ESP32.\n\n© 2025 xiaozhi-esp32-server {version}',
+  'settings.aboutContent': 'Console XiaoZhi\n\nUm aplicativo móvel de gerenciamento multiplataforma construído com Vue.js 3 + uni-app, oferecendo gerenciamento de dispositivos, configuração de agentes e outras funcionalidades para o hardware inteligente xiaozhi ESP32.\n\n© 2025 device-server {version}',
   'settings.restartSuccess': 'Salvo, você pode reiniciar o app manualmente depois',
   'settings.serverUrlSavedAndCacheCleared': 'URL do servidor salva e cache limpo',
   'settings.resetToDefaultAndCacheCleared': 'Restaurado ao padrão e cache limpo',

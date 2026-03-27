@@ -1,6 +1,6 @@
-﻿[![Banners](docs/images/banner1.png)](https://github.com/xinnan-tech/xiaozhi-esp32-server)
+﻿[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Xiaozhi Backend Service xiaozhi-esp32-server</h1>
+<h1 align="center">Xiaozhi Backend Service device-server</h1>
 
 <p align="center">
 This project is based on human-machine symbiotic intelligence theory and technology to develop intelligent terminal hardware and software systems<br/>providing backend services for the open-source intelligent hardware project
@@ -11,9 +11,9 @@ Support for MQTT+UDP protocol, Websocket protocol, MCP access point, voiceprint 
 
 <p align="center">
 <a href="./docs/FAQ.md">FAQ</a>
-· <a href="https://github.com/xinnan-tech/xiaozhi-esp32-server/issues">Report Issues</a>
+· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/issues">Report Issues</a>
 · <a href="./README.md#%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3">Deployment Docs</a>
-· <a href="https://github.com/xinnan-tech/xiaozhi-esp32-server/releases">Release Notes</a>
+· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">Release Notes</a>
 </p>
 
 <p align="center">
@@ -22,14 +22,14 @@ Support for MQTT+UDP protocol, Websocket protocol, MCP access point, voiceprint 
   <a href="./README_vi.md"><img alt="Tiếng Việt" src="https://img.shields.io/badge/Tiếng Việt-DFE0E5"></a>
   <a href="./README_de.md"><img alt="Deutsch" src="https://img.shields.io/badge/Deutsch-DFE0E5"></a>
   <a href="./README_pt_BR.md"><img alt="Português (Brasil)" src="https://img.shields.io/badge/Português (Brasil)-DFE0E5"></a>
-  <a href="https://github.com/xinnan-tech/xiaozhi-esp32-server/releases">
-    <img alt="GitHub Contributors" src="https://img.shields.io/github/v/release/xinnan-tech/xiaozhi-esp32-server?logo=docker" />
+  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">
+    <img alt="GitHub Contributors" src="https://img.shields.io/github/v/release/xinnan-tech/device-server?logo=docker" />
   </a>
-  <a href="https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/LICENSE">
+  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/LICENSE">
     <img alt="GitHub pull requests" src="https://img.shields.io/badge/license-MIT-white?labelColor=black" />
   </a>
-  <a href="https://github.com/xinnan-tech/xiaozhi-esp32-server">
-    <img alt="stars" src="https://img.shields.io/github/stars/xinnan-tech/xiaozhi-esp32-server?color=ffcb47&labelColor=black" />
+  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver">
+    <img alt="stars" src="https://img.shields.io/github/stars/xinnan-tech/device-server?color=ffcb47&labelColor=black" />
   </a>
 </p>
 
@@ -235,7 +235,7 @@ This project provides the following testing tools to help you verify the system 
 ![请参考-全模块安装架构图](docs/images/deploy2.png)
 | Feature Module | Description |
 |:---:|:---|
-| Core Architecture | Based on [MQTT+UDP gateway](https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/docs/mqtt-gateway-integration.md), WebSocket and HTTP servers, provides complete console management and authentication system |
+| Core Architecture | Based on [MQTT+UDP gateway](https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/mqtt-gateway-integration.md), WebSocket and HTTP servers, provides complete console management and authentication system |
 | Voice Interaction | Supports streaming ASR(speech recognition), streaming TTS(speech synthesis), VAD(voice activity detection), supports multi-language recognition and voice processing |
 | Voiceprint Recognition | Supports multi-user voiceprint registration, management, and recognition, processes in parallel with ASR, real-time speaker identity recognition and passes to LLM for personalized responses |
 | Intelligent Dialogue | Supports multiple LLM(large language models), implements intelligent dialogue |
@@ -363,14 +363,14 @@ In fact, any VLLM that supports OpenAI interface calls can be integrated and use
 | <img src="./docs/images/logo_junsen.png" width="160"> | [huangjunsen](https://github.com/huangjunsen0406) | Thanks to [huangjunsen](https://github.com/huangjunsen0406) for contributing the `Smart Control Console Mobile` module, which enables efficient control and real-time interaction across mobile devices, significantly enhancing the system's operational convenience and management efficiency in mobile scenarios. |
 | <img src="./docs/images/logo_huiyuan.png" width="160"> | [Huiyuan Design](http://ui.kwd988.net/) | Thanks to [Huiyuan Design](http://ui.kwd988.net/) for providing professional visual solutions for this project, using their design practical experience serving over a thousand enterprises to empower this project's product user experience |
 | <img src="./docs/images/logo_qinren.png" width="160"> | [Xi'an Qinren Information Technology](https://www.029app.com/) | Thanks to [Xi'an Qinren Information Technology](https://www.029app.com/) for deepening this project's visual system, ensuring consistency and extensibility of overall design style in multi-scenario applications |
-| <img src="./docs/images/logo_contributors.png" width="160"> | [Code Contributors](https://github.com/xinnan-tech/xiaozhi-esp32-server/graphs/contributors) | Thanks to [all code contributors](https://github.com/xinnan-tech/xiaozhi-esp32-server/graphs/contributors), your efforts have made the project more robust and powerful. |
+| <img src="./docs/images/logo_contributors.png" width="160"> | [Code Contributors](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors) | Thanks to [all code contributors](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors), your efforts have made the project more robust and powerful. |
 
 
-<a href="https://star-history.com/#xinnan-tech/xiaozhi-esp32-server&Date">
+<a href="https://star-history.com/#xinnan-tech/device-server&Date">
 
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/xiaozhi-esp32-server&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/xiaozhi-esp32-server&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xinnan-tech/xiaozhi-esp32-server&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
  </picture>
 </a>

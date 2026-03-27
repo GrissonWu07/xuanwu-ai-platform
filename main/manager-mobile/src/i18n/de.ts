@@ -1,4 +1,4 @@
-// Deutsch Sprachpaket
+﻿// Deutsch Sprachpaket
 export default {
     // TabBar
     'tabBar.home': 'Startseite',
@@ -316,7 +316,7 @@ export default {
     'settings.restartLater': 'Später',
     // Über uns
     'settings.aboutApp': 'Über XiaoZhi Konsole',
-    'settings.aboutContent': 'XiaoZhi Konsole\n\nEine plattformübergreifende mobile Management-App, erstellt mit Vue.js 3 + uni-app, bietet Geräteverwaltung, Agentenkonfiguration und andere Funktionen für xiaozhi ESP32 Smart Hardware.\n\n© 2025 xiaozhi-esp32-server {version}',
+    'settings.aboutContent': 'XiaoZhi Konsole\n\nEine plattformübergreifende mobile Management-App, erstellt mit Vue.js 3 + uni-app, bietet Geräteverwaltung, Agentenkonfiguration und andere Funktionen für xiaozhi ESP32 Smart Hardware.\n\n© 2025 device-server {version}',
     'settings.restartSuccess': 'Gespeichert, Sie können die App später manuell neu starten',
     'settings.serverUrlSavedAndCacheCleared': 'Server-URL gespeichert und Cache geleert',
     'settings.resetToDefaultAndCacheCleared': 'Auf Standard zurückgesetzt und Cache geleert',

@@ -1,10 +1,10 @@
--- 添加手机短信注册功能的需要的参数
+﻿-- 添加手机短信注册功能的需要的参数
 delete from sys_params where id in (108, 109, 110, 111, 112, 113, 114, 115);
 delete from sys_params where id in (610, 611, 612, 613);
 INSERT INTO sys_params
 (id, param_code, param_value, value_type, param_type, remark, creator, create_date, updater, update_date)
     VALUES
-(108, 'server.name', 'xiaozhi-esp32-server', 'string', 1, '系统名称', NULL, NULL, NULL, NULL),
+(108, 'server.name', 'device-server', 'string', 1, '系统名称', NULL, NULL, NULL, NULL),
 (109, 'server.beian_icp_num', 'null', 'string', 1, 'icp备案号，填写null则不设置', NULL, NULL, NULL, NULL),
 (110, 'server.beian_ga_num', 'null', 'string', 1, '公安备案号，填写null则不设置', NULL, NULL, NULL, NULL),
 (111, 'server.enable_mobile_register', 'false', 'boolean', 1, '是否开启手机注册', NULL, NULL, NULL, NULL),

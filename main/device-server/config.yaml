@@ -1,4 +1,4 @@
-# 在开发中，请在项目根目录创建data目录，然后在data目录创建名称为【.config.yaml】的空文件
+﻿# 在开发中，请在项目根目录创建data目录，然后在data目录创建名称为【.config.yaml】的空文件
 # 然后你想修改覆盖修改什么配置，就修改【.config.yaml】文件，而不是修改【config.yaml】文件
 # 系统会优先读取【data/.config.yaml】文件的配置，如果【.config.yaml】文件里的配置不存在，系统会自动去读取【config.yaml】文件的配置。
 # 这样做，可以最简化配置，保护您的密钥安全。
@@ -115,7 +115,7 @@ wakeup_words:
   - "小滨小滨"
   - "小冰小冰"
 # MCP接入点地址，地址格式为：ws://你的mcp接入点ip或者域名:端口号/mcp/?token=你的token
-# 详细教程 https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/docs/mcp-endpoint-integration.md
+# 详细教程 https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/mcp-endpoint-integration.md
 mcp_endpoint: 你的接入点 websocket地址
 
 # 上下文源配置
@@ -832,7 +832,7 @@ TTS:
     output_dir: tmp/
     # language: "中文"  # 指定输出语种,如:中文、英语、日语、韩语等,请根据所选音色支持的语言进行设置,不填则默认为中文
   FishSpeech:
-    # 参照教程：https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/docs/fish-speech-integration.md
+    # 参照教程：https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/fish-speech-integration.md
     type: fishspeech
     output_dir: tmp/
     response_format: wav

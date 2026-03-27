@@ -86,7 +86,7 @@ docker compose up -d
 执行完后，再执行以下命令，查看日志信息。
 
 ```
-docker logs -f xiaozhi-esp32-server
+docker logs -f device-server
 ```
 
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -101,12 +101,12 @@ docker logs -f xiaozhi-esp32-server
 5.2、执行以下命令
 
 ```
-docker stop xiaozhi-esp32-server
-docker rm xiaozhi-esp32-server
-docker stop xiaozhi-esp32-server-web
-docker rm xiaozhi-esp32-server-web
-docker rmi ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:server_latest
-docker rmi ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
+docker stop device-server
+docker rm device-server
+docker stop device-server-web
+docker rm device-server-web
+docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
+docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ```
 
 5.3、重新按docker方式部署
@@ -128,9 +128,9 @@ docker rmi ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
 ![conda_env](./images/conda_env_2.png)
 
 ```
-conda remove -n xiaozhi-esp32-server --all -y
-conda create -n xiaozhi-esp32-server python=3.10 -y
-conda activate xiaozhi-esp32-server
+conda remove -n device-server --all -y
+conda create -n device-server python=3.10 -y
+conda activate device-server
 
 # 添加清华源通道
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
@@ -150,16 +150,16 @@ conda install libiconv -y
 
 你先要下载本项目源码，源码可以通过`git clone`命令下载，如果你不熟悉`git clone`命令。
 
-你可以用浏览器打开这个地址`https://github.com/xinnan-tech/xiaozhi-esp32-server.git`
+你可以用浏览器打开这个地址`https://github.com/GrissonWu07/ai-assist-deviceserver.git`
 
 打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
 
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xiaozhi-esp32-server-main`
-你需要把它重命名成`xiaozhi-esp32-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
+点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`device-server-main`
+你需要把它重命名成`device-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
 
 ```
 # 继续使用conda环境
-conda activate xiaozhi-esp32-server
+conda activate device-server
 # 进入到你的项目根目录，再进入main/device-server
 cd main/device-server
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
@@ -182,7 +182,7 @@ pip install -r requirements.txt
 
 ```
 # 确保在device-server目录下执行
-conda activate xiaozhi-esp32-server
+conda activate device-server
 python app.py
 ```
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -271,7 +271,7 @@ LLM:
 ## 部署相关教程
 1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
 2、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
-3、[如何与Nginx集成](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/791)<br/>
+3、[如何与Nginx集成](https://github.com/GrissonWu07/ai-assist-deviceserver/issues/791)<br/>
 ## 拓展相关教程
 1、[如何开启手机号码注册智控台](./ali-sms-integration.md)<br/>
 2、[如何集成HomeAssistant实现智能家居控制](./homeassistant-integration.md)<br/>

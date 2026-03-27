@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="welcome">
     <HeaderBar />
 
@@ -83,7 +83,7 @@
                     <el-form-item :label="$t('roleConfig.contextProvider') + '：'" class="context-provider-item">
                       <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span style="color: #606266; font-size: 13px;">
-                          {{ $t('roleConfig.contextProviderSuccess', { count: currentContextProviders.length }) }}<a href="https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/docs/context-provider-integration.md" target="_blank" class="doc-link">{{ $t('roleConfig.contextProviderDocLink') }}</a>
+                          {{ $t('roleConfig.contextProviderSuccess', { count: currentContextProviders.length }) }}<a href="https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/context-provider-integration.md" target="_blank" class="doc-link">{{ $t('roleConfig.contextProviderDocLink') }}</a>
                         </span>
                         <el-button
                           class="edit-function-btn"

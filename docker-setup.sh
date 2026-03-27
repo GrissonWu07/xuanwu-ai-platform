@@ -117,7 +117,7 @@ check_installed() {
     fi
     
     # 检查容器是否存在
-    if docker inspect xiaozhi-esp32-server > /dev/null 2>&1; then
+    if docker inspect device-server > /dev/null 2>&1; then
         CONTAINER_CHECK=1
     else
         CONTAINER_CHECK=0
@@ -142,10 +142,10 @@ if check_installed; then
         
         # 停止并删除特定容器（考虑容器可能不存在的情况）
         containers=(
-            "xiaozhi-esp32-server"
-            "xiaozhi-esp32-server-web"
-            "xiaozhi-esp32-server-db"
-            "xiaozhi-esp32-server-redis"
+            "device-server"
+            "device-server-web"
+            "device-server-db"
+            "device-server-redis"
         )
         
         for container in "${containers[@]}"; do
@@ -160,8 +160,8 @@ if check_installed; then
         
         # 删除特定镜像（考虑镜像可能不存在的情况）
         images=(
-            "ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:server_latest"
-            "ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest"
+            "ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest"
+            "ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest"
         )
         
         for image in "${images[@]}"; do
@@ -183,8 +183,8 @@ if check_installed; then
         fi
         
         # 下载最新版配置文件
-        check_and_download "/opt/device-server/docker-compose_all.yml" "https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/docker-compose_all.yml"
-        check_and_download "/opt/device-server/data/.config.yaml" "https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/config_from_api.yaml"
+        check_and_download "/opt/device-server/docker-compose_all.yml" "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/docker-compose_all.yml"
+        check_and_download "/opt/device-server/data/.config.yaml" "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/config_from_api.yaml"
         
         # 启动Docker服务
         echo "开始启动最新版本服务..."
@@ -341,8 +341,8 @@ fi
 
 # 如果不是升级完成，才执行下载
 if [ -z "$UPGRADE_COMPLETED" ]; then
-    check_and_download "/opt/device-server/docker-compose_all.yml" "https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/docker-compose_all.yml"
-    check_and_download "/opt/device-server/data/.config.yaml" "https://ghfast.top/https://raw.githubusercontent.com/xinnan-tech/xiaozhi-esp32-server/refs/heads/main/main/device-server/config_from_api.yaml"
+    check_and_download "/opt/device-server/docker-compose_all.yml" "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/docker-compose_all.yml"
+    check_and_download "/opt/device-server/data/.config.yaml" "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/config_from_api.yaml"
 fi
 
 # 启动Docker服务
@@ -368,7 +368,7 @@ while true; do
         exit 1
     fi
     
-    if docker logs xiaozhi-esp32-server-web 2>&1 | grep -q "Started AdminApplication in"; then
+    if docker logs device-server-web 2>&1 | grep -q "Started AdminApplication in"; then
         break
     fi
     sleep 1
@@ -393,11 +393,11 @@ import sys, yaml;
 config_path = '/opt/device-server/data/.config.yaml'; 
 with open(config_path, 'r') as f: 
     config = yaml.safe_load(f) or {}; 
-config['manager-api'] = {'url': 'http://xiaozhi-esp32-server-web:8002/xiaozhi', 'secret': '$SECRET_KEY'}; 
+config['manager-api'] = {'url': 'http://device-server-web:8002/xiaozhi', 'secret': '$SECRET_KEY'}; 
 with open(config_path, 'w') as f: 
     yaml.dump(config, f); 
 "
-    docker restart xiaozhi-esp32-server
+    docker restart device-server
 fi
 
 # 获取并显示地址信息

@@ -1,4 +1,4 @@
-// Gói ngôn ngữ tiếng Việt
+﻿// Gói ngôn ngữ tiếng Việt
 export default {
     // TabBar
     'tabBar.home': 'Trang chủ',
@@ -316,7 +316,7 @@ export default {
     'settings.restartLater': 'Để sau',
     // Về chúng tôi
     'settings.aboutApp': 'Về Bảng điều khiển XiaoZhi',
-    'settings.aboutContent': 'Bảng điều khiển XiaoZhi\n\nỨng dụng quản lý di động đa nền tảng được xây dựng với Vue.js 3 + uni-app, cung cấp quản lý thiết bị, cấu hình đại lý và các chức năng khác cho phần cứng thông minh xiaozhi ESP32.\n\n© 2025 xiaozhi-esp32-server {version}',
+    'settings.aboutContent': 'Bảng điều khiển XiaoZhi\n\nỨng dụng quản lý di động đa nền tảng được xây dựng với Vue.js 3 + uni-app, cung cấp quản lý thiết bị, cấu hình đại lý và các chức năng khác cho phần cứng thông minh xiaozhi ESP32.\n\n© 2025 device-server {version}',
     'settings.restartSuccess': 'Đã lưu, bạn có thể tự khởi động lại ứng dụng sau',
     'settings.serverUrlSavedAndCacheCleared': 'Đã lưu URL máy chủ và xóa bộ nhớ cache',
     'settings.resetToDefaultAndCacheCleared': 'Đã đặt lại mặc định và xóa bộ nhớ cache',
