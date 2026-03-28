@@ -12,8 +12,8 @@
 2.  [Overall Architecture](#2-overall-architecture)
 3.  [Component Deep Dive](#3-component-deep-dive)
     *   [3.1. `xuanwu-device-server` (Core AI Engine - Python Implementation)](#31-xuanwu-device-server-core-ai-engine---python-implementation)
-    *   [3.2. `manager-api` (Management Backend - Java Spring Boot Implementation)](#32-manager-api-management-backend---java-spring-boot-implementation)
-    *   [3.3. `manager-web` (Web Management Frontend - Vue.js Implementation)](#33-manager-web-web-management-frontend---vuejs-implementation)
+    *   [3.2. `xuanwu-management-server` (Default Primary Management Host - Python Implementation)](#32-xuanwu-management-server-default-primary-management-host---python-implementation)
+    *   [3.3. `manager-api` / `manager-web` (Java compatibility reference implementation)](#33-manager-api--manager-web-java-compatibility-reference-implementation)
 4.  [Data Flow and Interaction Mechanisms](#4-data-flow-and-interaction-mechanisms)
 5.  [Key Features Summary](#5-key-features-summary)
 6.  [Deployment and Configuration Overview](#6-deployment-and-configuration-overview)
@@ -48,36 +48,30 @@ The `xuanwu-device-server` system adopts a **distributed, multi-component collab
     *   Executing custom commands through a flexible **plugin system**, including IoT device control logic.
     *   Obtaining its detailed runtime operation configuration from the `manager-api` service.
 
-3.  **`manager-api` (Management Backend - Java Spring Boot Implementation):**
-    This is an application built using the Java Spring Boot framework, providing a secure RESTful API for system management and configuration. It serves not only as the backend support for the `manager-web` console but also as the configuration data source for `xuanwu-device-server`. Its core functions include:
-    *   Providing user authentication (login, permission verification) and user account management functions for the Web console.
-    *   Registration, information management of ESP32 devices, and maintenance of device-specific configurations.
-    *   Persistently storing system configurations in the **MySQL database**, such as user-selected AI service providers, API keys, device parameters, plugin settings, etc.
-    *   Providing specific API endpoints for `xuanwu-device-server` to pull its required latest configuration.
-    *   Managing TTS voice options, handling OTA (Over-The-Air) firmware update processes, and related metadata.
-    *   Utilizing **Redis** as a high-speed cache to store hotspot data (such as session information, frequently accessed configurations) to improve API response speed and overall system performance.
+3.  **`xuanwu-management-server` (Default Primary Management Host - Python Implementation):**
+    This is the recommended Python management host for the current architecture. It owns the control-plane and management-domain entrypoints and serves as the preferred runtime configuration source for `xuanwu-device-server`. Its core responsibilities include:
+    *   Exposing the new `/control-plane/v1/*` management and control-plane APIs.
+    *   Acting as the default runtime configuration source for `xuanwu-device-server`.
+    *   Proxying agent-configuration requests to `XuanWu` through `/control-plane/v1/xuanwu/*`.
+    *   Gradually absorbing the management responsibilities previously held by `manager-api` / `manager-web`.
 
-4.  **`manager-web` (Web Control Panel - Vue.js Implementation):**
-    This is a Single Page Application (SPA) built with Vue.js, providing system administrators with a graphical, user-friendly operation interface. Its main capabilities include:
-    *   Conveniently configuring various AI services used by `xuanwu-device-server` (such as ASR, LLM, TTS provider switching, parameter adjustment).
-    *   Managing platform user accounts, role assignment, and permission control.
-    *   Managing registered ESP32 devices and their related settings.
-    *   (Potential functionality) Monitoring system operation status, viewing logs, troubleshooting, etc.
-    *   Comprehensive interaction with all backend management functions provided by `manager-api`.
+4.  **`manager-api` / `manager-web` (Java compatibility reference implementation):**
+    These modules remain in the repository for migration compatibility, deployment reference, and feature inventory only. They are no longer the recommended default path. `xuanwu-device-server` falls back to this Java management chain only when legacy compatibility mode is explicitly enabled.
 
 **High-Level Interaction Flow Overview:**
 
 *   **Voice Interaction Main Line:** After the **ESP32 device** captures user voice, it transmits audio data in real-time to **`xuanwu-device-server`** through **WebSocket**. After `xuanwu-device-server` completes a series of AI processing (VAD, ASR, LLM interaction, TTS), it sends the synthesized voice response back to the ESP32 device for playback through WebSocket. All real-time interactions directly related to voice are completed in this link.
-*   **Management Configuration Main Line:** Administrators access the **`manager-web`** console through a browser. `manager-web` executes various management operations (such as modifying configurations, managing users or devices) by calling **RESTful HTTP interfaces** provided by **`manager-api`**. Data is passed between them in JSON format.
-*   **Configuration Synchronization:** **`xuanwu-device-server`** actively pulls its latest operation configuration from **`manager-api`** through HTTP requests when starting or when specific update mechanisms are triggered. This ensures that configuration changes made by administrators in the Web interface can be effectively applied to the operation of the core AI engine in a timely manner.
+*   **Management Configuration Main Line:** Administrators enter the new Python management path through **`xuanwu-management-server`**; agent-configuration requests then continue through `xuanwu-management-server -> XuanWu` for proxying and persistence.
+*   **Configuration Synchronization:** **`xuanwu-device-server`** actively pulls its preferred runtime configuration from **`xuanwu-management-server`**. It only falls back to `manager-api` when legacy compatibility mode is explicitly enabled.
 
-This **frontend-backend separation, core service and management service separation** architectural design allows `xuanwu-device-server` to focus on efficient real-time AI processing tasks, while `manager-api` and `manager-web` together provide a powerful and easy-to-use management and configuration platform. Each component has clear responsibilities, facilitating independent development, testing, deployment, and expansion.
+This layered architecture lets `xuanwu-device-server` focus on real-time runtime processing, `xuanwu-management-server` focus on management and control-plane responsibilities, and `XuanWu` own the agent/configuration domain. The legacy Java management modules are retained only as compatibility references.
 
 ```
 xuanwu-device-server
   ├─ xuanwu-device-server Port 8000 Python development Responsible for ESP32 communication
-  ├─ manager-web Port 8001 Node.js+Vue development Responsible for providing web interface for console
-  ├─ manager-api Port 8002 Java development Responsible for providing console API
+  ├─ xuanwu-management-server Port 18082 Python development Responsible for the default primary management host
+  ├─ manager-web Port 8001 Node.js+Vue development Java compatibility reference implementation
+  ├─ manager-api Port 8002 Java development Java compatibility reference implementation
   └─ Mobile management has been retired and will be absorbed by the Python control plane
 ```
 
@@ -94,7 +88,7 @@ The `xuanwu-device-server` is the intelligent core of the system, responsible fo
     *   To integrate with various AI services for Speech-to-Text (ASR), Natural Language Understanding (via Large Language Models - LLMs), Text-to-Speech (TTS), Voice Activity Detection (VAD), Intent Recognition, and Memory.
     *   To manage dialogue flow and context with users.
     *   To execute custom functions and control IoT devices based on user commands.
-    *   To be dynamically configurable through the `manager-api`.
+    *   To be dynamically configurable through `xuanwu-management-server`, with `manager-api` retained only as an explicit compatibility fallback.
 
 *   **Core Technologies:**
     *   **Python 3:** The primary programming language.

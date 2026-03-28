@@ -381,6 +381,8 @@ done
 )
 
 # 密钥配置
+# 下面这段仍然对应 legacy 兼容模式下的 manager-api 配置。
+# 默认主路径已经切到 xuanwu-management-server；只有需要旧 Java 管理链路时才需要配置这里。
 
 # 获取服务器公网地址
 PUBLIC_IP=$(hostname -I | awk '{print $1}')

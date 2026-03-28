@@ -12,8 +12,8 @@
 2.  [整体架构](#2-整体架构)
 3.  [核心组件深度剖析](#3-核心组件深度剖析)
     *   [3.1. `xuanwu-device-server` (核心AI引擎 - Python实现)](#31-xuanwu-device-server-核心ai引擎---python实现)
-    *   [3.2. `manager-api` (管理后端 - Java Spring Boot实现)](#32-manager-api-管理后端---java-spring-boot实现)
-    *   [3.3. `manager-web` (Web管理前端 - Vue.js实现)](#33-manager-web-web管理前端---vuejs实现)
+    *   [3.2. `xuanwu-management-server` (默认主管理宿主 - Python实现)](#32-xuanwu-management-server-默认主管理宿主---python实现)
+    *   [3.3. `manager-api` / `manager-web` (Java 兼容参考实现)](#33-manager-api--manager-web-java-兼容参考实现)
 4.  [数据流与交互机制](#4-数据流与交互机制)
 5.  [核心功能概要](#5-核心功能概要)
 6.  [部署与配置概述](#6-部署与配置概述)
@@ -47,36 +47,30 @@
     *   通过一个灵活的**插件系统**执行自定义命令，包括对IoT设备的控制逻辑。
     *   从 `manager-api` 服务获取其详细的运行时操作配置。
 
-3.  **`manager-api` (管理后端 - Java实现):**
-    这是一个基于Java Spring Boot框架构建的应用程序，它为整个系统的管理和配置提供了一套安全的RESTful API。它不仅是 `manager-web` 控制台的后端支撑，也是 `xuanwu-device-server` 的配置数据来源。其核心功能包括：
-    *   为Web控制台提供用户认证（登录、权限验证）和用户账户管理功能。
-    *   ESP32设备的注册、信息管理以及设备特定配置的维护。
-    *   在**MySQL数据库**中持久化存储系统配置，例如用户选择的AI服务提供商、API密钥、设备参数、插件设置等。
-    *   提供特定的API端点，供 `xuanwu-device-server` 拉取其所需的最新配置。
-    *   管理TTS音色选项、处理OTA（Over-The-Air）固件更新流程及相关元数据。
-    *   利用 **Redis** 作为高速缓存，存储热点数据（如会话信息、频繁访问的配置），以提升API响应速度和系统整体性能。
+3.  **`xuanwu-management-server` (默认主管理宿主 - Python实现):**
+    这是当前推荐的 Python 管理宿主，负责承接控制面、管理面以及对 `XuanWu` 的代理调用。它既是 `xuanwu-device-server` 的首选配置来源，也是后续替代 legacy Java 管理链路的主路径。其核心职责包括：
+    *   提供新的 `/control-plane/v1/*` 管理与控制面接口。
+    *   作为 `xuanwu-device-server` 的默认运行时配置来源。
+    *   通过 `/control-plane/v1/xuanwu/*` 代理智能体配置相关请求到 `XuanWu`。
+    *   逐步吸收原 `manager-api` / `manager-web` 的管理能力。
 
-4.  **`manager-web` (Web控制面板 - Vue.js实现):**
-    这是一个基于Vue.js构建的单页应用（SPA），为系统管理员提供了一个图形化、用户友好的操作界面。其主要能力包括：
-    *   便捷地配置 `xuanwu-device-server` 所使用的各项AI服务（如ASR、LLM、TTS的提供商切换、参数调整）。
-    *   管理平台用户账户、角色分配及权限控制。
-    *   管理已注册的ESP32设备及其相关设置。
-    *   （潜在功能）监控系统运行状态、查看日志、进行故障排查等。
-    *   与 `manager-api` 提供的所有后端管理功能进行全面的交互。
+4.  **`manager-api` / `manager-web` (Java 兼容参考实现):**
+    这两个模块仍保留在仓库中，主要用于兼容过渡、旧部署参考和能力盘点，不再是推荐的新部署主路径。只有在显式开启 legacy 兼容模式时，`xuanwu-device-server` 才会回退到这条 Java 管理链路。
 
 **高层交互流程概述:**
 
 *   **语音交互主线:** **ESP32设备**捕捉到用户语音后，通过**WebSocket**将音频数据实时传输给**`xuanwu-device-server`**。`xuanwu-device-server`完成一系列AI处理（VAD、ASR、LLM交互、TTS）后，再通过WebSocket将合成的语音回复发送回ESP32设备进行播放。所有与语音直接相关的实时交互均在此链路完成。
-*   **管理配置主线:** 管理员通过浏览器访问**`manager-web`**控制台。`manager-web`通过调用**`manager-api`**提供的**RESTful HTTP接口**来执行各种管理操作（如修改配置、管理用户或设备）。数据以JSON格式在两者间传递。
-*   **配置同步:** **`xuanwu-device-server`**在启动或特定更新机制触发时，会主动通过HTTP请求从**`manager-api`**拉取其最新的操作配置。这确保了管理员在Web界面上所做的配置更改能够及时有效地应用到核心AI引擎的运行中。
+*   **管理配置主线:** 管理员通过 **`xuanwu-management-server`** 进入新的 Python 管理主线；与智能体配置相关的请求再由 `xuanwu-management-server -> XuanWu` 继续转发和落盘。
+*   **配置同步:** **`xuanwu-device-server`** 在启动或特定更新机制触发时，会优先通过HTTP请求从 **`xuanwu-management-server`** 拉取其最新运行配置。只有显式启用 legacy 兼容模式时，才会回退到 `manager-api`。
 
-这种**前后端分离、核心服务与管理服务分离**的架构设计，使得 `xuanwu-device-server`能够专注于高效的实时AI处理任务，而 `manager-api` 和 `manager-web` 则共同提供了一个功能强大且易于使用的管理和配置平台。各组件职责清晰，有利于独立开发、测试、部署和扩展。
+这种**运行时服务、Python 管理宿主、智能体服务分层**的架构设计，使得 `xuanwu-device-server` 能够专注于高效的实时AI处理任务，`xuanwu-management-server` 专注于管理与控制面，而 `XuanWu` 负责智能体配置与推理域。legacy Java 管理模块则退居兼容参考角色。
 
 ```
 xuanwu-device-server
   ├─ xuanwu-device-server 8000 端口 Python语言开发 负责与esp32通信
-  ├─ manager-web 8001 端口 Node.js+Vue开发 负责提供控制台的web界面
-  ├─ manager-api 8002 端口 Java语言开发 负责提供控制台的api
+  ├─ xuanwu-management-server 18082 端口 Python语言开发 负责默认主管理面
+  ├─ manager-web 8001 端口 Node.js+Vue开发 Java 兼容参考实现
+  ├─ manager-api 8002 端口 Java语言开发 Java 兼容参考实现
   └─ 移动端管理能力已下线，后续统一由 Python 控制面承接
 ```
 
@@ -93,7 +87,7 @@ xuanwu-device-server
     *   深度集成各类AI服务，包括：自动语音识别 (ASR)、大型语言模型 (LLM) 进行自然语言理解 (NLU)、文本转语音 (TTS)、语音活动检测 (VAD)、意图识别 (Intent Recognition) 及对话记忆 (Memory)。
     *   精细管理用户与设备间的对话流程及上下文状态。
     *   基于用户指令，通过插件化机制执行自定义函数及控制物联网 (IoT) 设备。
-    *   支持通过 `manager-api`进行动态配置加载与更新。
+    *   支持通过 `xuanwu-management-server` 进行动态配置加载与更新，并仅在兼容模式下回退到 `manager-api`。
 
 *   **核心技术栈:**
     *   **Python 3:** 作为主要编程语言，Python以其丰富的AI/ML生态库和快速开发特性被选用。

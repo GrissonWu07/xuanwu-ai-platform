@@ -99,6 +99,20 @@ def test_main_readmes_include_management_server_migration_note():
     assert "xuanwu-management-server" in zh_text
     assert "http://xuanwu-ai:8000" in zh_text
     assert "默认主管理宿主" in zh_text
+    assert "管理配置主线" in zh_text
+    assert "xuanwu-management-server -> XuanWu" in zh_text
+    assert "Java 兼容参考实现" in zh_text
     assert "xuanwu-management-server" in en_text
     assert "http://xuanwu-ai:8000" in en_text
     assert "default primary management host" in en_text
+    assert "Management Configuration Main Line" in en_text
+    assert "xuanwu-management-server -> XuanWu" in en_text
+    assert "Java compatibility reference implementation" in en_text
+
+
+def test_docker_setup_mentions_legacy_manager_api_compatibility_mode():
+    root = Path(__file__).resolve().parents[1]
+    setup_text = (root / "docker-setup.sh").read_text(encoding="utf-8")
+
+    assert "legacy 兼容模式" in setup_text
+    assert "manager-api" in setup_text
