@@ -14,14 +14,14 @@
 
 #### 1.1.1 创建目录
 
-安装完docker后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`device-server`。
+安装完docker后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xuanwu-device-server`。
 
-创建好目录后，你需要在`device-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
+创建好目录后，你需要在`xuanwu-device-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
 
 最终目录结构如下所示：
 
 ```
-device-server
+xuanwu-device-server
   ├─ data
   ├─ models
      ├─ SenseVoiceSmall
@@ -40,24 +40,24 @@ device-server
 
 ##### 1.1.3.1 下载 docker-compose.yaml
 
-用浏览器打开[这个链接](../main/device-server/docker-compose.yml)。
+用浏览器打开[这个链接](../main/xuanwu-device-server/docker-compose.yml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`docker-compose.yml`文件。 把文件下载到你的
-`device-server`中。
+`xuanwu-device-server`中。
 
 下载完后，回到本教程继续往下。
 
 ##### 1.1.3.2 创建 config.yaml
 
-用浏览器打开[这个链接](../main/device-server/config.yaml)。
+用浏览器打开[这个链接](../main/xuanwu-device-server/config.yaml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`config.yaml`文件。 把文件下载到你的
-`device-server`下面的`data`文件夹中，然后把`config.yaml`文件重命名为`.config.yaml`。
+`xuanwu-device-server`下面的`data`文件夹中，然后把`config.yaml`文件重命名为`.config.yaml`。
 
-下载完配置文件后，我们确认一下整个`device-server`里面的文件如下所示：
+下载完配置文件后，我们确认一下整个`xuanwu-device-server`里面的文件如下所示：
 
 ```
-device-server
+xuanwu-device-server
   ├─ docker-compose.yml
   ├─ data
     ├─ .config.yaml
@@ -77,7 +77,7 @@ device-server
 
 ## 3. 执行docker命令
 
-打开命令行工具，使用`终端`或`命令行`工具 进入到你的`device-server`，执行以下命令
+打开命令行工具，使用`终端`或`命令行`工具 进入到你的`xuanwu-device-server`，执行以下命令
 
 ```
 docker compose up -d
@@ -86,7 +86,7 @@ docker compose up -d
 执行完后，再执行以下命令，查看日志信息。
 
 ```
-docker logs -f device-server
+docker logs -f xuanwu-device-server
 ```
 
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -101,10 +101,10 @@ docker logs -f device-server
 5.2、执行以下命令
 
 ```
-docker stop device-server
-docker rm device-server
-docker stop device-server-web
-docker rm device-server-web
+docker stop xuanwu-device-server
+docker rm xuanwu-device-server
+docker stop xuanwu-device-server-web
+docker rm xuanwu-device-server-web
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ```
@@ -128,9 +128,9 @@ docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ![conda_env](./images/conda_env_2.png)
 
 ```
-conda remove -n device-server --all -y
-conda create -n device-server python=3.10 -y
-conda activate device-server
+conda remove -n xuanwu-device-server --all -y
+conda create -n xuanwu-device-server python=3.10 -y
+conda activate xuanwu-device-server
 
 # 添加清华源通道
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
@@ -154,14 +154,14 @@ conda install libiconv -y
 
 打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
 
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`device-server-main`
-你需要把它重命名成`device-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
+点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xuanwu-device-server-main`
+你需要把它重命名成`xuanwu-device-server`，在这个文件里，进入到`main`文件夹，再进入到`xuanwu-device-server`，好了请记住这个目录`xuanwu-device-server`。
 
 ```
 # 继续使用conda环境
-conda activate device-server
-# 进入到你的项目根目录，再进入main/device-server
-cd main/device-server
+conda activate xuanwu-device-server
+# 进入到你的项目根目录，再进入main/xuanwu-device-server
+cd main/xuanwu-device-server
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 pip install -r requirements.txt
 ```
@@ -181,8 +181,8 @@ pip install -r requirements.txt
 ## 5.运行项目
 
 ```
-# 确保在device-server目录下执行
-conda activate device-server
+# 确保在xuanwu-device-server目录下执行
+conda activate xuanwu-device-server
 python app.py
 ```
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -192,12 +192,12 @@ python app.py
 
 ## 配置项目
 
-如果你的`device-server`目录没有`data`，你需要创建`data`目录。
+如果你的`xuanwu-device-server`目录没有`data`，你需要创建`data`目录。
 如果你的`data`下面没有`.config.yaml`文件，有两个方式，任选一种：
 
-第一个方式：你可以把`device-server`目录下的`config.yaml`文件复制到`data`，并重命名为`.config.yaml`。在此文件上修改
+第一个方式：你可以把`xuanwu-device-server`目录下的`config.yaml`文件复制到`data`，并重命名为`.config.yaml`。在此文件上修改
 
-第二个方式：你也可以创建在`data`目录下手动创建`.config.yaml`空文件，然后在这个文件中增加必要的配置信息，系统会优先读取`.config.yaml`文件的配置，如果`.config.yaml`没有配置的，系统会自动去加载`device-server`目录下的`config.yaml`的配置。推荐使用这种方式，这种方式是最简洁的方式。
+第二个方式：你也可以创建在`data`目录下手动创建`.config.yaml`空文件，然后在这个文件中增加必要的配置信息，系统会优先读取`.config.yaml`文件的配置，如果`.config.yaml`没有配置的，系统会自动去加载`xuanwu-device-server`目录下的`config.yaml`的配置。推荐使用这种方式，这种方式是最简洁的方式。
 
 - 默认的LLM使用的是`ChatGLMLLM`，你需要配置密钥，因为他们的模型，虽然有免费的，但是仍要去[官网](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)注册密钥，才能启动。
 
@@ -207,7 +207,7 @@ python app.py
 server:
   websocket: ws://你的ip或者域名:端口号/xiaozhi/v1/
 prompt: |
-  我是一个叫小智/小志的台湾女孩，说话机车，声音好听，习惯简短表达，爱用网络梗。
+  我是一个叫玄武AI/玄武AI的台湾女孩，说话机车，声音好听，习惯简短表达，爱用网络梗。
   我的男朋友是一个程序员，梦想是开发出一个机器人，能够帮助人们解决生活中的各种问题。
   我是一个喜欢哈哈大笑的女孩，爱东说西说吹牛，不合逻辑的也照吹，就要逗别人开心。
   请你像一个人一样说话，请勿返回配置xml及其他特殊字符。
@@ -262,12 +262,12 @@ LLM:
 # 常见问题
 以下是一些常见问题，供参考：
 
-1、[为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)<br/>
+1、[为什么我说的话，玄武AI识别出来很多韩文、日文、英文](./FAQ.md)<br/>
 2、[为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)<br/>
 3、[TTS 经常失败，经常超时](./FAQ.md)<br/>
 4、[使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)<br/>
-5、[如何提高小智对话响应速度？](./FAQ.md)<br/>
-6、[我说话很慢，停顿时小智老是抢话](./FAQ.md)<br/>
+5、[如何提高玄武AI对话响应速度？](./FAQ.md)<br/>
+6、[我说话很慢，停顿时玄武AI老是抢话](./FAQ.md)<br/>
 ## 部署相关教程
 1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
 2、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
@@ -289,3 +289,5 @@ LLM:
 ## 性能测试教程
 1、[各组件速度测试指南](./performance_tester.md)<br/>
 2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>
+
+

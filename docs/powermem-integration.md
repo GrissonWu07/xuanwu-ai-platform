@@ -1,43 +1,43 @@
-# PowerMem 记忆组件集成指南
+﻿# PowerMem 璁板繂缁勪欢闆嗘垚鎸囧崡
 
-## 简介
+## 绠€浠?
 
-[PowerMem](https://www.powermem.ai/) 是由 OceanBase 开源的 Agent 记忆组件，通过本地 LLM 进行记忆总结和智能检索，为 AI 代理提供高效的记忆管理功能。
+[PowerMem](https://www.powermem.ai/) 鏄敱 OceanBase 寮€婧愮殑 Agent 璁板繂缁勪欢锛岄€氳繃鏈湴 LLM 杩涜璁板繂鎬荤粨鍜屾櫤鑳芥绱紝涓?AI 浠ｇ悊鎻愪緵楂樻晥鐨勮蹇嗙鐞嗗姛鑳姐€?
 
-费用说明：PowerMem 本身开源免费，实际费用取决于您选择的 LLM 和数据库：
-- 使用 SQLite + 免费 LLM（如智谱 glm-4-flash）= **完全免费**
-- 使用云端 LLM 或云端数据库 = 按对应服务收费
+璐圭敤璇存槑锛歅owerMem 鏈韩寮€婧愬厤璐癸紝瀹為檯璐圭敤鍙栧喅浜庢偍閫夋嫨鐨?LLM 鍜屾暟鎹簱锛?
+- 浣跨敤 SQLite + 鍏嶈垂 LLM锛堝鏅鸿氨 glm-4-flash锛? **瀹屽叏鍏嶈垂**
+- 浣跨敤浜戠 LLM 鎴栦簯绔暟鎹簱 = 鎸夊搴旀湇鍔℃敹璐?
 
-> 💡 **最佳性能提示**：PowerMem 配合 OceanBase 使用可实现最大性能释放，SQLite 仅建议在资源不足的情况下使用。
+> 馃挕 **鏈€浣虫€ц兘鎻愮ず**锛歅owerMem 閰嶅悎 OceanBase 浣跨敤鍙疄鐜版渶澶ф€ц兘閲婃斁锛孲QLite 浠呭缓璁湪璧勬簮涓嶈冻鐨勬儏鍐典笅浣跨敤銆?
 
 - **GitHub**: https://github.com/oceanbase/powermem
-- **官网**: https://www.powermem.ai/
-- **使用示例**: https://github.com/oceanbase/powermem/tree/main/examples
+- **瀹樼綉**: https://www.powermem.ai/
+- **浣跨敤绀轰緥**: https://github.com/oceanbase/powermem/tree/main/examples
 
-## 功能特性
+## 鍔熻兘鐗规€?
 
-- **本地总结**：通过 LLM 在本地进行记忆总结和提取
-- **用户画像**：通过 `UserMemory` 自动提取用户信息（姓名、职业、兴趣等），持续更新用户画像
-- **智能遗忘**：基于艾宾浩斯遗忘曲线，自动"遗忘"过时噪声信息
-- **多种存储后端**：支持 OceanBase（推荐，最佳性能）、SeekDB（推荐，AI应用存储一体）、PostgreSQL、SQLite（轻量备选）
-- **多种 LLM 支持**：通义千问、智谱（glm-4-flash 免费）、OpenAI 等
-- **智能检索**：基于向量搜索的语义检索能力
-- **私有部署**：完全支持本地私有化部署
-- **异步操作**：高效的异步记忆管理
+- **鏈湴鎬荤粨**锛氶€氳繃 LLM 鍦ㄦ湰鍦拌繘琛岃蹇嗘€荤粨鍜屾彁鍙?
+- **鐢ㄦ埛鐢诲儚**锛氶€氳繃 `UserMemory` 鑷姩鎻愬彇鐢ㄦ埛淇℃伅锛堝鍚嶃€佽亴涓氥€佸叴瓒ｇ瓑锛夛紝鎸佺画鏇存柊鐢ㄦ埛鐢诲儚
+- **鏅鸿兘閬楀繕**锛氬熀浜庤壘瀹炬旦鏂仐蹇樻洸绾匡紝鑷姩"閬楀繕"杩囨椂鍣０淇℃伅
+- **澶氱瀛樺偍鍚庣**锛氭敮鎸?OceanBase锛堟帹鑽愶紝鏈€浣虫€ц兘锛夈€丼eekDB锛堟帹鑽愶紝AI搴旂敤瀛樺偍涓€浣擄級銆丳ostgreSQL銆丼QLite锛堣交閲忓閫夛級
+- **澶氱 LLM 鏀寔**锛氶€氫箟鍗冮棶銆佹櫤璋憋紙glm-4-flash 鍏嶈垂锛夈€丱penAI 绛?
+- **鏅鸿兘妫€绱?*锛氬熀浜庡悜閲忔悳绱㈢殑璇箟妫€绱㈣兘鍔?
+- **绉佹湁閮ㄧ讲**锛氬畬鍏ㄦ敮鎸佹湰鍦扮鏈夊寲閮ㄧ讲
+- **寮傛鎿嶄綔**锛氶珮鏁堢殑寮傛璁板繂绠＄悊
 
-## 安装
+## 瀹夎
 
-PowerMem 已添加到项目依赖中，如果需要手动安装：
+PowerMem 宸叉坊鍔犲埌椤圭洰渚濊禆涓紝濡傛灉闇€瑕佹墜鍔ㄥ畨瑁咃細
 
 ```bash
 pip install powermem
 ```
 
-## 配置说明
+## 閰嶇疆璇存槑
 
-### 基础配置
+### 鍩虹閰嶇疆
 
-在 `config.yaml` 中配置 PowerMem：
+鍦?`config.yaml` 涓厤缃?PowerMem锛?
 
 ```yaml
 selected_module:
@@ -46,76 +46,76 @@ selected_module:
 Memory:
   powermem:
     type: powermem
-    # 是否启用用户画像功能
-    # 用户画像支持: oceanbase、seekdb、sqlite (powermem 0.3.0+)
+    # 鏄惁鍚敤鐢ㄦ埛鐢诲儚鍔熻兘
+    # 鐢ㄦ埛鐢诲儚鏀寔: oceanbase銆乻eekdb銆乻qlite (powermem 0.3.0+)
     enable_user_profile: true
     
-    # ========== LLM 配置 ==========
+    # ========== LLM 閰嶇疆 ==========
     llm:
-      provider: openai  # 可选: qwen, openai, zhipu 等
+      provider: openai  # 鍙€? qwen, openai, zhipu 绛?
       config:
-        api_key: 你的LLM API密钥
+        api_key: 浣犵殑LLM API瀵嗛挜
         model: qwen-plus
-        # openai_base_url: https://api.openai.com/v1  # 可选，自定义服务地址
+        # openai_base_url: https://api.openai.com/v1  # 鍙€夛紝鑷畾涔夋湇鍔″湴鍧€
     
-    # ========== Embedding 配置 ==========
+    # ========== Embedding 閰嶇疆 ==========
     embedder:
-      provider: openai  # 可选: qwen, openai 等
+      provider: openai  # 鍙€? qwen, openai 绛?
       config:
-        api_key: 你的嵌入模型API密钥
+        api_key: 浣犵殑宓屽叆妯″瀷API瀵嗛挜
         model: text-embedding-v4
         openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
-        # embedding_dims: 1024  # 向量维度，非1536时需配置
+        # embedding_dims: 1024  # 鍚戦噺缁村害锛岄潪1536鏃堕渶閰嶇疆
     
-    # ========== Database 配置 ==========
+    # ========== Database 閰嶇疆 ==========
     vector_store:
-      provider: sqlite  # 可选: oceanbase(推荐), seekdb(推荐), postgres, sqlite(轻量)
-      config: {}  # SQLite 无需额外配置
+      provider: sqlite  # 鍙€? oceanbase(鎺ㄨ崘), seekdb(鎺ㄨ崘), postgres, sqlite(杞婚噺)
+      config: {}  # SQLite 鏃犻渶棰濆閰嶇疆
 ```
 
-### 配置参数详解
+### 閰嶇疆鍙傛暟璇﹁В
 
-#### LLM 配置
+#### LLM 閰嶇疆
 
-| 参数 | 说明 | 可选值 |
+| 鍙傛暟 | 璇存槑 | 鍙€夊€?|
 |------|------|--------|
-| `llm.provider` | LLM 提供商 | `qwen`, `openai`, `zhipu` 等 |
-| `llm.config.api_key` | API 密钥 | - |
-| `llm.config.model` | 模型名称 | 根据提供商选择 |
-| `llm.config.openai_base_url` | 自定义服务地址（可选） | - |
+| `llm.provider` | LLM 鎻愪緵鍟?| `qwen`, `openai`, `zhipu` 绛?|
+| `llm.config.api_key` | API 瀵嗛挜 | - |
+| `llm.config.model` | 妯″瀷鍚嶇О | 鏍规嵁鎻愪緵鍟嗛€夋嫨 |
+| `llm.config.openai_base_url` | 鑷畾涔夋湇鍔″湴鍧€锛堝彲閫夛級 | - |
 
-#### Embedding 配置
+#### Embedding 閰嶇疆
 
-| 参数 | 说明 | 可选值 |
+| 鍙傛暟 | 璇存槑 | 鍙€夊€?|
 |------|------|--------|
-| `embedder.provider` | 嵌入模型提供商 | `qwen`, `openai` 等 |
-| `embedder.config.api_key` | API 密钥 | - |
-| `embedder.config.model` | 模型名称 | 根据提供商选择 |
-| `embedder.config.openai_base_url` | 自定义服务地址（可选） | - |
+| `embedder.provider` | 宓屽叆妯″瀷鎻愪緵鍟?| `qwen`, `openai` 绛?|
+| `embedder.config.api_key` | API 瀵嗛挜 | - |
+| `embedder.config.model` | 妯″瀷鍚嶇О | 鏍规嵁鎻愪緵鍟嗛€夋嫨 |
+| `embedder.config.openai_base_url` | 鑷畾涔夋湇鍔″湴鍧€锛堝彲閫夛級 | - |
 
-#### Database 配置
+#### Database 閰嶇疆
 
-| 参数 | 说明 | 可选值 |
+| 鍙傛暟 | 璇存槑 | 鍙€夊€?|
 |------|------|--------|
-| `vector_store.provider` | 存储后端类型 | `oceanbase`(推荐), `seekdb`(推荐), `postgres`, `sqlite`(轻量) |
-| `vector_store.config` | 数据库连接配置 | 根据 provider 设置 |
+| `vector_store.provider` | 瀛樺偍鍚庣绫诲瀷 | `oceanbase`(鎺ㄨ崘), `seekdb`(鎺ㄨ崘), `postgres`, `sqlite`(杞婚噺) |
+| `vector_store.config` | 鏁版嵁搴撹繛鎺ラ厤缃?| 鏍规嵁 provider 璁剧疆 |
 
-### 记忆模式说明
+### 璁板繂妯″紡璇存槑
 
-PowerMem 支持两种记忆模式：
+PowerMem 鏀寔涓ょ璁板繂妯″紡锛?
 
-| 模式 | 配置 | 功能 | 存储要求 |
+| 妯″紡 | 閰嶇疆 | 鍔熻兘 | 瀛樺偍瑕佹眰 |
 |------|------|------|----------|
-| **普通记忆** | `enable_user_profile: false` | 对话记忆存储与检索 | 支持所有数据库 |
-| **用户画像** | `enable_user_profile: true` | 记忆 + 自动提取用户画像 | oceanbase、seekdb、sqlite |
+| **鏅€氳蹇?* | `enable_user_profile: false` | 瀵硅瘽璁板繂瀛樺偍涓庢绱?| 鏀寔鎵€鏈夋暟鎹簱 |
+| **鐢ㄦ埛鐢诲儚** | `enable_user_profile: true` | 璁板繂 + 鑷姩鎻愬彇鐢ㄦ埛鐢诲儚 | oceanbase銆乻eekdb銆乻qlite |
 
-> 📌 **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
+> 馃搶 **鐗堟湰璇存槑**锛歅owerMem 0.3.0+ 鐗堟湰锛岀敤鎴风敾鍍忓姛鑳芥敮鎸?OceanBase銆丼eekDB銆丼QLite 涓夌瀛樺偍鍚庣銆?
 
-### 使用通义千问（推荐）
+### 浣跨敤閫氫箟鍗冮棶锛堟帹鑽愶級
 
-1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/) 注册账号
-2. 在 [API Key 管理](https://bailian.console.aliyun.com/?apiKey=1#/api-key) 页面获取 API 密钥
-3. 配置如下：
+1. 璁块棶 [闃块噷浜戠櫨鐐煎钩鍙癩(https://bailian.console.aliyun.com/) 娉ㄥ唽璐﹀彿
+2. 鍦?[API Key 绠＄悊](https://bailian.console.aliyun.com/?apiKey=1#/api-key) 椤甸潰鑾峰彇 API 瀵嗛挜
+3. 閰嶇疆濡備笅锛?
 
 ```yaml
 Memory:
@@ -138,13 +138,13 @@ Memory:
       config: {}
 ```
 
-### 使用智谱免费 LLM（完全免费方案）
+### 浣跨敤鏅鸿氨鍏嶈垂 LLM锛堝畬鍏ㄥ厤璐规柟妗堬級
 
-智谱提供免费的 glm-4-flash 模型，配合 SQLite 可实现完全免费使用：
+鏅鸿氨鎻愪緵鍏嶈垂鐨?glm-4-flash 妯″瀷锛岄厤鍚?SQLite 鍙疄鐜板畬鍏ㄥ厤璐逛娇鐢細
 
-1. 访问 [智谱AI开放平台](https://bigmodel.cn/) 注册账号
-2. 在 [API Keys](https://bigmodel.cn/usercenter/proj-mgmt/apikeys) 页面获取 API 密钥
-3. 配置如下：
+1. 璁块棶 [鏅鸿氨AI寮€鏀惧钩鍙癩(https://bigmodel.cn/) 娉ㄥ唽璐﹀彿
+2. 鍦?[API Keys](https://bigmodel.cn/usercenter/proj-mgmt/apikeys) 椤甸潰鑾峰彇 API 瀵嗛挜
+3. 閰嶇疆濡備笅锛?
 
 ```yaml
 Memory:
@@ -152,7 +152,7 @@ Memory:
     type: powermem
     enable_user_profile: true
     llm:
-      provider: openai  # 使用 openai 兼容模式
+      provider: openai  # 浣跨敤 openai 鍏煎妯″紡
       config:
         api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
         model: glm-4-flash
@@ -168,7 +168,7 @@ Memory:
       config: {}
 ```
 
-### 使用 OpenAI
+### 浣跨敤 OpenAI
 
 ```yaml
 Memory:
@@ -192,14 +192,14 @@ Memory:
       config: {}
 ```
 
-### 使用 OceanBase（最佳性能方案）
+### 浣跨敤 OceanBase锛堟渶浣虫€ц兘鏂规锛?
 
-OceanBase 是 PowerMem 的最佳搭档，可实现最大性能释放：
+OceanBase 鏄?PowerMem 鐨勬渶浣虫惌妗ｏ紝鍙疄鐜版渶澶ф€ц兘閲婃斁锛?
 
-1. 部署 OceanBase 数据库（支持开源本地部署或使用云服务）
-   - 开源部署：https://github.com/oceanbase/oceanbase
-   - 云服务：https://www.oceanbase.com/
-2. 配置如下：
+1. 閮ㄧ讲 OceanBase 鏁版嵁搴擄紙鏀寔寮€婧愭湰鍦伴儴缃叉垨浣跨敤浜戞湇鍔★級
+   - 寮€婧愰儴缃诧細https://github.com/oceanbase/oceanbase
+   - 浜戞湇鍔★細https://www.oceanbase.com/
+2. 閰嶇疆濡備笅锛?
 
 ```yaml
 Memory:
@@ -225,33 +225,33 @@ Memory:
         user: root@test
         password: your_password
         db_name: powermem
-        collection_name: memories  # 默认值
-        embedding_model_dims: 1536  # 嵌入向量维度，必需参数
+        collection_name: memories  # 榛樿鍊?
+        embedding_model_dims: 1536  # 宓屽叆鍚戦噺缁村害锛屽繀闇€鍙傛暟
 ```
 
-## 设备记忆隔离
+## 璁惧璁板繂闅旂
 
-PowerMem 会自动使用设备 ID（`device_id`）作为 `user_id` 进行记忆隔离。这意味着：
+PowerMem 浼氳嚜鍔ㄤ娇鐢ㄨ澶?ID锛坄device_id`锛変綔涓?`user_id` 杩涜璁板繂闅旂銆傝繖鎰忓懗鐫€锛?
 
-- 每个设备拥有独立的记忆空间
-- 不同设备之间的记忆完全隔离
-- 同一设备的多次对话可以共享记忆上下文
+- 姣忎釜璁惧鎷ユ湁鐙珛鐨勮蹇嗙┖闂?
+- 涓嶅悓璁惧涔嬮棿鐨勮蹇嗗畬鍏ㄩ殧绂?
+- 鍚屼竴璁惧鐨勫娆″璇濆彲浠ュ叡浜蹇嗕笂涓嬫枃
 
-## 用户画像（UserMemory）
+## 鐢ㄦ埛鐢诲儚锛圲serMemory锛?
 
-PowerMem 提供 `UserMemory` 类，可自动从对话中提取用户画像信息。
+PowerMem 鎻愪緵 `UserMemory` 绫伙紝鍙嚜鍔ㄤ粠瀵硅瘽涓彁鍙栫敤鎴风敾鍍忎俊鎭€?
 
-> 📌 **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
+> 馃搶 **鐗堟湰璇存槑**锛歅owerMem 0.3.0+ 鐗堟湰锛岀敤鎴风敾鍍忓姛鑳芥敮鎸?OceanBase銆丼eekDB銆丼QLite 涓夌瀛樺偍鍚庣銆?
 
-### 启用用户画像
+### 鍚敤鐢ㄦ埛鐢诲儚
 
-在配置中设置 `enable_user_profile: true` 即可启用：
+鍦ㄩ厤缃腑璁剧疆 `enable_user_profile: true` 鍗冲彲鍚敤锛?
 
 ```yaml
 Memory:
   powermem:
     type: powermem
-    enable_user_profile: true  # 启用用户画像
+    enable_user_profile: true  # 鍚敤鐢ㄦ埛鐢诲儚
     llm:
       provider: qwen
       config:
@@ -264,82 +264,84 @@ Memory:
         model: text-embedding-v4
         openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     vector_store:
-      provider: sqlite  # 用户画像支持: oceanbase、seekdb、sqlite
+      provider: sqlite  # 鐢ㄦ埛鐢诲儚鏀寔: oceanbase銆乻eekdb銆乻qlite
       config: {}
 ```
 
-### 用户画像能力
+### 鐢ㄦ埛鐢诲儚鑳藉姏
 
-| 能力 | 说明 |
+| 鑳藉姏 | 璇存槑 |
 |------|------|
-| **信息提取** | 自动从对话中提取姓名、年龄、职业、兴趣等 |
-| **持续更新** | 随着对话进行，不断完善用户画像 |
-| **画像检索** | 将用户画像与记忆搜索结合，提升检索相关性 |
-| **智能遗忘** | 基于艾宾浩斯遗忘曲线，淡化过时信息 |
+| **淇℃伅鎻愬彇** | 鑷姩浠庡璇濅腑鎻愬彇濮撳悕銆佸勾榫勩€佽亴涓氥€佸叴瓒ｇ瓑 |
+| **鎸佺画鏇存柊** | 闅忕潃瀵硅瘽杩涜锛屼笉鏂畬鍠勭敤鎴风敾鍍?|
+| **鐢诲儚妫€绱?* | 灏嗙敤鎴风敾鍍忎笌璁板繂鎼滅储缁撳悎锛屾彁鍗囨绱㈢浉鍏虫€?|
+| **鏅鸿兘閬楀繕** | 鍩轰簬鑹惧娴╂柉閬楀繕鏇茬嚎锛屾贰鍖栬繃鏃朵俊鎭?|
 
-### 工作原理
+### 宸ヤ綔鍘熺悊
 
-启用用户画像后，小智在查询记忆时会自动返回：
-1. **用户画像**：用户的基本信息、兴趣爱好等
-2. **相关记忆**：与当前对话相关的历史记忆
+鍚敤鐢ㄦ埛鐢诲儚鍚庯紝灏忔櫤鍦ㄦ煡璇㈣蹇嗘椂浼氳嚜鍔ㄨ繑鍥烇細
+1. **鐢ㄦ埛鐢诲儚**锛氱敤鎴风殑鍩烘湰淇℃伅銆佸叴瓒ｇ埍濂界瓑
+2. **鐩稿叧璁板繂**锛氫笌褰撳墠瀵硅瘽鐩稿叧鐨勫巻鍙茶蹇?
 
-> ✅ **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
+> 鉁?**鐗堟湰璇存槑**锛歅owerMem 0.3.0+ 鐗堟湰锛岀敤鎴风敾鍍忓姛鑳芥敮鎸?OceanBase銆丼eekDB銆丼QLite 涓夌瀛樺偍鍚庣銆?
 
-## 与其他记忆组件的对比
+## 涓庡叾浠栬蹇嗙粍浠剁殑瀵规瘮
 
-| 特性 | PowerMem | mem0ai | mem_local_short |
+| 鐗规€?| PowerMem | mem0ai | mem_local_short |
 |------|----------|--------|-----------------|
-| 工作方式 | 本地总结 | 云端接口 | 本地总结 |
-| 存储位置 | 本地/云端DB | 云端 | 本地YAML |
-| 费用 | 取决于LLM和DB | 1000次/月免费 | 完全免费 |
-| 智能检索 | ✅ 向量搜索 | ✅ 向量搜索 | ❌ 全量返回 |
-| 用户画像 | ✅ UserMemory | ❌ | ❌ |
-| 智能遗忘 | ✅ 遗忘曲线 | ❌ | ❌ |
-| 私有部署 | ✅ 支持 | ❌ 仅云端 | ✅ 支持 |
-| 数据库支持 | OceanBase(推荐)/SeekDB/PostgreSQL/SQLite | - | YAML 文件 |
+| 宸ヤ綔鏂瑰紡 | 鏈湴鎬荤粨 | 浜戠鎺ュ彛 | 鏈湴鎬荤粨 |
+| 瀛樺偍浣嶇疆 | 鏈湴/浜戠DB | 浜戠 | 鏈湴YAML |
+| 璐圭敤 | 鍙栧喅浜嶭LM鍜孌B | 1000娆?鏈堝厤璐?| 瀹屽叏鍏嶈垂 |
+| 鏅鸿兘妫€绱?| 鉁?鍚戦噺鎼滅储 | 鉁?鍚戦噺鎼滅储 | 鉂?鍏ㄩ噺杩斿洖 |
+| 鐢ㄦ埛鐢诲儚 | 鉁?UserMemory | 鉂?| 鉂?|
+| 鏅鸿兘閬楀繕 | 鉁?閬楀繕鏇茬嚎 | 鉂?| 鉂?|
+| 绉佹湁閮ㄧ讲 | 鉁?鏀寔 | 鉂?浠呬簯绔?| 鉁?鏀寔 |
+| 鏁版嵁搴撴敮鎸?| OceanBase(鎺ㄨ崘)/SeekDB/PostgreSQL/SQLite | - | YAML 鏂囦欢 |
 
-## 常见问题
+## 甯歌闂
 
-### 1. API 密钥错误
+### 1. API 瀵嗛挜閿欒
 
-如果出现 `API key is required` 错误，请检查：
-- `llm_api_key` 和 `embedding_api_key` 是否正确填写
-- API 密钥是否有效
+濡傛灉鍑虹幇 `API key is required` 閿欒锛岃妫€鏌ワ細
+- `llm_api_key` 鍜?`embedding_api_key` 鏄惁姝ｇ‘濉啓
+- API 瀵嗛挜鏄惁鏈夋晥
 
-### 2. 模型不存在
+### 2. 妯″瀷涓嶅瓨鍦?
 
-如果出现模型不存在的错误，请确认：
-- `llm_model` 和 `embedding_model` 名称是否正确
-- 对应的模型服务是否已开通
+濡傛灉鍑虹幇妯″瀷涓嶅瓨鍦ㄧ殑閿欒锛岃纭锛?
+- `llm_model` 鍜?`embedding_model` 鍚嶇О鏄惁姝ｇ‘
+- 瀵瑰簲鐨勬ā鍨嬫湇鍔℃槸鍚﹀凡寮€閫?
 
-### 3. 连接超时
+### 3. 杩炴帴瓒呮椂
 
-如果出现连接超时，可以尝试：
-- 检查网络连接
-- 如果使用代理，配置 `llm_base_url` 和 `embedding_base_url`
+濡傛灉鍑虹幇杩炴帴瓒呮椂锛屽彲浠ュ皾璇曪細
+- 妫€鏌ョ綉缁滆繛鎺?
+- 濡傛灉浣跨敤浠ｇ悊锛岄厤缃?`llm_base_url` 鍜?`embedding_base_url`
 
-## 测试验证
+## 娴嬭瘯楠岃瘉
 
-可以在虚拟环境中测试 PowerMem 是否正常工作：
+鍙互鍦ㄨ櫄鎷熺幆澧冧腑娴嬭瘯 PowerMem 鏄惁姝ｅ父宸ヤ綔锛?
 
 ```bash
-# 激活虚拟环境
+# 婵€娲昏櫄鎷熺幆澧?
 source .venv/bin/activate
 
-# 测试 PowerMem 导入
-python -c "from powermem import AsyncMemory; print('PowerMem 导入成功')"
+# 娴嬭瘯 PowerMem 瀵煎叆
+python -c "from powermem import AsyncMemory; print('PowerMem 瀵煎叆鎴愬姛')"
 
-# 测试 UserMemory 导入（用户画像功能）
-python -c "from powermem import UserMemory; print('UserMemory 导入成功')"
+# 娴嬭瘯 UserMemory 瀵煎叆锛堢敤鎴风敾鍍忓姛鑳斤級
+python -c "from powermem import UserMemory; print('UserMemory 瀵煎叆鎴愬姛')"
 ```
 
-## 更多资源
+## 鏇村璧勬簮
 
-- [PowerMem 官方文档](https://www.powermem.ai/)
-- [PowerMem GitHub 仓库](https://github.com/oceanbase/powermem)
-- [PowerMem 使用示例](https://github.com/oceanbase/powermem/tree/main/examples)
-- [OceanBase 官网](https://www.oceanbase.com/)
+- [PowerMem 瀹樻柟鏂囨。](https://www.powermem.ai/)
+- [PowerMem GitHub 浠撳簱](https://github.com/oceanbase/powermem)
+- [PowerMem 浣跨敤绀轰緥](https://github.com/oceanbase/powermem/tree/main/examples)
+- [OceanBase 瀹樼綉](https://www.oceanbase.com/)
 - [OceanBase GitHub](https://github.com/oceanbase/oceanbase)
-- [SeekDB GitHub](https://github.com/oceanbase/seekdb)（AI原生搜索数据库）
-- [阿里云百炼平台](https://bailian.console.aliyun.com/)
+- [SeekDB GitHub](https://github.com/oceanbase/seekdb)锛圓I鍘熺敓鎼滅储鏁版嵁搴擄級
+- [闃块噷浜戠櫨鐐煎钩鍙癩(https://bailian.console.aliyun.com/)
+
+
 

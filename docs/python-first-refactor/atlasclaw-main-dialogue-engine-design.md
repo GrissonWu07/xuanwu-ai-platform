@@ -1,78 +1,78 @@
-# AtlasClaw 主对话引擎专项设计文档
+﻿# AtlasClaw 涓诲璇濆紩鎿庝笓椤硅璁℃枃妗?
 
-## 1. 文档目的
+## 1. 鏂囨。鐩殑
 
-本文档定义 `xiaozhi-server` 与 `AtlasClaw` 的重构目标架构，并明确本次重构的核心决策：
+鏈枃妗ｅ畾涔?`xiaozhi-server` 涓?`AtlasClaw` 鐨勯噸鏋勭洰鏍囨灦鏋勶紝骞舵槑纭湰娆￠噸鏋勭殑鏍稿績鍐崇瓥锛?
 
-- `AtlasClaw` 成为唯一主对话引擎
-- `xiaozhi-server` 保留为设备接入与执行层
-- 当前本地 `LLM`、`Intent`、`Memory` 不再承担主对话职责
-- 设备本地能力通过运行时 API 暴露给 `AtlasClaw`，由 `AtlasClaw` 统一规划与调度
+- `AtlasClaw` 鎴愪负鍞竴涓诲璇濆紩鎿?
+- `xiaozhi-server` 淇濈暀涓鸿澶囨帴鍏ヤ笌鎵ц灞?
+- 褰撳墠鏈湴 `LLM`銆乣Intent`銆乣Memory` 涓嶅啀鎵挎媴涓诲璇濊亴璐?
+- 璁惧鏈湴鑳藉姏閫氳繃杩愯鏃?API 鏆撮湶缁?`AtlasClaw`锛岀敱 `AtlasClaw` 缁熶竴瑙勫垝涓庤皟搴?
 
-本文档是后续实现、接口联调、模块下线和测试验收的唯一设计依据。
+鏈枃妗ｆ槸鍚庣画瀹炵幇銆佹帴鍙ｈ仈璋冦€佹ā鍧椾笅绾垮拰娴嬭瘯楠屾敹鐨勫敮涓€璁捐渚濇嵁銆?
 
-## 2. 背景与问题
+## 2. 鑳屾櫙涓庨棶棰?
 
-当前项目中，`xiaozhi-server` 同时承担了以下职责：
+褰撳墠椤圭洰涓紝`xiaozhi-server` 鍚屾椂鎵挎媴浜嗕互涓嬭亴璐ｏ細
 
-- 设备 WebSocket 接入
-- 音频输入输出与流控
+- 璁惧 WebSocket 鎺ュ叆
+- 闊抽杈撳叆杈撳嚭涓庢祦鎺?
 - ASR / TTS
-- 本地意图识别
-- 本地 LLM 回复生成
-- 本地工具调度
-- 记忆与上下文处理
+- 鏈湴鎰忓浘璇嗗埆
+- 鏈湴 LLM 鍥炲鐢熸垚
+- 鏈湴宸ュ叿璋冨害
+- 璁板繂涓庝笂涓嬫枃澶勭悊
 
-这种设计的问题是：
+杩欑璁捐鐨勯棶棰樻槸锛?
 
-- 设备接入逻辑与对话智能强耦合，`core/connection.py` 过重
-- 本地 `Intent`、`LLM`、`Memory`、工具执行流程交织，扩展和替换成本高
-- 很难复用 `AtlasClaw` 已具备的会话、Agent、Tool、Skill、Memory 能力
-- 主对话链路无法升级为真正的智能代理模式
+- 璁惧鎺ュ叆閫昏緫涓庡璇濇櫤鑳藉己鑰﹀悎锛宍core/connection.py` 杩囬噸
+- 鏈湴 `Intent`銆乣LLM`銆乣Memory`銆佸伐鍏锋墽琛屾祦绋嬩氦缁囷紝鎵╁睍鍜屾浛鎹㈡垚鏈珮
+- 寰堥毦澶嶇敤 `AtlasClaw` 宸插叿澶囩殑浼氳瘽銆丄gent銆乀ool銆丼kill銆丮emory 鑳藉姏
+- 涓诲璇濋摼璺棤娉曞崌绾т负鐪熸鐨勬櫤鑳戒唬鐞嗘ā寮?
 
-本次重构的目标不是将 `AtlasClaw` 作为普通 LLM 提供方接入，而是将其提升为整个系统的唯一主对话引擎。
+鏈閲嶆瀯鐨勭洰鏍囦笉鏄皢 `AtlasClaw` 浣滀负鏅€?LLM 鎻愪緵鏂规帴鍏ワ紝鑰屾槸灏嗗叾鎻愬崌涓烘暣涓郴缁熺殑鍞竴涓诲璇濆紩鎿庛€?
 
-## 3. 设计目标
+## 3. 璁捐鐩爣
 
-### 3.1 核心目标
+### 3.1 鏍稿績鐩爣
 
-- 设备连接、音频采集、TTS 播放仍由 `xiaozhi-server` 负责
-- 用户文本一旦形成，即由 `AtlasClaw` 负责主对话、任务规划、工具选择和记忆管理
-- 所有复杂语义代理行为统一收敛到 `AtlasClaw`
-- `xiaozhi-server` 只做运行时执行、协议转换和实时控制
+- 璁惧杩炴帴銆侀煶棰戦噰闆嗐€乀TS 鎾斁浠嶇敱 `xiaozhi-server` 璐熻矗
+- 鐢ㄦ埛鏂囨湰涓€鏃﹀舰鎴愶紝鍗崇敱 `AtlasClaw` 璐熻矗涓诲璇濄€佷换鍔¤鍒掋€佸伐鍏烽€夋嫨鍜岃蹇嗙鐞?
+- 鎵€鏈夊鏉傝涔変唬鐞嗚涓虹粺涓€鏀舵暃鍒?`AtlasClaw`
+- `xiaozhi-server` 鍙仛杩愯鏃舵墽琛屻€佸崗璁浆鎹㈠拰瀹炴椂鎺у埗
 
-### 3.2 非目标
+### 3.2 闈炵洰鏍?
 
-- 本阶段不重写 Web 管理台或移动端
-- 本阶段不将 `AtlasClaw` 内嵌到 `xiaozhi-server` 进程内
-- 本阶段不保留“双主引擎”长期并行模式
-- 本阶段不重新设计设备协议
+- 鏈樁娈典笉閲嶅啓 Web 绠＄悊鍙版垨绉诲姩绔?
+- 鏈樁娈典笉灏?`AtlasClaw` 鍐呭祵鍒?`xiaozhi-server` 杩涚▼鍐?
+- 鏈樁娈典笉淇濈暀鈥滃弻涓诲紩鎿庘€濋暱鏈熷苟琛屾ā寮?
+- 鏈樁娈典笉閲嶆柊璁捐璁惧鍗忚
 
-## 4. 总体架构
+## 4. 鎬讳綋鏋舵瀯
 
-### 4.1 重构后的职责边界
+### 4.1 閲嶆瀯鍚庣殑鑱岃矗杈圭晫
 
-`xiaozhi-server` 负责：
+`xiaozhi-server` 璐熻矗锛?
 
-- 设备协议接入
+- 璁惧鍗忚鎺ュ叆
 - WebSocket / HTTP / OTA / MQTT
-- VAD / ASR / TTS / 音频流控
-- 设备连接状态
-- `hello` / `ping` / `abort` / `listen` / `server` 等设备控制消息
-- 设备本地工具执行
-- 为 `AtlasClaw` 提供运行时能力 API
+- VAD / ASR / TTS / 闊抽娴佹帶
+- 璁惧杩炴帴鐘舵€?
+- `hello` / `ping` / `abort` / `listen` / `server` 绛夎澶囨帶鍒舵秷鎭?
+- 璁惧鏈湴宸ュ叿鎵ц
+- 涓?`AtlasClaw` 鎻愪緵杩愯鏃惰兘鍔?API
 
-`AtlasClaw` 负责：
+`AtlasClaw` 璐熻矗锛?
 
-- 主会话管理
-- 主对话生成
-- 意图识别与任务规划
-- Tool / Skill / Provider 调度
-- 记忆与上下文编排
-- 多步代理推理
-- 最终回复流生成
+- 涓讳細璇濈鐞?
+- 涓诲璇濈敓鎴?
+- 鎰忓浘璇嗗埆涓庝换鍔¤鍒?
+- Tool / Skill / Provider 璋冨害
+- 璁板繂涓庝笂涓嬫枃缂栨帓
+- 澶氭浠ｇ悊鎺ㄧ悊
+- 鏈€缁堝洖澶嶆祦鐢熸垚
 
-### 4.2 目标调用链
+### 4.2 鐩爣璋冪敤閾?
 
 ```mermaid
 sequenceDiagram
@@ -91,11 +91,11 @@ sequenceDiagram
     XZ-->>Device: stt / tts / audio packets
 ```
 
-## 5. 当前代码现状与替换点
+## 5. 褰撳墠浠ｇ爜鐜扮姸涓庢浛鎹㈢偣
 
-### 5.1 当前主对话链路
+### 5.1 褰撳墠涓诲璇濋摼璺?
 
-当前 `xiaozhi-server` 的主对话链路主要位于以下文件：
+褰撳墠 `xiaozhi-server` 鐨勪富瀵硅瘽閾捐矾涓昏浣嶄簬浠ヤ笅鏂囦欢锛?
 
 - `main/xiaozhi-server/core/handle/receiveAudioHandle.py`
 - `main/xiaozhi-server/core/handle/intentHandler.py`
@@ -103,105 +103,105 @@ sequenceDiagram
 - `main/xiaozhi-server/core/utils/modules_initialize.py`
 - `main/xiaozhi-server/core/providers/tools/unified_tool_handler.py`
 
-当前流程大致为：
+褰撳墠娴佺▼澶ц嚧涓猴細
 
-1. 设备上传音频
-2. 本地 `VAD` 判断说话状态
-3. 本地 `ASR` 产出文本
-4. `receiveAudioHandle.startToChat()` 启动对话
-5. `intentHandler.handle_user_intent()` 决定是否命中意图与函数调用
-6. 若未命中，则 `conn.chat()` 使用本地 `LLM` 生成回复
-7. 本地工具由 `UnifiedToolHandler` 执行
-8. 本地 `TTS` 转语音返回设备
+1. 璁惧涓婁紶闊抽
+2. 鏈湴 `VAD` 鍒ゆ柇璇磋瘽鐘舵€?
+3. 鏈湴 `ASR` 浜у嚭鏂囨湰
+4. `receiveAudioHandle.startToChat()` 鍚姩瀵硅瘽
+5. `intentHandler.handle_user_intent()` 鍐冲畾鏄惁鍛戒腑鎰忓浘涓庡嚱鏁拌皟鐢?
+6. 鑻ユ湭鍛戒腑锛屽垯 `conn.chat()` 浣跨敤鏈湴 `LLM` 鐢熸垚鍥炲
+7. 鏈湴宸ュ叿鐢?`UnifiedToolHandler` 鎵ц
+8. 鏈湴 `TTS` 杞闊宠繑鍥炶澶?
 
-### 5.2 本次重构后的主替换点
+### 5.2 鏈閲嶆瀯鍚庣殑涓绘浛鎹㈢偣
 
-以下逻辑将从本地主路径中移出：
+浠ヤ笅閫昏緫灏嗕粠鏈湴涓昏矾寰勪腑绉诲嚭锛?
 
-- 主回复生成
-- 主意图识别
-- 主记忆管理
-- 主工具规划
+- 涓诲洖澶嶇敓鎴?
+- 涓绘剰鍥捐瘑鍒?
+- 涓昏蹇嗙鐞?
+- 涓诲伐鍏疯鍒?
 
-以下逻辑保留在本地：
+浠ヤ笅閫昏緫淇濈暀鍦ㄦ湰鍦帮細
 
-- 音频处理
-- 设备状态控制
-- 实时中断
-- TTS 输出
-- 设备本地能力执行
+- 闊抽澶勭悊
+- 璁惧鐘舵€佹帶鍒?
+- 瀹炴椂涓柇
+- TTS 杈撳嚭
+- 璁惧鏈湴鑳藉姏鎵ц
 
-## 6. 关键设计决策
+## 6. 鍏抽敭璁捐鍐崇瓥
 
-### 6.1 AtlasClaw 是唯一主对话引擎
+### 6.1 AtlasClaw 鏄敮涓€涓诲璇濆紩鎿?
 
-默认情况下：
+榛樿鎯呭喌涓嬶細
 
-- 所有用户自然语言输入均发送到 `AtlasClaw`
-- 本地 `Intent` 不参与主决策
-- 本地 `LLM` 不生成主回复
-- 本地 `Memory` 不维护主会话状态
+- 鎵€鏈夌敤鎴疯嚜鐒惰瑷€杈撳叆鍧囧彂閫佸埌 `AtlasClaw`
+- 鏈湴 `Intent` 涓嶅弬涓庝富鍐崇瓥
+- 鏈湴 `LLM` 涓嶇敓鎴愪富鍥炲
+- 鏈湴 `Memory` 涓嶇淮鎶や富浼氳瘽鐘舵€?
 
-本地组件仅保留两种用途：
+鏈湴缁勪欢浠呬繚鐣欎袱绉嶇敤閫旓細
 
-- 设备级即时控制
-- 紧急 fallback
+- 璁惧绾у嵆鏃舵帶鍒?
+- 绱ф€?fallback
 
-### 6.2 `AtlasClaw` 不作为 LLM Provider 集成
+### 6.2 `AtlasClaw` 涓嶄綔涓?LLM Provider 闆嗘垚
 
-本次不将 `AtlasClaw` 塞入 `core/providers/llm/*`。
+鏈涓嶅皢 `AtlasClaw` 濉炲叆 `core/providers/llm/*`銆?
 
-原因：
+鍘熷洜锛?
 
-- `AtlasClaw` 是 Agent 平台，不是单纯模型调用方
-- 它有会话、工具、技能、上下文、SSE 事件流等更高层语义
-- 把它封装成普通 LLM provider 会丢失工具事件、思考阶段、会话控制能力
+- `AtlasClaw` 鏄?Agent 骞冲彴锛屼笉鏄崟绾ā鍨嬭皟鐢ㄦ柟
+- 瀹冩湁浼氳瘽銆佸伐鍏枫€佹妧鑳姐€佷笂涓嬫枃銆丼SE 浜嬩欢娴佺瓑鏇撮珮灞傝涔?
+- 鎶婂畠灏佽鎴愭櫘閫?LLM provider 浼氫涪澶卞伐鍏蜂簨浠躲€佹€濊€冮樁娈点€佷細璇濇帶鍒惰兘鍔?
 
-因此应新增 `DialogueEngine` 抽象，并实现 `AtlasClawDialogueEngine`。
+鍥犳搴旀柊澧?`DialogueEngine` 鎶借薄锛屽苟瀹炵幇 `AtlasClawDialogueEngine`銆?
 
-### 6.3 设备是会话主体
+### 6.3 璁惧鏄細璇濅富浣?
 
-`AtlasClaw` 默认的 `/sessions` 设计偏向“认证用户作为会话主体”，这与设备型场景不完全一致。
+`AtlasClaw` 榛樿鐨?`/sessions` 璁捐鍋忓悜鈥滆璇佺敤鎴蜂綔涓轰細璇濅富浣撯€濓紝杩欎笌璁惧鍨嬪満鏅笉瀹屽叏涓€鑷淬€?
 
-因此本次设计采用：
+鍥犳鏈璁捐閲囩敤锛?
 
-- `xiaozhi-server` 自行构造稳定的 `session_key`
-- 直接调用 `AtlasClaw /agent/run`
-- 不依赖 `AtlasClaw /sessions` 接口来分配会话身份
+- `xiaozhi-server` 鑷鏋勯€犵ǔ瀹氱殑 `session_key`
+- 鐩存帴璋冪敤 `AtlasClaw /agent/run`
+- 涓嶄緷璧?`AtlasClaw /sessions` 鎺ュ彛鏉ュ垎閰嶄細璇濊韩浠?
 
-## 7. 会话与身份模型
+## 7. 浼氳瘽涓庤韩浠芥ā鍨?
 
-### 7.1 会话主体
+### 7.1 浼氳瘽涓讳綋
 
-本设计中会话主体是“设备连接”而不是浏览器用户。
+鏈璁′腑浼氳瘽涓讳綋鏄€滆澶囪繛鎺モ€濊€屼笉鏄祻瑙堝櫒鐢ㄦ埛銆?
 
-定义如下：
+瀹氫箟濡備笅锛?
 
-- `device_id`：设备标识，主会话主体
-- `client_id`：单设备下的连接实例标识
-- `runtime_session_id`：`xiaozhi-server` 本地会话 ID
-- `atlas_session_key`：发给 `AtlasClaw` 的稳定会话键
+- `device_id`锛氳澶囨爣璇嗭紝涓讳細璇濅富浣?
+- `client_id`锛氬崟璁惧涓嬬殑杩炴帴瀹炰緥鏍囪瘑
+- `runtime_session_id`锛歚xiaozhi-server` 鏈湴浼氳瘽 ID
+- `atlas_session_key`锛氬彂缁?`AtlasClaw` 鐨勭ǔ瀹氫細璇濋敭
 
-### 7.2 `atlas_session_key` 规范
+### 7.2 `atlas_session_key` 瑙勮寖
 
-推荐规范如下：
+鎺ㄨ崘瑙勮寖濡備笅锛?
 
-- 单设备单会话：
+- 鍗曡澶囧崟浼氳瘽锛?
   - `agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}`
-- 单设备多并发连接：
+- 鍗曡澶囧骞跺彂杩炴帴锛?
   - `agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}:topic:{client_id}`
 
-规则：
+瑙勫垯锛?
 
-- `agent_id` 固定为 `main`
-- `user_id` 固定映射为 `device-{device_id}`
-- `channel` 固定为 `xiaozhi`
-- `peer_id` 固定为 `device_id`
-- 如需并发隔离，使用 `topic:{client_id}`
+- `agent_id` 鍥哄畾涓?`main`
+- `user_id` 鍥哄畾鏄犲皠涓?`device-{device_id}`
+- `channel` 鍥哄畾涓?`xiaozhi`
+- `peer_id` 鍥哄畾涓?`device_id`
+- 濡傞渶骞跺彂闅旂锛屼娇鐢?`topic:{client_id}`
 
-### 7.3 本地运行时会话注册表
+### 7.3 鏈湴杩愯鏃朵細璇濇敞鍐岃〃
 
-`xiaozhi-server` 需要新增运行时注册表：
+`xiaozhi-server` 闇€瑕佹柊澧炶繍琛屾椂娉ㄥ唽琛細
 
 - `runtime_session_id -> websocket connection`
 - `runtime_session_id -> device_id`
@@ -209,11 +209,11 @@ sequenceDiagram
 - `runtime_session_id -> atlas_session_key`
 - `atlas_session_key -> current runtime session`
 
-建议新增模块：
+寤鸿鏂板妯″潡锛?
 
 - `main/xiaozhi-server/core/runtime/session_registry.py`
 
-建议接口：
+寤鸿鎺ュ彛锛?
 
 ```python
 class RuntimeSessionRegistry:
@@ -223,36 +223,36 @@ class RuntimeSessionRegistry:
     def get_by_atlas_session(self, atlas_session_key: str): ...
 ```
 
-## 8. AtlasClaw 对接接口设计
+## 8. AtlasClaw 瀵规帴鎺ュ彛璁捐
 
-### 8.1 接口选择
+### 8.1 鎺ュ彛閫夋嫨
 
-本设计使用 `AtlasClaw` 现有 API：
+鏈璁′娇鐢?`AtlasClaw` 鐜版湁 API锛?
 
 - `POST /agent/run`
 - `GET /agent/runs/{run_id}/stream`
 - `POST /agent/runs/{run_id}/abort`
 
-不作为主路径使用：
+涓嶄綔涓轰富璺緞浣跨敤锛?
 
 - `POST /sessions`
 - `GET /sessions/{session_key}`
 
-### 8.2 `AgentRunRequest` 扩展
+### 8.2 `AgentRunRequest` 鎵╁睍
 
-当前 `AtlasClaw` 的 `AgentRunRequest` 字段是：
+褰撳墠 `AtlasClaw` 鐨?`AgentRunRequest` 瀛楁鏄細
 
 - `session_key`
 - `message`
 - `model`
 - `timeout_seconds`
 
-本次需要扩展 `context` 字段：
+鏈闇€瑕佹墿灞?`context` 瀛楁锛?
 
 ```json
 {
   "session_key": "agent:main:user:device-esp32-001:xiaozhi:dm:esp32-001",
-  "message": "帮我看一下窗外天气",
+  "message": "甯垜鐪嬩竴涓嬬獥澶栧ぉ姘?,
   "timeout_seconds": 120,
   "context": {
     "device_id": "esp32-001",
@@ -276,23 +276,23 @@ class RuntimeSessionRegistry:
 }
 ```
 
-### 8.3 `context` 字段表
+### 8.3 `context` 瀛楁琛?
 
-| 字段 | 类型 | 必填 | 说明 |
+| 瀛楁 | 绫诲瀷 | 蹇呭～ | 璇存槑 |
 |---|---|---:|---|
-| `device_id` | string | 是 | 设备 ID |
-| `client_id` | string | 否 | 当前连接实例 ID |
-| `runtime_session_id` | string | 是 | `xiaozhi-server` 本地运行时会话 ID |
-| `channel` | string | 是 | 固定为 `xiaozhi` |
-| `bind_status` | string | 是 | `bound` / `pending` / `unknown` |
-| `locale` | string | 否 | 会话语言偏好 |
-| `audio_format` | string | 否 | 设备音频编码 |
-| `capabilities` | object | 是 | 设备能力声明 |
-| `device_metadata` | object | 否 | 固件、型号、采样率等 |
+| `device_id` | string | 鏄?| 璁惧 ID |
+| `client_id` | string | 鍚?| 褰撳墠杩炴帴瀹炰緥 ID |
+| `runtime_session_id` | string | 鏄?| `xiaozhi-server` 鏈湴杩愯鏃朵細璇?ID |
+| `channel` | string | 鏄?| 鍥哄畾涓?`xiaozhi` |
+| `bind_status` | string | 鏄?| `bound` / `pending` / `unknown` |
+| `locale` | string | 鍚?| 浼氳瘽璇█鍋忓ソ |
+| `audio_format` | string | 鍚?| 璁惧闊抽缂栫爜 |
+| `capabilities` | object | 鏄?| 璁惧鑳藉姏澹版槑 |
+| `device_metadata` | object | 鍚?| 鍥轰欢銆佸瀷鍙枫€侀噰鏍风巼绛?|
 
-### 8.4 AtlasClaw SSE 事件语义
+### 8.4 AtlasClaw SSE 浜嬩欢璇箟
 
-保留 `AtlasClaw` 现有 SSE 事件：
+淇濈暀 `AtlasClaw` 鐜版湁 SSE 浜嬩欢锛?
 
 - `lifecycle`
 - `assistant`
@@ -300,55 +300,55 @@ class RuntimeSessionRegistry:
 - `thinking`
 - `error`
 
-其中映射规则如下：
+鍏朵腑鏄犲皠瑙勫垯濡備笅锛?
 
-| AtlasClaw 事件 | xiaozhi-server 行为 |
+| AtlasClaw 浜嬩欢 | xiaozhi-server 琛屼负 |
 |---|---|
-| `lifecycle:start` | 标记远端对话开始 |
-| `thinking:start` | 可选发送“思考中”内部状态，不播报 |
-| `assistant` | 聚合文本片段，转为 TTS 输出 |
-| `tool:start` | 可选记录日志或发送轻量状态 |
-| `tool:end` | 更新内部状态，不直接播报 |
-| `error` | 进入错误回复策略 |
-| `lifecycle:end` | 结束当前对话轮次 |
+| `lifecycle:start` | 鏍囪杩滅瀵硅瘽寮€濮?|
+| `thinking:start` | 鍙€夊彂閫佲€滄€濊€冧腑鈥濆唴閮ㄧ姸鎬侊紝涓嶆挱鎶?|
+| `assistant` | 鑱氬悎鏂囨湰鐗囨锛岃浆涓?TTS 杈撳嚭 |
+| `tool:start` | 鍙€夎褰曟棩蹇楁垨鍙戦€佽交閲忕姸鎬?|
+| `tool:end` | 鏇存柊鍐呴儴鐘舵€侊紝涓嶇洿鎺ユ挱鎶?|
+| `error` | 杩涘叆閿欒鍥炲绛栫暐 |
+| `lifecycle:end` | 缁撴潫褰撳墠瀵硅瘽杞 |
 
-### 8.5 流式输出策略
+### 8.5 娴佸紡杈撳嚭绛栫暐
 
-本地 TTS 仍然维持现有流式输出模型。
+鏈湴 TTS 浠嶇劧缁存寔鐜版湁娴佸紡杈撳嚭妯″瀷銆?
 
-约定：
+绾﹀畾锛?
 
-- `assistant` 事件内容按增量文本处理
-- `xiaozhi-server` 对增量文本做句边界缓冲
-- 每到句子级断点即喂给 TTS
-- `lifecycle:end` 时冲刷剩余文本
+- `assistant` 浜嬩欢鍐呭鎸夊閲忔枃鏈鐞?
+- `xiaozhi-server` 瀵瑰閲忔枃鏈仛鍙ヨ竟鐣岀紦鍐?
+- 姣忓埌鍙ュ瓙绾ф柇鐐瑰嵆鍠傜粰 TTS
+- `lifecycle:end` 鏃跺啿鍒峰墿浣欐枃鏈?
 
-因此需要新增本地组件：
+鍥犳闇€瑕佹柊澧炴湰鍦扮粍浠讹細
 
 - `AtlasClawStreamBridge`
 
-建议位置：
+寤鸿浣嶇疆锛?
 
 - `main/xiaozhi-server/core/providers/agent/atlasclaw_stream_bridge.py`
 
-## 9. xiaozhi-server 运行时 API 设计
+## 9. xiaozhi-server 杩愯鏃?API 璁捐
 
-`AtlasClaw` 作为主引擎后，需要回调设备本地能力。为此 `xiaozhi-server` 必须提供运行时 API。
+`AtlasClaw` 浣滀负涓诲紩鎿庡悗锛岄渶瑕佸洖璋冭澶囨湰鍦拌兘鍔涖€備负姝?`xiaozhi-server` 蹇呴』鎻愪緵杩愯鏃?API銆?
 
-统一前缀：
+缁熶竴鍓嶇紑锛?
 
 - `/runtime/v1`
 
-### 9.1 会话上下文查询
+### 9.1 浼氳瘽涓婁笅鏂囨煡璇?
 
 `GET /runtime/v1/sessions/{runtime_session_id}/context`
 
-用途：
+鐢ㄩ€旓細
 
-- 查询当前设备连接与能力状态
-- 供 `AtlasClaw` Tool / Provider 做决策前读取
+- 鏌ヨ褰撳墠璁惧杩炴帴涓庤兘鍔涚姸鎬?
+- 渚?`AtlasClaw` Tool / Provider 鍋氬喅绛栧墠璇诲彇
 
-响应示例：
+鍝嶅簲绀轰緥锛?
 
 ```json
 {
@@ -371,48 +371,48 @@ class RuntimeSessionRegistry:
 }
 ```
 
-### 9.2 本地工具执行
+### 9.2 鏈湴宸ュ叿鎵ц
 
 `POST /runtime/v1/sessions/{runtime_session_id}/tool-executions`
 
-用途：
+鐢ㄩ€旓細
 
-- `AtlasClaw` 调用设备本地能力
+- `AtlasClaw` 璋冪敤璁惧鏈湴鑳藉姏
 
-请求示例：
+璇锋眰绀轰緥锛?
 
 ```json
 {
   "name": "self_camera_take_photo",
   "arguments": {
-    "question": "描述当前看到的内容"
+    "question": "鎻忚堪褰撳墠鐪嬪埌鐨勫唴瀹?
   },
   "request_id": "toolreq-001"
 }
 ```
 
-响应示例：
+鍝嶅簲绀轰緥锛?
 
 ```json
 {
   "status": "ok",
   "request_id": "toolreq-001",
   "result": {
-    "text": "摄像头看到桌面上有一个白色杯子和一本书",
+    "text": "鎽勫儚澶寸湅鍒版闈笂鏈変竴涓櫧鑹叉澂瀛愬拰涓€鏈功",
     "data": {}
   }
 }
 ```
 
-### 9.3 运行时打断
+### 9.3 杩愯鏃舵墦鏂?
 
 `POST /runtime/v1/sessions/{runtime_session_id}/interrupt`
 
-用途：
+鐢ㄩ€旓細
 
-- `AtlasClaw` 主动要求本地停止当前播报或任务
+- `AtlasClaw` 涓诲姩瑕佹眰鏈湴鍋滄褰撳墠鎾姤鎴栦换鍔?
 
-请求示例：
+璇锋眰绀轰緥锛?
 
 ```json
 {
@@ -420,7 +420,7 @@ class RuntimeSessionRegistry:
 }
 ```
 
-响应示例：
+鍝嶅簲绀轰緥锛?
 
 ```json
 {
@@ -429,43 +429,43 @@ class RuntimeSessionRegistry:
 }
 ```
 
-### 9.4 运行时说话动作
+### 9.4 杩愯鏃惰璇濆姩浣?
 
 `POST /runtime/v1/sessions/{runtime_session_id}/speak`
 
-用途：
+鐢ㄩ€旓細
 
-- `AtlasClaw` 工具链需要设备即时播报时使用
-- 不经过主对话回复通道
+- `AtlasClaw` 宸ュ叿閾鹃渶瑕佽澶囧嵆鏃舵挱鎶ユ椂浣跨敤
+- 涓嶇粡杩囦富瀵硅瘽鍥炲閫氶亾
 
-请求示例：
+璇锋眰绀轰緥锛?
 
 ```json
 {
-  "text": "正在为你拍照，请稍等",
+  "text": "姝ｅ湪涓轰綘鎷嶇収锛岃绋嶇瓑",
   "interrupt_current": false
 }
 ```
 
-### 9.5 运行时认证
+### 9.5 杩愯鏃惰璇?
 
-所有 `/runtime/v1/*` 接口统一采用服务到服务密钥：
+鎵€鏈?`/runtime/v1/*` 鎺ュ彛缁熶竴閲囩敤鏈嶅姟鍒版湇鍔″瘑閽ワ細
 
 - Header: `X-Xiaozhi-Runtime-Secret`
 
-默认策略：
+榛樿绛栫暐锛?
 
-- 密钥从 `xiaozhi-server` 本地配置读取
-- `AtlasClaw` 使用环境变量配置
-- 仅允许内网调用
+- 瀵嗛挜浠?`xiaozhi-server` 鏈湴閰嶇疆璇诲彇
+- `AtlasClaw` 浣跨敤鐜鍙橀噺閰嶇疆
+- 浠呭厑璁稿唴缃戣皟鐢?
 
-## 10. AtlasClaw Provider 设计
+## 10. AtlasClaw Provider 璁捐
 
-### 10.1 新增 `xiaozhi-runtime provider`
+### 10.1 鏂板 `xiaozhi-runtime provider`
 
-该 provider 的职责是将 `AtlasClaw` 内部 Tool 调用桥接到 `xiaozhi-server` 的运行时 API。
+璇?provider 鐨勮亴璐ｆ槸灏?`AtlasClaw` 鍐呴儴 Tool 璋冪敤妗ユ帴鍒?`xiaozhi-server` 鐨勮繍琛屾椂 API銆?
 
-建议能力包括：
+寤鸿鑳藉姏鍖呮嫭锛?
 
 - `get_device_runtime_context`
 - `speak_text`
@@ -473,15 +473,15 @@ class RuntimeSessionRegistry:
 - `execute_device_tool`
 - `get_device_capabilities`
 
-建议目录：
+寤鸿鐩綍锛?
 
 - `C:/Projects/cmps/atlasclaw-providers/providers/xiaozhi-runtime-provider`
 
-如暂不使用独立 provider 仓库，也可以先放在内置 provider 或 skills 目录中。
+濡傛殏涓嶄娇鐢ㄧ嫭绔?provider 浠撳簱锛屼篃鍙互鍏堟斁鍦ㄥ唴缃?provider 鎴?skills 鐩綍涓€?
 
-### 10.2 Tool 清单
+### 10.2 Tool 娓呭崟
 
-建议第一批工具：
+寤鸿绗竴鎵瑰伐鍏凤細
 
 - `xiaozhi_get_runtime_context`
 - `xiaozhi_take_photo`
@@ -490,25 +490,25 @@ class RuntimeSessionRegistry:
 - `xiaozhi_execute_iot_action`
 - `xiaozhi_execute_mcp_tool`
 
-### 10.3 Tool 输入约定
+### 10.3 Tool 杈撳叆绾﹀畾
 
-所有工具都必须支持从 `deps.extra.context` 中读取：
+鎵€鏈夊伐鍏烽兘蹇呴』鏀寔浠?`deps.extra.context` 涓鍙栵細
 
 - `runtime_session_id`
 - `device_id`
 - `client_id`
 - `capabilities`
 
-原则：
+鍘熷垯锛?
 
-- 不要求每次工具调用都重复传 `runtime_session_id`
-- 若显式传参与上下文冲突，以显式传参为准
+- 涓嶈姹傛瘡娆″伐鍏疯皟鐢ㄩ兘閲嶅浼?`runtime_session_id`
+- 鑻ユ樉寮忎紶鍙備笌涓婁笅鏂囧啿绐侊紝浠ユ樉寮忎紶鍙備负鍑?
 
-## 11. xiaozhi-server 内部重构设计
+## 11. xiaozhi-server 鍐呴儴閲嶆瀯璁捐
 
-### 11.1 新增 `DialogueEngine`
+### 11.1 鏂板 `DialogueEngine`
 
-建议新增抽象：
+寤鸿鏂板鎶借薄锛?
 
 ```python
 class DialogueEngine(Protocol):
@@ -516,53 +516,53 @@ class DialogueEngine(Protocol):
     async def abort_turn(self, conn) -> None: ...
 ```
 
-实现：
+瀹炵幇锛?
 
 - `AtlasClawDialogueEngine`
 - `LocalFallbackDialogueEngine`
 
-建议位置：
+寤鸿浣嶇疆锛?
 
 - `main/xiaozhi-server/core/providers/agent/dialogue_engine.py`
 - `main/xiaozhi-server/core/providers/agent/atlasclaw.py`
 - `main/xiaozhi-server/core/providers/agent/local_fallback.py`
 
-### 11.2 `receiveAudioHandle.startToChat()` 调整
+### 11.2 `receiveAudioHandle.startToChat()` 璋冩暣
 
-当前职责：
+褰撳墠鑱岃矗锛?
 
-- 解析文本
-- 本地意图识别
-- 本地聊天
+- 瑙ｆ瀽鏂囨湰
+- 鏈湴鎰忓浘璇嗗埆
+- 鏈湴鑱婂ぉ
 
-调整后职责：
+璋冩暣鍚庤亴璐ｏ細
 
-- 做设备状态检查
+- 鍋氳澶囩姸鎬佹鏌?
 - `send_stt_message()`
-- 调用 `conn.dialogue_engine.run_turn(conn, actual_text)`
+- 璋冪敤 `conn.dialogue_engine.run_turn(conn, actual_text)`
 
-不再直接调用：
+涓嶅啀鐩存帴璋冪敤锛?
 
 - `handle_user_intent()`
 - `conn.chat()`
 
-### 11.3 `intentHandler.py` 调整
+### 11.3 `intentHandler.py` 璋冩暣
 
-本地 `intentHandler.py` 不再是主路径，仅保留：
+鏈湴 `intentHandler.py` 涓嶅啀鏄富璺緞锛屼粎淇濈暀锛?
 
-- 唤醒词命中
-- 退出命令
-- 本地设备级紧急动作
+- 鍞ら啋璇嶅懡涓?
+- 閫€鍑哄懡浠?
+- 鏈湴璁惧绾х揣鎬ュ姩浣?
 
-不再负责：
+涓嶅啀璐熻矗锛?
 
-- 主意图识别
-- 主工具规划
-- 主回复生成
+- 涓绘剰鍥捐瘑鍒?
+- 涓诲伐鍏疯鍒?
+- 涓诲洖澶嶇敓鎴?
 
-### 11.4 `connection.py` 调整
+### 11.4 `connection.py` 璋冩暣
 
-新增字段：
+鏂板瀛楁锛?
 
 - `runtime_session_id`
 - `atlas_session_key`
@@ -570,22 +570,22 @@ class DialogueEngine(Protocol):
 - `atlas_run_id`
 - `atlas_stream_task`
 
-移除主职责：
+绉婚櫎涓昏亴璐ｏ細
 
-- 本地主对话生成
-- 本地主工具编排
-- 本地主记忆驱动
+- 鏈湴涓诲璇濈敓鎴?
+- 鏈湴涓诲伐鍏风紪鎺?
+- 鏈湴涓昏蹇嗛┍鍔?
 
-保留职责：
+淇濈暀鑱岃矗锛?
 
-- 连接生命周期管理
-- 音频流控
-- 本地设备状态
-- 本地工具执行入口
+- 杩炴帴鐢熷懡鍛ㄦ湡绠＄悊
+- 闊抽娴佹帶
+- 鏈湴璁惧鐘舵€?
+- 鏈湴宸ュ叿鎵ц鍏ュ彛
 
-### 11.5 `modules_initialize.py` 调整
+### 11.5 `modules_initialize.py` 璋冩暣
 
-新增 `Agent` 配置块，例如：
+鏂板 `Agent` 閰嶇疆鍧楋紝渚嬪锛?
 
 ```yaml
 Agent:
@@ -598,36 +598,36 @@ selected_module:
   Agent: AtlasClaw
 ```
 
-新的初始化顺序：
+鏂扮殑鍒濆鍖栭『搴忥細
 
-- 必选：`ASR`
-- 必选：`TTS`
-- 必选：`Agent`
-- 可选 fallback：`LLM` / `Intent` / `Memory`
+- 蹇呴€夛細`ASR`
+- 蹇呴€夛細`TTS`
+- 蹇呴€夛細`Agent`
+- 鍙€?fallback锛歚LLM` / `Intent` / `Memory`
 
-### 11.6 `UnifiedToolHandler` 的角色变化
+### 11.6 `UnifiedToolHandler` 鐨勮鑹插彉鍖?
 
-当前 `UnifiedToolHandler` 既是本地工具注册器，也是本地主链路工具执行器。
+褰撳墠 `UnifiedToolHandler` 鏃㈡槸鏈湴宸ュ叿娉ㄥ唽鍣紝涔熸槸鏈湴涓婚摼璺伐鍏锋墽琛屽櫒銆?
 
-重构后变为：
+閲嶆瀯鍚庡彉涓猴細
 
-- 设备本地能力执行器
-- `AtlasClaw` 运行时 API 背后的执行核心
+- 璁惧鏈湴鑳藉姏鎵ц鍣?
+- `AtlasClaw` 杩愯鏃?API 鑳屽悗鐨勬墽琛屾牳蹇?
 
-即：
+鍗筹細
 
-- 不再主要服务本地 `LLM function calling`
-- 转而服务 `AtlasClaw -> runtime API -> UnifiedToolHandler`
+- 涓嶅啀涓昏鏈嶅姟鏈湴 `LLM function calling`
+- 杞€屾湇鍔?`AtlasClaw -> runtime API -> UnifiedToolHandler`
 
-## 12. AtlasClaw 内部改造设计
+## 12. AtlasClaw 鍐呴儴鏀归€犺璁?
 
-### 12.1 `AgentRunRequest` 扩展
+### 12.1 `AgentRunRequest` 鎵╁睍
 
-修改位置：
+淇敼浣嶇疆锛?
 
 - `C:/Projects/cmps/atlasclaw/app/atlasclaw/api/schemas.py`
 
-新增字段：
+鏂板瀛楁锛?
 
 ```python
 class AgentRunRequest(BaseModel):
@@ -638,152 +638,152 @@ class AgentRunRequest(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict)
 ```
 
-### 12.2 `routes_agent.py` 调整
+### 12.2 `routes_agent.py` 璋冩暣
 
-目标：
+鐩爣锛?
 
-- 接受 `context`
-- 传入 `execute_agent_run(...)`
+- 鎺ュ彈 `context`
+- 浼犲叆 `execute_agent_run(...)`
 
-### 12.3 `run_service.py` 调整
+### 12.3 `run_service.py` 璋冩暣
 
-将 `request.context` 注入：
+灏?`request.context` 娉ㄥ叆锛?
 
 - `build_scoped_deps(..., extra={"context": request.context, "agent_id": target_agent_id})`
 
-这样所有 Skills / Tools 可以从：
+杩欐牱鎵€鏈?Skills / Tools 鍙互浠庯細
 
 - `ctx.deps.extra["context"]`
 
-读取设备上下文。
+璇诲彇璁惧涓婁笅鏂囥€?
 
-### 12.4 Skill / Tool 使用约定
+### 12.4 Skill / Tool 浣跨敤绾﹀畾
 
-所有与设备相关的 AtlasClaw Tool 必须遵循：
+鎵€鏈変笌璁惧鐩稿叧鐨?AtlasClaw Tool 蹇呴』閬靛惊锛?
 
-- 读取 `runtime_session_id`
-- 不直接持有 WebSocket
-- 不直接依赖 `xiaozhi-server` 内部代码
-- 只通过运行时 API 调用设备本地能力
+- 璇诲彇 `runtime_session_id`
+- 涓嶇洿鎺ユ寔鏈?WebSocket
+- 涓嶇洿鎺ヤ緷璧?`xiaozhi-server` 鍐呴儴浠ｇ爜
+- 鍙€氳繃杩愯鏃?API 璋冪敤璁惧鏈湴鑳藉姏
 
-## 13. 失败处理与降级策略
+## 13. 澶辫触澶勭悊涓庨檷绾х瓥鐣?
 
-### 13.1 AtlasClaw 不可达
+### 13.1 AtlasClaw 涓嶅彲杈?
 
-默认策略：
+榛樿绛栫暐锛?
 
-- 首选重试一次
-- 失败后进入本地 fallback 引擎
+- 棣栭€夐噸璇曚竴娆?
+- 澶辫触鍚庤繘鍏ユ湰鍦?fallback 寮曟搸
 
-fallback 范围：
+fallback 鑼冨洿锛?
 
-- 简单闲聊
-- 固定模板回复
-- 基础本地工具
+- 绠€鍗曢棽鑱?
+- 鍥哄畾妯℃澘鍥炲
+- 鍩虹鏈湴宸ュ叿
 
-不保证：
+涓嶄繚璇侊細
 
-- 多步代理任务
-- 长程记忆一致性
+- 澶氭浠ｇ悊浠诲姟
+- 闀跨▼璁板繂涓€鑷存€?
 
-### 13.2 运行时工具调用失败
+### 13.2 杩愯鏃跺伐鍏疯皟鐢ㄥけ璐?
 
-若 `AtlasClaw` 调用 `xiaozhi runtime API` 失败：
+鑻?`AtlasClaw` 璋冪敤 `xiaozhi runtime API` 澶辫触锛?
 
-- 返回结构化错误给 `AtlasClaw`
-- 由 `AtlasClaw` 决定是否改用其他工具或向用户解释失败
+- 杩斿洖缁撴瀯鍖栭敊璇粰 `AtlasClaw`
+- 鐢?`AtlasClaw` 鍐冲畾鏄惁鏀圭敤鍏朵粬宸ュ叿鎴栧悜鐢ㄦ埛瑙ｉ噴澶辫触
 
-### 13.3 设备断线
+### 13.3 璁惧鏂嚎
 
-若设备断线：
+鑻ヨ澶囨柇绾匡細
 
-- 本地 `runtime_session_registry` 立刻失效该 `runtime_session_id`
-- `runtime API` 返回 `410 Gone` 或 `404 Not Found`
-- `AtlasClaw` 收到后停止该类设备动作
+- 鏈湴 `runtime_session_registry` 绔嬪埢澶辨晥璇?`runtime_session_id`
+- `runtime API` 杩斿洖 `410 Gone` 鎴?`404 Not Found`
+- `AtlasClaw` 鏀跺埌鍚庡仠姝㈣绫昏澶囧姩浣?
 
-### 13.4 打断策略
+### 13.4 鎵撴柇绛栫暐
 
-当用户新一轮语音输入开始时：
+褰撶敤鎴锋柊涓€杞闊宠緭鍏ュ紑濮嬫椂锛?
 
-- `xiaozhi-server` 优先本地中断 TTS 播报
-- 如存在在途 `AtlasClaw run_id`，调用 `/agent/runs/{run_id}/abort`
+- `xiaozhi-server` 浼樺厛鏈湴涓柇 TTS 鎾姤
+- 濡傚瓨鍦ㄥ湪閫?`AtlasClaw run_id`锛岃皟鐢?`/agent/runs/{run_id}/abort`
 
-## 14. 安全设计
+## 14. 瀹夊叏璁捐
 
-### 14.1 服务间认证
+### 14.1 鏈嶅姟闂磋璇?
 
-- `AtlasClaw -> xiaozhi-server runtime API` 必须使用服务密钥
-- 密钥不能复用设备 JWT
-- 所有调用记录请求 ID 和 session ID
+- `AtlasClaw -> xiaozhi-server runtime API` 蹇呴』浣跨敤鏈嶅姟瀵嗛挜
+- 瀵嗛挜涓嶈兘澶嶇敤璁惧 JWT
+- 鎵€鏈夎皟鐢ㄨ褰曡姹?ID 鍜?session ID
 
-### 14.2 工具权限边界
+### 14.2 宸ュ叿鏉冮檺杈圭晫
 
-原则：
+鍘熷垯锛?
 
-- `AtlasClaw` 负责决策
-- `xiaozhi-server` 负责执行
-- 真正接触设备硬件、摄像头、IoT、麦克风的权限边界都留在本地
+- `AtlasClaw` 璐熻矗鍐崇瓥
+- `xiaozhi-server` 璐熻矗鎵ц
+- 鐪熸鎺ヨЕ璁惧纭欢銆佹憚鍍忓ご銆両oT銆侀害鍏嬮鐨勬潈闄愯竟鐣岄兘鐣欏湪鏈湴
 
-### 14.3 审计
+### 14.3 瀹¤
 
-需要记录：
+闇€瑕佽褰曪細
 
-- 每次 `/agent/run` 请求
-- 每次运行时工具执行
-- 每次中断与失败
-- 每次 fallback 触发
+- 姣忔 `/agent/run` 璇锋眰
+- 姣忔杩愯鏃跺伐鍏锋墽琛?
+- 姣忔涓柇涓庡け璐?
+- 姣忔 fallback 瑙﹀彂
 
-## 15. 分阶段实施计划
+## 15. 鍒嗛樁娈靛疄鏂借鍒?
 
-### Phase 1: 接口冻结
+### Phase 1: 鎺ュ彛鍐荤粨
 
-- 冻结 `session_key` 规范
-- 冻结 `AgentRunRequest.context`
-- 冻结 runtime API 契约
-- 冻结 `xiaozhi-runtime` tool 清单
+- 鍐荤粨 `session_key` 瑙勮寖
+- 鍐荤粨 `AgentRunRequest.context`
+- 鍐荤粨 runtime API 濂戠害
+- 鍐荤粨 `xiaozhi-runtime` tool 娓呭崟
 
-### Phase 2: AtlasClaw 对接层
+### Phase 2: AtlasClaw 瀵规帴灞?
 
-- 增加 `AtlasClawDialogueEngine`
-- 打通 `/agent/run` 与 SSE stream
-- 打通本地文本到 TTS 的桥接
+- 澧炲姞 `AtlasClawDialogueEngine`
+- 鎵撻€?`/agent/run` 涓?SSE stream
+- 鎵撻€氭湰鍦版枃鏈埌 TTS 鐨勬ˉ鎺?
 
-### Phase 3: 运行时工具桥
+### Phase 3: 杩愯鏃跺伐鍏锋ˉ
 
-- 增加 `runtime/v1` API
-- 将 `UnifiedToolHandler` 放到运行时 API 背后
-- 增加 `xiaozhi-runtime provider`
+- 澧炲姞 `runtime/v1` API
+- 灏?`UnifiedToolHandler` 鏀惧埌杩愯鏃?API 鑳屽悗
+- 澧炲姞 `xiaozhi-runtime provider`
 
-### Phase 4: 主链路切换
+### Phase 4: 涓婚摼璺垏鎹?
 
-- `startToChat()` 改为走 `DialogueEngine`
-- 本地 `Intent/LLM/Memory` 从主链路移除
-- 加入 fallback
+- `startToChat()` 鏀逛负璧?`DialogueEngine`
+- 鏈湴 `Intent/LLM/Memory` 浠庝富閾捐矾绉婚櫎
+- 鍔犲叆 fallback
 
-### Phase 5: 清理与下线
+### Phase 5: 娓呯悊涓庝笅绾?
 
-- 停止依赖本地主意图与本地主聊天逻辑
-- 清理配置中默认的本地 `LLM/Intent/Memory` 主路径
-- 评估并下线非核心模块
+- 鍋滄渚濊禆鏈湴涓绘剰鍥句笌鏈湴涓昏亰澶╅€昏緫
+- 娓呯悊閰嶇疆涓粯璁ょ殑鏈湴 `LLM/Intent/Memory` 涓昏矾寰?
+- 璇勪及骞朵笅绾块潪鏍稿績妯″潡
 
-## 16. 验收标准
+## 16. 楠屾敹鏍囧噯
 
-完成后必须满足以下标准：
+瀹屾垚鍚庡繀椤绘弧瓒充互涓嬫爣鍑嗭細
 
-- 设备端文本输入默认全部进入 `AtlasClaw`
-- 本地不再承担主回复生成
-- `AtlasClaw` 能通过 SSE 持续返回文本流
-- `xiaozhi-server` 能把 `assistant` 事件稳定转换为 TTS 播报
-- `AtlasClaw` 能通过 runtime API 调用设备本地工具
-- 用户打断时能同时中断本地 TTS 和远端 `AtlasClaw run`
-- `AtlasClaw` 不可用时系统能进入明确的 fallback 模式
-- 当前设备协议 `hello` / `ping` / `abort` / `listen` / OTA 不受影响
+- 璁惧绔枃鏈緭鍏ラ粯璁ゅ叏閮ㄨ繘鍏?`AtlasClaw`
+- 鏈湴涓嶅啀鎵挎媴涓诲洖澶嶇敓鎴?
+- `AtlasClaw` 鑳介€氳繃 SSE 鎸佺画杩斿洖鏂囨湰娴?
+- `xiaozhi-server` 鑳芥妸 `assistant` 浜嬩欢绋冲畾杞崲涓?TTS 鎾姤
+- `AtlasClaw` 鑳介€氳繃 runtime API 璋冪敤璁惧鏈湴宸ュ叿
+- 鐢ㄦ埛鎵撴柇鏃惰兘鍚屾椂涓柇鏈湴 TTS 鍜岃繙绔?`AtlasClaw run`
+- `AtlasClaw` 涓嶅彲鐢ㄦ椂绯荤粺鑳借繘鍏ユ槑纭殑 fallback 妯″紡
+- 褰撳墠璁惧鍗忚 `hello` / `ping` / `abort` / `listen` / OTA 涓嶅彈褰卞搷
 
-## 17. 代码改动清单
+## 17. 浠ｇ爜鏀瑰姩娓呭崟
 
 ### 17.1 xiaozhi-server
 
-重点修改：
+閲嶇偣淇敼锛?
 
 - `main/xiaozhi-server/core/handle/receiveAudioHandle.py`
 - `main/xiaozhi-server/core/handle/intentHandler.py`
@@ -791,7 +791,7 @@ fallback 范围：
 - `main/xiaozhi-server/core/utils/modules_initialize.py`
 - `main/xiaozhi-server/core/providers/tools/unified_tool_handler.py`
 
-建议新增：
+寤鸿鏂板锛?
 
 - `main/xiaozhi-server/core/providers/agent/dialogue_engine.py`
 - `main/xiaozhi-server/core/providers/agent/atlasclaw.py`
@@ -802,26 +802,28 @@ fallback 范围：
 
 ### 17.2 AtlasClaw
 
-重点修改：
+閲嶇偣淇敼锛?
 
 - `C:/Projects/cmps/atlasclaw/app/atlasclaw/api/schemas.py`
 - `C:/Projects/cmps/atlasclaw/app/atlasclaw/api/routes_agent.py`
 - `C:/Projects/cmps/atlasclaw/app/atlasclaw/api/services/run_service.py`
 
-建议新增：
+寤鸿鏂板锛?
 
 - `xiaozhi-runtime provider`
 - `xiaozhi-runtime tools`
 
-## 18. 默认实现假设
+## 18. 榛樿瀹炵幇鍋囪
 
-为避免实现期再做产品决策，默认采用以下假设：
+涓洪伩鍏嶅疄鐜版湡鍐嶅仛浜у搧鍐崇瓥锛岄粯璁ら噰鐢ㄤ互涓嬪亣璁撅細
 
-- `AtlasClaw` 为唯一主对话引擎
-- 设备本地对话引擎只作为 fallback
-- `session_key` 由 `xiaozhi-server` 构造
-- `AtlasClaw` 继续保留其现有 SSE 语义，不做协议重写
-- 设备本地能力通过 HTTP runtime API 暴露，不做进程内直连
-- `UnifiedToolHandler` 保留，并转型为本地执行层
-- 所有设备本地高权限动作必须由 `xiaozhi-server` 执行
+- `AtlasClaw` 涓哄敮涓€涓诲璇濆紩鎿?
+- 璁惧鏈湴瀵硅瘽寮曟搸鍙綔涓?fallback
+- `session_key` 鐢?`xiaozhi-server` 鏋勯€?
+- `AtlasClaw` 缁х画淇濈暀鍏剁幇鏈?SSE 璇箟锛屼笉鍋氬崗璁噸鍐?
+- 璁惧鏈湴鑳藉姏閫氳繃 HTTP runtime API 鏆撮湶锛屼笉鍋氳繘绋嬪唴鐩磋繛
+- `UnifiedToolHandler` 淇濈暀锛屽苟杞瀷涓烘湰鍦版墽琛屽眰
+- 鎵€鏈夎澶囨湰鍦伴珮鏉冮檺鍔ㄤ綔蹇呴』鐢?`xiaozhi-server` 鎵ц
+
+
 

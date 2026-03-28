@@ -30,20 +30,20 @@ sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/G
 > 5. 引导配置服务端
 >
 
-执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启device-server](#5.重启device-server)里提到的最重要的3件事情，完成3这三项配置后即可使用。
+执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启xuanwu-device-server](#5.重启xuanwu-device-server)里提到的最重要的3件事情，完成3这三项配置后即可使用。
 
 ### 1.2 手动部署
 
 #### 1.2.1 创建目录
 
-安装完后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`device-server`。
+安装完后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xuanwu-device-server`。
 
-创建好目录后，你需要在`device-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
+创建好目录后，你需要在`xuanwu-device-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
 
 最终目录结构如下所示：
 
 ```
-device-server
+xuanwu-device-server
   ├─ data
   ├─ models
      ├─ SenseVoiceSmall
@@ -66,28 +66,28 @@ device-server
 
 ##### 1.2.3.1 下载 docker-compose_all.yaml
 
-用浏览器打开[这个链接](../main/device-server/docker-compose_all.yml)。
+用浏览器打开[这个链接](../main/xuanwu-device-server/docker-compose_all.yml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`docker-compose_all.yml`文件。 把文件下载到你的
-`device-server`中。
+`xuanwu-device-server`中。
 
-或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/docker-compose_all.yml` 下载。
+或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-server/docker-compose_all.yml` 下载。
 
 下载完后，回到本教程继续往下。
 
 ##### 1.2.3.2 下载 config_from_api.yaml
 
-用浏览器打开[这个链接](../main/device-server/config_from_api.yaml)。
+用浏览器打开[这个链接](../main/xuanwu-device-server/config_from_api.yaml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`config_from_api.yaml`文件。 把文件下载到你的
-`device-server`下面的`data`文件夹中，然后把`config_from_api.yaml`文件重命名为`.config.yaml`。
+`xuanwu-device-server`下面的`data`文件夹中，然后把`config_from_api.yaml`文件重命名为`.config.yaml`。
 
-或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/device-server/config_from_api.yaml` 下载保存。
+或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-server/config_from_api.yaml` 下载保存。
 
-下载完配置文件后，我们确认一下整个`device-server`里面的文件如下所示：
+下载完配置文件后，我们确认一下整个`xuanwu-device-server`里面的文件如下所示：
 
 ```
-device-server
+xuanwu-device-server
   ├─ docker-compose_all.yml
   ├─ data
     ├─ .config.yaml
@@ -103,22 +103,22 @@ device-server
 如果你之前已经成功运行智控台，如果上面保存有你的密钥信息，请先从智控台上拷贝重要数据下来。因为升级过程中，有可能会覆盖原来的数据。
 
 ## 3. 清除历史版本镜像和容器
-接下来打开命令行工具，使用`终端`或`命令行`工具 进入到你的`device-server`，执行以下命令
+接下来打开命令行工具，使用`终端`或`命令行`工具 进入到你的`xuanwu-device-server`，执行以下命令
 
 ```
 docker compose -f docker-compose_all.yml down
 
-docker stop device-server
-docker rm device-server
+docker stop xuanwu-device-server
+docker rm xuanwu-device-server
 
-docker stop device-server-web
-docker rm device-server-web
+docker stop xuanwu-device-server-web
+docker rm xuanwu-device-server-web
 
-docker stop device-server-db
-docker rm device-server-db
+docker stop xuanwu-device-server-db
+docker rm xuanwu-device-server-db
 
-docker stop device-server-redis
-docker rm device-server-redis
+docker stop xuanwu-device-server-redis
+docker rm xuanwu-device-server-redis
 
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
@@ -134,7 +134,7 @@ docker compose -f docker-compose_all.yml up -d
 执行完后，再执行以下命令，查看日志信息。
 
 ```
-docker logs -f device-server-web
+docker logs -f xuanwu-device-server-web
 ```
 
 当你看到输出日志时，说明你的`智控台`启动成功了。
@@ -145,7 +145,7 @@ docker logs -f device-server-web
 http://localhost:8002/xiaozhi/doc.html
 ```
 
-请注意此刻仅是`智控台`能运行，如果8000端口`device-server`报错，先不要理会。
+请注意此刻仅是`智控台`能运行，如果8000端口`xuanwu-device-server`报错，先不要理会。
 
 这时，你需要使用浏览器，打开`智控台`，链接：http://127.0.0.1:8002 ，注册第一个用户。第一个用户即是超级管理员，以后的用户都是普通用户。普通用户只能绑定设备和配置智能体;超级管理员可以进行模型管理、用户管理、参数配置等功能。
 
@@ -157,7 +157,7 @@ http://localhost:8002/xiaozhi/doc.html
 
 `server.secret`需要说明一下，这个`参数值`很重要，作用是让我们的`Server`端连接`manager-api`。`server.secret`是每次从零部署manager模块时，会自动随机生成的密钥。
 
-复制`参数值`后，打开`device-server`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
+复制`参数值`后，打开`xuanwu-device-server`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
 
 ```
 manager-api:
@@ -166,16 +166,16 @@ manager-api:
 ```
 1、把你刚才从`智控台`复制过来的`server.secret`的`参数值`复制到`.config.yaml`文件里的`secret`里。
 
-2、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
+2、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
 
-3、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
+3、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
 
-4、因为你是docker部署，把`url`改成下面的`http://device-server-web:8002/xiaozhi`
+4、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
 
 类似这样的效果
 ```
 manager-api:
-  url: http://device-server-web:8002/xiaozhi
+  url: http://xuanwu-device-server-web:8002/xiaozhi
   secret: 12345678-xxxx-xxxx-xxxx-123456789000
 ```
 
@@ -186,12 +186,12 @@ manager-api:
 使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
 弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
 
-## 5.重启device-server
+## 5.重启xuanwu-device-server
 
 接下来打开命令行工具，使用`终端`或`命令行`工具 输入
 ```
-docker restart device-server
-docker logs -f device-server
+docker restart xuanwu-device-server
+docker logs -f xuanwu-device-server
 ```
 如果你能看到，类似以下日志,则是Server启动成功的标志。
 
@@ -240,7 +240,7 @@ CREATE DATABASE xiaozhi_esp32_server CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 如果还没有MySQL，你可以通过docker安装mysql
 
 ```
-docker run --name device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xiaozhi_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
+docker run --name xuanwu-device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xiaozhi_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
 ```
 
 ## 2.安装redis
@@ -248,7 +248,7 @@ docker run --name device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e
 如果还没有Redis，你可以通过docker安装redis
 
 ```
-docker run --name device-server-redis -d -p 6379:6379 redis
+docker run --name xuanwu-device-server-redis -d -p 6379:6379 redis
 ```
 
 ## 3.运行manager-api程序
@@ -344,9 +344,9 @@ npm run serve
 ![conda_env](./images/conda_env_2.png)
 
 ```
-conda remove -n device-server --all -y
-conda create -n device-server python=3.10 -y
-conda activate device-server
+conda remove -n xuanwu-device-server --all -y
+conda create -n xuanwu-device-server python=3.10 -y
+conda activate xuanwu-device-server
 
 # 添加清华源通道
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
@@ -370,14 +370,14 @@ conda install libiconv -y
 
 打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
 
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`device-server-main`
-你需要把它重命名成`device-server`，在这个文件里，进入到`main`文件夹，再进入到`device-server`，好了请记住这个目录`device-server`。
+点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xuanwu-device-server-main`
+你需要把它重命名成`xuanwu-device-server`，在这个文件里，进入到`main`文件夹，再进入到`xuanwu-device-server`，好了请记住这个目录`xuanwu-device-server`。
 
 ```
 # 继续使用conda环境
-conda activate device-server
-# 进入到你的项目根目录，再进入main/device-server
-cd main/device-server
+conda activate xuanwu-device-server
+# 进入到你的项目根目录，再进入main/xuanwu-device-server
+cd main/xuanwu-device-server
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 pip install -r requirements.txt
 ```
@@ -398,10 +398,10 @@ pip install -r requirements.txt
 
 `server.secret`需要说明一下，这个`参数值`很重要，作用是让我们的`Server`端连接`manager-api`。`server.secret`是每次从零部署manager模块时，会自动随机生成的密钥。
 
-如果你的`device-server`目录没有`data`，你需要创建`data`目录。
-如果你的`data`下面没有`.config.yaml`文件，你可以把`device-server`目录下的`config_from_api.yaml`文件复制到`data`，并重命名为`.config.yaml`
+如果你的`xuanwu-device-server`目录没有`data`，你需要创建`data`目录。
+如果你的`data`下面没有`.config.yaml`文件，你可以把`xuanwu-device-server`目录下的`config_from_api.yaml`文件复制到`data`，并重命名为`.config.yaml`
 
-复制`参数值`后，打开`device-server`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
+复制`参数值`后，打开`xuanwu-device-server`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
 
 ```
 manager-api:
@@ -421,8 +421,8 @@ manager-api:
 ## 5.运行项目
 
 ```
-# 确保在device-server目录下执行
-conda activate device-server
+# 确保在xuanwu-device-server目录下执行
+conda activate xuanwu-device-server
 python app.py
 ```
 
@@ -463,12 +463,12 @@ ws://你电脑局域网的ip:8000/xiaozhi/v1/
 # 常见问题
 以下是一些常见问题，供参考：
 
-1、[为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)<br/>
+1、[为什么我说的话，玄武AI识别出来很多韩文、日文、英文](./FAQ.md)<br/>
 2、[为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)<br/>
 3、[TTS 经常失败，经常超时](./FAQ.md)<br/>
 4、[使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)<br/>
-5、[如何提高小智对话响应速度？](./FAQ.md)<br/>
-6、[我说话很慢，停顿时小智老是抢话](./FAQ.md)<br/>
+5、[如何提高玄武AI对话响应速度？](./FAQ.md)<br/>
+6、[我说话很慢，停顿时玄武AI老是抢话](./FAQ.md)<br/>
 ## 部署相关教程
 1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
 2、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
@@ -490,3 +490,5 @@ ws://你电脑局域网的ip:8000/xiaozhi/v1/
 ## 性能测试教程
 1、[各组件速度测试指南](./performance_tester.md)<br/>
 2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>
+
+

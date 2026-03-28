@@ -2,7 +2,7 @@
 
 ## 目标
 
-在不影响 `AtlasClaw -> xiaozhi-server -> device` 主对话链路的前提下，让 `manager-api`、`manager-web`、`manager-mobile` 退出运行依赖。
+在不影响 `AtlasClaw -> xiaozhi-server -> device` 主对话链路的前提下，让 `manager-api`、`manager-web` 退出运行依赖，同时移除已下线的移动管理端残留。
 
 ## 当前状态
 
@@ -56,7 +56,7 @@
    - Vision
    - Runtime API
    - Control-plane API
-4. 关闭 `manager-web`、`manager-mobile`。
+4. 关闭 `manager-web`。
 5. 将 `manager-api` 切到只读或直接停用。
 
 ## 导入 Bundle 约定
@@ -88,4 +88,6 @@ python main/xiaozhi-server/scripts/import_control_plane_bundle.py `
 
 - 关闭 `manager-api` 后，设备仍可完成最小对话闭环。
 - `control-plane/v1/runtime/device-config:resolve` 可以独立给出设备运行时配置。
-- `manager-web`、`manager-mobile` 不再参与任何主对话路径。
+- `manager-web` 不再参与任何主对话路径。
+
+

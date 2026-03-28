@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'main/device-server/requirements.txt'
+      - 'main/xuanwu-device-server/requirements.txt'
       - 'Dockerfile-server-base'
       - '.github/workflows/build-base-image.yml'
 
@@ -47,3 +47,5 @@ jobs:
         run: |
           echo "✅ Base image built and pushed successfully!"
           echo "📦 Tag: ghcr.io/${{ github.repository }}:server-base"
+
+

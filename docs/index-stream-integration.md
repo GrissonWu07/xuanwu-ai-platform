@@ -1,83 +1,83 @@
-# IndexStreamTTS 使用指南
+﻿# IndexStreamTTS 浣跨敤鎸囧崡
 
-## 环境准备
-### 1. 克隆项目 
+## 鐜鍑嗗
+### 1. 鍏嬮殕椤圭洰 
 ```bash 
 git clone https://github.com/Ksuriuri/index-tts-vllm.git
 ```
-进入解压后的目录
+杩涘叆瑙ｅ帇鍚庣殑鐩綍
 ```bash
 cd index-tts-vllm
 ```
-切换到指定版本 (使用VLLM-0.10.2的历史版本)
+鍒囨崲鍒版寚瀹氱増鏈?(浣跨敤VLLM-0.10.2鐨勫巻鍙茬増鏈?
 ```bash
 git checkout 224e8d5e5c8f66801845c66b30fa765328fd0be3
 ```
 
-### 2. 创建并激活 conda 环境
+### 2. 鍒涘缓骞舵縺娲?conda 鐜
 ```bash 
 conda create -n index-tts-vllm python=3.12
 conda activate index-tts-vllm
 ```
 
-### 3. 安装PyTorch 需要版本为2.8.0（最新版）
-#### 查看显卡最高支持的版本和实际安装的版本
+### 3. 瀹夎PyTorch 闇€瑕佺増鏈负2.8.0锛堟渶鏂扮増锛?
+#### 鏌ョ湅鏄惧崱鏈€楂樻敮鎸佺殑鐗堟湰鍜屽疄闄呭畨瑁呯殑鐗堟湰
 ```bash
 nvidia-smi
 nvcc --version
 ``` 
-#### 驱动支持的最高 CUDA 版本
+#### 椹卞姩鏀寔鐨勬渶楂?CUDA 鐗堟湰
 ```bash
 CUDA Version: 12.8
 ```
-#### 实际安装的 CUDA 编译器版本
+#### 瀹為檯瀹夎鐨?CUDA 缂栬瘧鍣ㄧ増鏈?
 ```bash
 Cuda compilation tools, release 12.8, V12.8.89
 ```
-#### 那么对应的安装命令（pytorch默认给的是12.8的驱动版本）
+#### 閭ｄ箞瀵瑰簲鐨勫畨瑁呭懡浠わ紙pytorch榛樿缁欑殑鏄?2.8鐨勯┍鍔ㄧ増鏈級
 ```bash
 pip install torch torchvision
 ```
-需要 pytorch 版本 2.8.0（对应 vllm 0.10.2），具体安装指令请参考：[pytorch 官网](https://pytorch.org/get-started/locally/)
+闇€瑕?pytorch 鐗堟湰 2.8.0锛堝搴?vllm 0.10.2锛夛紝鍏蜂綋瀹夎鎸囦护璇峰弬鑰冿細[pytorch 瀹樼綉](https://pytorch.org/get-started/locally/)
 
-### 4. 安装依赖
+### 4. 瀹夎渚濊禆
 ```bash 
 pip install -r requirements.txt
 ```
 
-### 5. 下载模型权重
-### 方案一：下载官方权重文件后转换
-此为官方权重文件，下载到本地任意路径即可，支持 IndexTTS-1.5 的权重  
+### 5. 涓嬭浇妯″瀷鏉冮噸
+### 鏂规涓€锛氫笅杞藉畼鏂规潈閲嶆枃浠跺悗杞崲
+姝や负瀹樻柟鏉冮噸鏂囦欢锛屼笅杞藉埌鏈湴浠绘剰璺緞鍗冲彲锛屾敮鎸?IndexTTS-1.5 鐨勬潈閲? 
 | HuggingFace                                                   | ModelScope                                                          |
 |---------------------------------------------------------------|---------------------------------------------------------------------|
 | [IndexTTS](https://huggingface.co/IndexTeam/Index-TTS)        | [IndexTTS](https://modelscope.cn/models/IndexTeam/Index-TTS)        |
 | [IndexTTS-1.5](https://huggingface.co/IndexTeam/IndexTTS-1.5) | [IndexTTS-1.5](https://modelscope.cn/models/IndexTeam/IndexTTS-1.5) |
 
-下面以ModelScope的安装方法为例  
-#### 请注意：git需要安装并初始化启用lfs（如已安装可以跳过）
+涓嬮潰浠odelScope鐨勫畨瑁呮柟娉曚负渚? 
+#### 璇锋敞鎰忥細git闇€瑕佸畨瑁呭苟鍒濆鍖栧惎鐢╨fs锛堝宸插畨瑁呭彲浠ヨ烦杩囷級
 ```bash
 sudo apt-get install git-lfs
 git lfs install
 ```
-创建模型目录，并拉取模型
+鍒涘缓妯″瀷鐩綍锛屽苟鎷夊彇妯″瀷
 ```bash 
 mkdir model_dir
 cd model_dir
 git clone https://www.modelscope.cn/IndexTeam/IndexTTS-1.5.git
 ```
 
-#### 模型权重转换
+#### 妯″瀷鏉冮噸杞崲
 ```bash 
 bash convert_hf_format.sh /path/to/your/model_dir
 ```
-例如：你下载的IndexTTS-1.5模型存放在model_dir目录下，则执行以下命令
+渚嬪锛氫綘涓嬭浇鐨処ndexTTS-1.5妯″瀷瀛樻斁鍦╩odel_dir鐩綍涓嬶紝鍒欐墽琛屼互涓嬪懡浠?
 ```bash
 bash convert_hf_format.sh model_dir/IndexTTS-1.5
 ```
-此操作会将官方的模型权重转换为 transformers 库兼容的版本，保存在模型权重路径下的 vllm 文件夹中，方便后续 vllm 库加载模型权重
+姝ゆ搷浣滀細灏嗗畼鏂圭殑妯″瀷鏉冮噸杞崲涓?transformers 搴撳吋瀹圭殑鐗堟湰锛屼繚瀛樺湪妯″瀷鏉冮噸璺緞涓嬬殑 vllm 鏂囦欢澶逛腑锛屾柟渚垮悗缁?vllm 搴撳姞杞芥ā鍨嬫潈閲?
 
-### 6. 更改接口适配一下项目
-接口返回数据与项目不适配需要调整一下，使其直接返回音频数据
+### 6. 鏇存敼鎺ュ彛閫傞厤涓€涓嬮」鐩?
+鎺ュ彛杩斿洖鏁版嵁涓庨」鐩笉閫傞厤闇€瑕佽皟鏁翠竴涓嬶紝浣垮叾鐩存帴杩斿洖闊抽鏁版嵁
 ```bash
 vi api_server.py
 ```
@@ -109,87 +109,88 @@ async def tts_api(request: Request):
         )
 ```
 
-### 7.编写sh启动脚本（请注意要在相应的conda环境下运行）
+### 7.缂栧啓sh鍚姩鑴氭湰锛堣娉ㄦ剰瑕佸湪鐩稿簲鐨刢onda鐜涓嬭繍琛岋級
 ```bash 
 vi start_api.sh
 ```
-### 将下面内容粘贴进去并按:输入wq保存  
-#### 脚本中的/home/system/index-tts-vllm/model_dir/IndexTTS-1.5 请自行修改为实际路径
+### 灏嗕笅闈㈠唴瀹圭矘璐磋繘鍘诲苟鎸?杈撳叆wq淇濆瓨  
+#### 鑴氭湰涓殑/home/system/index-tts-vllm/model_dir/IndexTTS-1.5 璇疯嚜琛屼慨鏀逛负瀹為檯璺緞
 ```bash
-# 激活conda环境
+# 婵€娲籧onda鐜
 conda activate index-tts-vllm 
-echo "激活项目conda环境"
+echo "婵€娲婚」鐩甤onda鐜"
 sleep 2
-# 查找占用11996端口的进程号
+# 鏌ユ壘鍗犵敤11996绔彛鐨勮繘绋嬪彿
 PID_VLLM=$(sudo netstat -tulnp | grep 11996 | awk '{print $7}' | cut -d'/' -f1)
 
-# 检查是否找到进程号
+# 妫€鏌ユ槸鍚︽壘鍒拌繘绋嬪彿
 if [ -z "$PID_VLLM" ]; then
-  echo "没有找到占用11996端口的进程"
+  echo "娌℃湁鎵惧埌鍗犵敤11996绔彛鐨勮繘绋?
 else
-  echo "找到占用11996端口的进程，进程号为: $PID_VLLM"
-  # 先尝试普通kill，等待2秒
+  echo "鎵惧埌鍗犵敤11996绔彛鐨勮繘绋嬶紝杩涚▼鍙蜂负: $PID_VLLM"
+  # 鍏堝皾璇曟櫘閫歬ill锛岀瓑寰?绉?
   kill $PID_VLLM
   sleep 2
-  # 检查进程是否还在
+  # 妫€鏌ヨ繘绋嬫槸鍚﹁繕鍦?
   if ps -p $PID_VLLM > /dev/null; then
-    echo "进程仍在运行，强制终止..."
+    echo "杩涚▼浠嶅湪杩愯锛屽己鍒剁粓姝?.."
     kill -9 $PID_VLLM
   fi
-  echo "已终止进程 $PID_VLLM"
+  echo "宸茬粓姝㈣繘绋?$PID_VLLM"
 fi
 
-# 查找占用VLLM::EngineCore进程
+# 鏌ユ壘鍗犵敤VLLM::EngineCore杩涚▼
 GPU_PIDS=$(ps aux | grep -E "VLLM|EngineCore" | grep -v grep | awk '{print $2}')
 
-# 检查是否找到进程号
+# 妫€鏌ユ槸鍚︽壘鍒拌繘绋嬪彿
 if [ -z "$GPU_PIDS" ]; then
-  echo "没有找到VLLM相关进程"
+  echo "娌℃湁鎵惧埌VLLM鐩稿叧杩涚▼"
 else
-  echo "找到VLLM相关进程，进程号为: $GPU_PIDS"
-  # 先尝试普通kill，等待2秒
+  echo "鎵惧埌VLLM鐩稿叧杩涚▼锛岃繘绋嬪彿涓? $GPU_PIDS"
+  # 鍏堝皾璇曟櫘閫歬ill锛岀瓑寰?绉?
   kill $GPU_PIDS
   sleep 2
-  # 检查进程是否还在
+  # 妫€鏌ヨ繘绋嬫槸鍚﹁繕鍦?
   if ps -p $GPU_PIDS > /dev/null; then
-    echo "进程仍在运行，强制终止..."
+    echo "杩涚▼浠嶅湪杩愯锛屽己鍒剁粓姝?.."
     kill -9 $GPU_PIDS
   fi
-  echo "已终止进程 $GPU_PIDS"
+  echo "宸茬粓姝㈣繘绋?$GPU_PIDS"
 fi
 
-# 创建tmp目录（如果不存在）
+# 鍒涘缓tmp鐩綍锛堝鏋滀笉瀛樺湪锛?
 mkdir -p tmp
 
-# 后台运行api_server.py，日志重定向到tmp/server.log
+# 鍚庡彴杩愯api_server.py锛屾棩蹇楅噸瀹氬悜鍒皌mp/server.log
 nohup python api_server.py --model_dir /home/system/index-tts-vllm/model_dir/IndexTTS-1.5 --port 11996 > tmp/server.log 2>&1 &
-echo "api_server.py 已在后台运行，日志请查看 tmp/server.log"
+echo "api_server.py 宸插湪鍚庡彴杩愯锛屾棩蹇楄鏌ョ湅 tmp/server.log"
 ```
-给脚本执行权限并运行脚本
+缁欒剼鏈墽琛屾潈闄愬苟杩愯鑴氭湰
 ```bash 
 chmod +x start_api.sh
 ./start_api.sh
 ```
-日志会在tmp/server.log中输出，可以通过以下命令查看日志情况
+鏃ュ織浼氬湪tmp/server.log涓緭鍑猴紝鍙互閫氳繃浠ヤ笅鍛戒护鏌ョ湅鏃ュ織鎯呭喌
 ```bash
 tail -f tmp/server.log
 ```
-如果显卡内存足够，可在脚本中添加启动参数 ----gpu_memory_utilization 来调整显存占用比例，默认值为 0.25
+濡傛灉鏄惧崱鍐呭瓨瓒冲锛屽彲鍦ㄨ剼鏈腑娣诲姞鍚姩鍙傛暟 ----gpu_memory_utilization 鏉ヨ皟鏁存樉瀛樺崰鐢ㄦ瘮渚嬶紝榛樿鍊间负 0.25
 
-## 音色配置
-index-tts-vllm支持通过配置文件注册自定义音色，支持单音色和混合音色配置。  
-在项目根目录下的assets/speaker.json文件中配置自定义音色
-### 配置格式说明
+## 闊宠壊閰嶇疆
+index-tts-vllm鏀寔閫氳繃閰嶇疆鏂囦欢娉ㄥ唽鑷畾涔夐煶鑹诧紝鏀寔鍗曢煶鑹插拰娣峰悎闊宠壊閰嶇疆銆? 
+鍦ㄩ」鐩牴鐩綍涓嬬殑assets/speaker.json鏂囦欢涓厤缃嚜瀹氫箟闊宠壊
+### 閰嶇疆鏍煎紡璇存槑
 ```bash
 {
-    "说话人名称1": [
-        "音频文件路径1.wav",
-        "音频文件路径2.wav"
+    "璇磋瘽浜哄悕绉?": [
+        "闊抽鏂囦欢璺緞1.wav",
+        "闊抽鏂囦欢璺緞2.wav"
     ],
-    "说话人名称2": [
-        "音频文件路径3.wav"
+    "璇磋瘽浜哄悕绉?": [
+        "闊抽鏂囦欢璺緞3.wav"
     ]
 }
 ```
-### 注意 （配置角色后需重启服务进行音色注册）
-添加后需在智控台中添加相应的说话人（单模块则更换相应的voice）
+### 娉ㄦ剰 锛堥厤缃鑹插悗闇€閲嶅惎鏈嶅姟杩涜闊宠壊娉ㄥ唽锛?
+娣诲姞鍚庨渶鍦ㄦ櫤鎺у彴涓坊鍔犵浉搴旂殑璇磋瘽浜猴紙鍗曟ā鍧楀垯鏇存崲鐩稿簲鐨剉oice锛
+

@@ -22,11 +22,12 @@ ENV LANG=zh_CN.UTF-8 \
     LANGUAGE=zh_CN:zh \
     PYTHONIOENCODING=utf-8
 
-WORKDIR /opt/device-server
+WORKDIR /opt/xuanwu-device-server
 
 # 复制requirements.txt
-COPY main/device-server/requirements.txt .
+COPY main/xuanwu-device-server/requirements.txt .
 
 # 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt --default-timeout=120 --retries 5
+

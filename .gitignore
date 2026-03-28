@@ -6,6 +6,7 @@ __pycache__/
 .vscode
 .claude
 AGENTS.md
+.worktrees/
 
 # C extensions
 *.so
@@ -148,7 +149,7 @@ cython_debug/
 tmp
 .history
 .DS_Store
-main/device-server/data
+main/xuanwu-device-server/data
 
 main/manager-web/node_modules
 .config.yaml
@@ -157,23 +158,23 @@ main/manager-web/node_modules
 .env.development
 
 # model files
-main/device-server/models/SenseVoiceSmall/model.pt
-main/device-server/models/sherpa-onnx*
-/main/device-server/audio_ref/
+main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
+main/xuanwu-device-server/models/sherpa-onnx*
+/main/xuanwu-device-server/audio_ref/
 /audio_ref/
 /asr-models/iic/SenseVoiceSmall/
-/main/device-server/asr-models/iic/SenseVoiceSmall/
+/main/xuanwu-device-server/asr-models/iic/SenseVoiceSmall/
 /models/SenseVoiceSmall/model.pt
 my_wakeup_words.mp3
-!main/device-server/config/assets/bind_code.wav
-!main/device-server/config/assets/wakeup_words.wav
-!main/device-server/config/assets/bind_not_found.wav
-!main/device-server/config/assets/bind_code/*.wav
-!main/device-server/config/assets/max_output_size.wav
+!main/xuanwu-device-server/config/assets/bind_code.wav
+!main/xuanwu-device-server/config/assets/wakeup_words.wav
+!main/xuanwu-device-server/config/assets/bind_not_found.wav
+!main/xuanwu-device-server/config/assets/bind_code/*.wav
+!main/xuanwu-device-server/config/assets/max_output_size.wav
 main/manager-api/.vscode
 # Ignore webpack cache directory
 main/manager-web/.webpack_cache/
-main/device-server/mysql
+main/xuanwu-device-server/mysql
 uploadfile
 *.json
 .vscode
@@ -182,8 +183,5 @@ uploadfile
 !package.json
 !**/package.json
 
-# Do not ignore env and json files inside manager-mobile
-!main/manager-mobile/**/env/
-!main/manager-mobile/**/.env*
-!main/manager-mobile/**/*.json
-!main/device-server/**/*.json
+!main/xuanwu-device-server/**/*.json
+

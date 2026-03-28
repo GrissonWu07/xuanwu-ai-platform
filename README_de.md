@@ -1,6 +1,6 @@
 ﻿[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Xiaozhi Backend-Service device-server</h1>
+<h1 align="center">Xiaozhi Backend-Service xuanwu-device-server</h1>
 
 <p align="center">
 Dieses Projekt basiert auf der Theorie und Technologie der Mensch-Maschine-symbiotischen Intelligenz zur Entwicklung intelligenter Terminal-Hardware- und Software-Systeme<br/>und bietet Backend-Dienste für das Open-Source-Hardware-Projekt
@@ -224,8 +224,8 @@ Dieses Projekt bietet die folgenden Testwerkzeuge, um Ihnen bei der Überprüfun
 
 | Werkzeugname | Standort | Verwendungsmethode | Funktionsbeschreibung |
 |:---:|:---|:---:|:---:|
-| Audio-Interaktionstesttool | main》device-server》test》test_page.html | Direkt mit Google Chrome öffnen | Testet Audio-Wiedergabe- und Empfangsfunktionen, überprüft, ob die Python-seitige Audioverarbeitung normal ist |
-| Modell-Reaktionstesttool | main》device-server》performance_tester.py | Ausführen `python performance_tester.py` | Testet die Reaktionsgeschwindigkeit von ASR (Spracherkennung), LLM (großes Modell), VLLM (Vision-Modell), TTS (Sprachsynthese) drei Kernmodulen |
+| Audio-Interaktionstesttool | main》xuanwu-device-server》test》test_page.html | Direkt mit Google Chrome öffnen | Testet Audio-Wiedergabe- und Empfangsfunktionen, überprüft, ob die Python-seitige Audioverarbeitung normal ist |
+| Modell-Reaktionstesttool | main》xuanwu-device-server》performance_tester.py | Ausführen `python performance_tester.py` | Testet die Reaktionsgeschwindigkeit von ASR (Spracherkennung), LLM (großes Modell), VLLM (Vision-Modell), TTS (Sprachsynthese) drei Kernmodulen |
 
 > 💡 Hinweis: Beim Testen der Modellgeschwindigkeit werden nur Modelle mit konfigurierten Schlüsseln getestet.
 
@@ -374,3 +374,5 @@ Tatsächlich kann jedes VLLM, das OpenAI-Schnittstellenaufrufe unterstützt, int
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
  </picture>
 </a>
+
+

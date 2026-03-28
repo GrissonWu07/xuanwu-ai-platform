@@ -272,4 +272,6 @@ runtime API 统一错误码：
 
 - 本地工具不由 `xiaozhi-server` 自主智能决定
 - 本地工具只能由 `AtlasClaw` 通过 runtime API 调用
-- `manager-web`、`manager-mobile`、`manager-api` 不参与主对话链路
+- `manager-web`、`manager-api` 不参与主对话链路
+
+

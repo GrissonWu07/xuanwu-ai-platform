@@ -4,7 +4,7 @@
 
 本项目的测试平台`https://2662r3426b.vicp.fun`，从开放以来就使用了该方法，效果良好。
 
-教程可参考B站博主`毕乐labs`发布的视频教程：[《开源小智服务器device-server自动更新以及最新版本MCP接入点配置保姆教程》](https://www.bilibili.com/video/BV15H37zHE7Q)
+教程可参考B站博主`毕乐labs`发布的视频教程：[《开源玄武AI服务器xuanwu-device-server自动更新以及最新版本MCP接入点配置保姆教程》](https://www.bilibili.com/video/BV15H37zHE7Q)
 
 # 开始条件
 - 你的电脑/服务器是linux操作系统
@@ -34,19 +34,19 @@ cd /home/system/xiaozhi
 git clone https://ghproxy.net/https://github.com/GrissonWu07/ai-assist-deviceserver.git
 ```
 
-执行完后，你的项目目录会多了一个文件夹`device-server`，这个就是项目的源码
+执行完后，你的项目目录会多了一个文件夹`xuanwu-device-server`，这个就是项目的源码
 
 # 第三步 复制基础的文件
 
-如果你之前已经跑通了整个流程，对funasr的模型文件`device-server/models/SenseVoiceSmall/model.pt`和你的私有配置文件`device-server/data/.config.yaml`这两个文件不会陌生。
+如果你之前已经跑通了整个流程，对funasr的模型文件`xuanwu-device-server/models/SenseVoiceSmall/model.pt`和你的私有配置文件`xuanwu-device-server/data/.config.yaml`这两个文件不会陌生。
 
 此刻你需要把`model.pt`文件复制到新的目录去，你可以这样
 ```
 # 创建需要的目录
-mkdir -p /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/data/
+mkdir -p /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/data/
 
-cp 你原来的.config.yaml完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/data/.config.yaml
-cp 你原来的model.pt完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/models/SenseVoiceSmall/model.pt
+cp 你原来的.config.yaml完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/data/.config.yaml
+cp 你原来的model.pt完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
 ```
 
 # 第四步 建立三个自动编译文件
@@ -135,13 +135,13 @@ else
   kill -9 $PID
   echo "已杀掉进程 $PID"
 fi
-cd main/device-server
+cd main/xuanwu-device-server
 # 初始化conda环境
 source ~/.bashrc
-conda activate device-server
+conda activate xuanwu-device-server
 pip install -r requirements.txt
 nohup python app.py >/dev/null &
-tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/tmp/server.log
+tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
 ```
 
 保存好后执行赋权命令
@@ -167,7 +167,7 @@ cd /home/system/xiaozhi
 # 后期想查看java日志，执行以下命令
 tail -f nohup.out
 # 后期想查看python日志，执行以下命令
-tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/tmp/server.log
+tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
 ```
 
 # 注意事项
@@ -180,3 +180,4 @@ tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/device-server/tmp/serve
 
 ### 2、每次更新需要更新手动SQL语句吗？
 回答：不需要，因为项目使用**Liquibase**管理数据库版本，会自动执行新的sql脚本。
+

@@ -1,62 +1,62 @@
-# esp32固件编译
+﻿# esp32鍥轰欢缂栬瘧
 
-## 第1步 准备你的ota地址
+## 绗?姝?鍑嗗浣犵殑ota鍦板潃
 
-如果你，使用的是本项目0.3.12版本，不管是简单Server部署还是全模块部署，都会有ota地址。
+濡傛灉浣狅紝浣跨敤鐨勬槸鏈」鐩?.3.12鐗堟湰锛屼笉绠℃槸绠€鍗昐erver閮ㄧ讲杩樻槸鍏ㄦā鍧楅儴缃诧紝閮戒細鏈塷ta鍦板潃銆?
 
-由于简单Server部署和全模块部署的OTA地址设置方式不一样，请你选择下面的具体方式：
+鐢变簬绠€鍗昐erver閮ㄧ讲鍜屽叏妯″潡閮ㄧ讲鐨凮TA鍦板潃璁剧疆鏂瑰紡涓嶄竴鏍凤紝璇蜂綘閫夋嫨涓嬮潰鐨勫叿浣撴柟寮忥細
 
-### 如果你用的是简单Server部署
-此刻，请你用浏览器打开你的ota地址，例如我的ota地址
+### 濡傛灉浣犵敤鐨勬槸绠€鍗昐erver閮ㄧ讲
+姝ゅ埢锛岃浣犵敤娴忚鍣ㄦ墦寮€浣犵殑ota鍦板潃锛屼緥濡傛垜鐨刼ta鍦板潃
 ```
 http://192.168.1.25:8003/xiaozhi/ota/
 ```
-如果显示“OTA接口运行正常，向设备发送的websocket地址是：ws://xxx:8000/xiaozhi/v1/
+濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛屽悜璁惧鍙戦€佺殑websocket鍦板潃鏄細ws://xxx:8000/xiaozhi/v1/
 
-你可以使用项目自带的`test_page.html`测试一下，是否能连上ota页面输出的websocket地址。
+浣犲彲浠ヤ娇鐢ㄩ」鐩嚜甯︾殑`test_page.html`娴嬭瘯涓€涓嬶紝鏄惁鑳借繛涓妎ta椤甸潰杈撳嚭鐨剋ebsocket鍦板潃銆?
 
-如果访问不到，你需要到配置文件`.config.yaml`里修改`server.websocket`的地址，重启后再重新测试，直到`test_page.html`能正常访问。
+濡傛灉璁块棶涓嶅埌锛屼綘闇€瑕佸埌閰嶇疆鏂囦欢`.config.yaml`閲屼慨鏀筦server.websocket`鐨勫湴鍧€锛岄噸鍚悗鍐嶉噸鏂版祴璇曪紝鐩村埌`test_page.html`鑳芥甯歌闂€?
 
-成功后，请往下进行第2步
+鎴愬姛鍚庯紝璇峰線涓嬭繘琛岀2姝?
 
-### 如果你用的是全模块部署
-此刻，请你用浏览器打开你的ota地址，例如我的ota地址
+### 濡傛灉浣犵敤鐨勬槸鍏ㄦā鍧楅儴缃?
+姝ゅ埢锛岃浣犵敤娴忚鍣ㄦ墦寮€浣犵殑ota鍦板潃锛屼緥濡傛垜鐨刼ta鍦板潃
 ```
 http://192.168.1.25:8002/xiaozhi/ota/
 ```
 
-如果显示“OTA接口运行正常，websocket集群数量：X”。那就往下进行2步。
+濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛寃ebsocket闆嗙兢鏁伴噺锛歑鈥濄€傞偅灏卞線涓嬭繘琛?姝ャ€?
 
-如果显示“OTA接口运行不正常”，大概是你还没在`智控台`配置`Websocket`地址。那就：
+濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯涓嶆甯糕€濓紝澶ф鏄綘杩樻病鍦╜鏅烘帶鍙癭閰嶇疆`Websocket`鍦板潃銆傞偅灏憋細
 
-- 1、使用超级管理员登录智控台
+- 1銆佷娇鐢ㄨ秴绾х鐞嗗憳鐧诲綍鏅烘帶鍙?
 
-- 2、顶部菜单点击`参数管理`
+- 2銆侀《閮ㄨ彍鍗曠偣鍑籤鍙傛暟绠＄悊`
 
-- 3、在列表中找到`server.websocket`项目，输入你的`Websocket`地址。例如我的就是
+- 3銆佸湪鍒楄〃涓壘鍒癭server.websocket`椤圭洰锛岃緭鍏ヤ綘鐨刞Websocket`鍦板潃銆備緥濡傛垜鐨勫氨鏄?
 
 ```
 ws://192.168.1.25:8000/xiaozhi/v1/
 ```
 
-配置完后，再使用浏览器刷新你的ota接口地址，看看是不是正常了。如果还不正常就，就再次确认一下Websocket是否正常启动，是否配置了Websocket地址。
+閰嶇疆瀹屽悗锛屽啀浣跨敤娴忚鍣ㄥ埛鏂颁綘鐨刼ta鎺ュ彛鍦板潃锛岀湅鐪嬫槸涓嶆槸姝ｅ父浜嗐€傚鏋滆繕涓嶆甯稿氨锛屽氨鍐嶆纭涓€涓媁ebsocket鏄惁姝ｅ父鍚姩锛屾槸鍚﹂厤缃簡Websocket鍦板潃銆?
 
-## 第2步 配置环境
-先按照这个教程配置项目环境[《Windows搭建 ESP IDF 5.3.2开发环境以及编译小智》](https://icnynnzcwou8.feishu.cn/wiki/JEYDwTTALi5s2zkGlFGcDiRknXf)
+## 绗?姝?閰嶇疆鐜
+鍏堟寜鐓ц繖涓暀绋嬮厤缃」鐩幆澧僛銆奧indows鎼缓 ESP IDF 5.3.2寮€鍙戠幆澧冧互鍙婄紪璇戝皬鏅恒€媇(https://icnynnzcwou8.feishu.cn/wiki/JEYDwTTALi5s2zkGlFGcDiRknXf)
 
-## 第3步 打开配置文件
-配置好编译环境后，下载虾哥iaozhi-esp32项目源码，
+## 绗?姝?鎵撳紑閰嶇疆鏂囦欢
+閰嶇疆濂界紪璇戠幆澧冨悗锛屼笅杞借櫨鍝aozhi-esp32椤圭洰婧愮爜锛?
 
-从这里下载虾哥[xiaozhi-esp32项目源码](https://github.com/78/xiaozhi-esp32)。
+浠庤繖閲屼笅杞借櫨鍝xiaozhi-esp32椤圭洰婧愮爜](https://github.com/78/xiaozhi-esp32)銆?
 
-下载后，打开`xiaozhi-esp32/main/Kconfig.projbuild`文件。
+涓嬭浇鍚庯紝鎵撳紑`xiaozhi-esp32/main/Kconfig.projbuild`鏂囦欢銆?
 
-## 第4步 修改OTA地址
+## 绗?姝?淇敼OTA鍦板潃
 
-找到`OTA_URL`的`default`的内容，把`https://api.tenclass.net/xiaozhi/ota/`
-   改成你自己的地址，例如，我的接口地址是`http://192.168.1.25:8002/xiaozhi/ota/`，就把内容改成这个。
+鎵惧埌`OTA_URL`鐨刞default`鐨勫唴瀹癸紝鎶奰https://api.tenclass.net/xiaozhi/ota/`
+   鏀规垚浣犺嚜宸辩殑鍦板潃锛屼緥濡傦紝鎴戠殑鎺ュ彛鍦板潃鏄痐http://192.168.1.25:8002/xiaozhi/ota/`锛屽氨鎶婂唴瀹规敼鎴愯繖涓€?
 
-修改前：
+淇敼鍓嶏細
 ```
 config OTA_URL
     string "Default OTA URL"
@@ -64,7 +64,7 @@ config OTA_URL
     help
         The application will access this URL to check for new firmwares and server address.
 ```
-修改后：
+淇敼鍚庯細
 ```
 config OTA_URL
     string "Default OTA URL"
@@ -73,66 +73,68 @@ config OTA_URL
         The application will access this URL to check for new firmwares and server address.
 ```
 
-## 第4步 设置编译参数
+## 绗?姝?璁剧疆缂栬瘧鍙傛暟
 
-设置编译参数
+璁剧疆缂栬瘧鍙傛暟
 
 ```
-# 终端命令行进入xiaozhi-esp32的根目录
+# 缁堢鍛戒护琛岃繘鍏iaozhi-esp32鐨勬牴鐩綍
 cd xiaozhi-esp32
-# 例如我使用的板子是esp32s3，所以设置编译目标为esp32s3，如果你的板子是其他型号，请替换成对应的型号
+# 渚嬪鎴戜娇鐢ㄧ殑鏉垮瓙鏄痚sp32s3锛屾墍浠ヨ缃紪璇戠洰鏍囦负esp32s3锛屽鏋滀綘鐨勬澘瀛愭槸鍏朵粬鍨嬪彿锛岃鏇挎崲鎴愬搴旂殑鍨嬪彿
 idf.py set-target esp32s3
-# 进入菜单配置
+# 杩涘叆鑿滃崟閰嶇疆
 idf.py menuconfig
 ```
 
-进入菜单配置后，再进入`Xiaozhi Assistant`，将`BOARD_TYPE`设置你板子的具体型号
-保存退出，回到终端命令行。
+杩涘叆鑿滃崟閰嶇疆鍚庯紝鍐嶈繘鍏Xiaozhi Assistant`锛屽皢`BOARD_TYPE`璁剧疆浣犳澘瀛愮殑鍏蜂綋鍨嬪彿
+淇濆瓨閫€鍑猴紝鍥炲埌缁堢鍛戒护琛屻€?
 
-## 第5步 编译固件
+## 绗?姝?缂栬瘧鍥轰欢
 
 ```
 idf.py build
 ```
 
-## 第6步 打包bin固件
+## 绗?姝?鎵撳寘bin鍥轰欢
 
 ```
 cd scripts
 python release.py
 ```
 
-上面的打包命令执行完成后，会在项目根目录下的`build`目录下生成固件文件`merged-binary.bin`。
-这个`merged-binary.bin`就是要烧录到硬件上的固件文件。
+涓婇潰鐨勬墦鍖呭懡浠ゆ墽琛屽畬鎴愬悗锛屼細鍦ㄩ」鐩牴鐩綍涓嬬殑`build`鐩綍涓嬬敓鎴愬浐浠舵枃浠禶merged-binary.bin`銆?
+杩欎釜`merged-binary.bin`灏辨槸瑕佺儳褰曞埌纭欢涓婄殑鍥轰欢鏂囦欢銆?
 
-注意：如果执行到第二命令后，报了“zip”相关的错误，请忽略这个错误，只要`build`目录下生成固件文件`merged-binary.bin`
-，对你没有太大影响，请继续。
+娉ㄦ剰锛氬鏋滄墽琛屽埌绗簩鍛戒护鍚庯紝鎶ヤ簡鈥渮ip鈥濈浉鍏崇殑閿欒锛岃蹇界暐杩欎釜閿欒锛屽彧瑕乣build`鐩綍涓嬬敓鎴愬浐浠舵枃浠禶merged-binary.bin`
+锛屽浣犳病鏈夊お澶у奖鍝嶏紝璇风户缁€?
 
-## 第7步 烧录固件
-   将esp32设备连接电脑，使用chrome浏览器，打开以下网址
+## 绗?姝?鐑у綍鍥轰欢
+   灏唀sp32璁惧杩炴帴鐢佃剳锛屼娇鐢╟hrome娴忚鍣紝鎵撳紑浠ヤ笅缃戝潃
 
 ```
 https://espressif.github.io/esp-launchpad/
 ```
 
-打开这个教程，[Flash工具/Web端烧录固件（无IDF开发环境）](https://ccnphfhqs21z.feishu.cn/wiki/Zpz4wXBtdimBrLk25WdcXzxcnNS)。
-翻到：`方式二：ESP-Launchpad 浏览器WEB端烧录`，从`3. 烧录固件/下载到开发板`开始，按照教程操作。
+鎵撳紑杩欎釜鏁欑▼锛孾Flash宸ュ叿/Web绔儳褰曞浐浠讹紙鏃營DF寮€鍙戠幆澧冿級](https://ccnphfhqs21z.feishu.cn/wiki/Zpz4wXBtdimBrLk25WdcXzxcnNS)銆?
+缈诲埌锛歚鏂瑰紡浜岋細ESP-Launchpad 娴忚鍣╓EB绔儳褰昤锛屼粠`3. 鐑у綍鍥轰欢/涓嬭浇鍒板紑鍙戞澘`寮€濮嬶紝鎸夌収鏁欑▼鎿嶄綔銆?
 
-烧录成功且联网成功后，通过唤醒词唤醒小智，留意server端输出的控制台信息。
+鐑у綍鎴愬姛涓旇仈缃戞垚鍔熷悗锛岄€氳繃鍞ら啋璇嶅敜閱掑皬鏅猴紝鐣欐剰server绔緭鍑虹殑鎺у埗鍙颁俊鎭€?
 
-## 常见问题
-以下是一些常见问题，供参考：
+## 甯歌闂
+浠ヤ笅鏄竴浜涘父瑙侀棶棰橈紝渚涘弬鑰冿細
 
-[1、为什么我说的话，小智识别出来很多韩文、日文、英文](./FAQ.md)
+[1銆佷负浠€涔堟垜璇寸殑璇濓紝灏忔櫤璇嗗埆鍑烘潵寰堝闊╂枃銆佹棩鏂囥€佽嫳鏂嘳(./FAQ.md)
 
-[2、为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)
+[2銆佷负浠€涔堜細鍑虹幇鈥淭TS 浠诲姟鍑洪敊 鏂囦欢涓嶅瓨鍦ㄢ€濓紵](./FAQ.md)
 
-[3、TTS 经常失败，经常超时](./FAQ.md)
+[3銆乀TS 缁忓父澶辫触锛岀粡甯歌秴鏃禲(./FAQ.md)
 
-[4、使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)
+[4銆佷娇鐢╓ifi鑳借繛鎺ヨ嚜寤烘湇鍔″櫒锛屼絾鏄?G妯″紡鍗存帴涓嶄笂](./FAQ.md)
 
-[5、如何提高小智对话响应速度？](./FAQ.md)
+[5銆佸浣曟彁楂樺皬鏅哄璇濆搷搴旈€熷害锛焆(./FAQ.md)
 
-[6、我说话很慢，停顿时小智老是抢话](./FAQ.md)
+[6銆佹垜璇磋瘽寰堟參锛屽仠椤挎椂灏忔櫤鑰佹槸鎶㈣瘽](./FAQ.md)
 
-[7、我想通过小智控制电灯、空调、远程开关机等操作](./FAQ.md)
+[7銆佹垜鎯抽€氳繃灏忔櫤鎺у埗鐢电伅銆佺┖璋冦€佽繙绋嬪紑鍏虫満绛夋搷浣淽(./FAQ.md)
+
+

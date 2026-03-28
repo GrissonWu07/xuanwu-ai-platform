@@ -1,6 +1,7 @@
 ﻿version: 2
 updates:
   - package-ecosystem: pip
-    directory: /main/device-server
+    directory: /main/xuanwu-device-server
     schedule:
       interval: weekly
+

@@ -201,3 +201,5 @@ provider 设计完成的标准是：
 - 能通过统一 client 调用 runtime API
 - 能将设备动作暴露为 `AtlasClaw` 标准工具
 - 与主对话引擎解耦，不直接依赖 `xiaozhi-server` 内部类
+
+

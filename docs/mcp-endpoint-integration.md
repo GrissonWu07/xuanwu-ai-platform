@@ -2,7 +2,7 @@
 
 本教程以虾哥开源的mcp计算器功能为示例，介绍如何将自己自定义的mcp服务接入到自己的接入点里。
 
-本教程的前提是，你的`device-server`已经启用了mcp接入点功能，如果你还没启用，可以先根据[这个教程](./mcp-endpoint-enable.md)启用。
+本教程的前提是，你的`xuanwu-device-server`已经启用了mcp接入点功能，如果你还没启用，可以先根据[这个教程](./mcp-endpoint-enable.md)启用。
 
 # 如何为智能体接入一个简单的mcp功能，如计算器功能
 
@@ -92,3 +92,4 @@ python mcp_pipe.py calculator.py
 250705 -INFO-当前支持的函数列表: [ 'get_time', 'get_lunar', 'play_music', 'get_weather', 'handle_exit_intent', 'calculator']
 ```
 如果包含了 `'calculator'`，说明设备将可以根据意图识别，调用计算器这个工具。
+

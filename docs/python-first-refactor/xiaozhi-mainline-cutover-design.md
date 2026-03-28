@@ -193,3 +193,5 @@ selected_module:
 - `assistant` 文本能稳定转成 TTS 音频
 - 中断能同时中断本地与远端
 - 设备控制消息不受影响
+
+

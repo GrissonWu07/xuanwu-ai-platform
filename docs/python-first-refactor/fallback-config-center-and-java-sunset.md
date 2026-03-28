@@ -121,7 +121,6 @@
 以下模块不参与主对话链路：
 
 - `manager-web`
-- `manager-mobile`
 - `manager-api`
 
 主链路切换完成后，这些模块最多只作为：
@@ -171,7 +170,6 @@
 #### Stage 4: 下线
 
 - 关闭 `manager-web`
-- 关闭 `manager-mobile`
 - 关闭 `manager-api`
 
 ### 4.4 数据迁移建议
@@ -214,11 +212,13 @@
 - `AtlasClaw`：唯一主对话引擎
 - `xiaozhi-server`：设备接入与执行层
 - Python 控制面：配置、设备、agent、model、secret
-- Java / Web / Mobile：完全退出主链路，并最终下线
+- Java / Web：完全退出主链路，并最终下线
 
 ## 7. 验收标准
 
 - `AtlasClaw` 不可用时有明确 fallback
 - `xiaozhi-server` 不再依赖 `manager-api` 获取主链路配置
-- `manager-web`、`manager-mobile`、`manager-api` 不参与主对话路径
+- `manager-web`、`manager-api` 不参与主对话路径
 - Java 可以进入只读过渡再最终下线
+
+
