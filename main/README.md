@@ -2,7 +2,7 @@
 
 > 迁移状态说明（2026-03-28）
 >
-> 当前仓库已经新增 Python 管理宿主 `xuanwu-management-server`，用于逐步替代 legacy `manager-api` / `manager-web`。
+> 当前仓库已经新增 Python 管理宿主 `xuanwu-management-server`，并将其作为默认主管理宿主；legacy `manager-api` / `manager-web` 仅保留兼容过渡用途。
 >
 > 当前约定的 `XuanWu` AI 访问地址为 `http://xuanwu-ai:8000`，并由 `xuanwu-management-server` 统一代理管理域请求。
 

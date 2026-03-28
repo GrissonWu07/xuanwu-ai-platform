@@ -3,6 +3,10 @@
 # 方式一：Docker运行全模块
 `0.8.2`版本开始，本项目发行的docker镜像只支持`x86架构`，如果需要在`arm64架构`的CPU上部署，可按照[这个教程](docker-build.md)在本机编译`arm64的镜像`。
 
+> 当前 Docker 全模块部署里的默认主管理宿主已经是 `xuanwu-management-server`，它会再把智能体配置相关请求转发到 `XuanWu`。
+>
+> `manager-api` / `manager-web` 现在只作为 legacy 兼容模式保留，不再是推荐的新部署主路径。
+
 ## 1. 安装docker
 
 如果您的电脑还没安装docker，可以按照这里的教程安装：[docker安装](https://www.runoob.com/docker/ubuntu-docker-install.html)

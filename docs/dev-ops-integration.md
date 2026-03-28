@@ -4,6 +4,10 @@
 
 本项目的测试平台`https://2662r3426b.vicp.fun`，从开放以来就使用了该方法，效果良好。
 
+> 当前源码部署的默认主路径已经是 `xuanwu-management-server + xuanwu-device-server + XuanWu`。
+>
+> `manager-api` / `manager-web` 在本文档里只作为 legacy 兼容模式说明，不再是推荐的新部署主线。
+
 教程可参考B站博主`毕乐labs`发布的视频教程：[《开源玄武AI服务器xuanwu-device-server自动更新以及最新版本MCP接入点配置保姆教程》](https://www.bilibili.com/video/BV15H37zHE7Q)
 
 # 开始条件

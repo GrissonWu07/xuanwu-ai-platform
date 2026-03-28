@@ -15,6 +15,8 @@ def test_docker_compose_mentions_management_server_and_xuanwu_address():
 
     assert "xuanwu-management-server" in compose_text
     assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in compose_text
+    assert "默认主管理宿主" in compose_text
+    assert "兼容模块" in compose_text
 
 
 def test_management_server_readme_mentions_transition_and_xuanwu_address():
@@ -69,6 +71,23 @@ def test_refactor_doc_mentions_management_server_transition():
     assert "http://xuanwu-ai:8000" in doc_text
 
 
+def test_deployment_doc_prefers_management_server_over_legacy_java_path():
+    root = Path(__file__).resolve().parents[1]
+    doc_text = (root / "docs" / "Deployment_all.md").read_text(encoding="utf-8")
+
+    assert "xuanwu-management-server" in doc_text
+    assert "默认主管理宿主" in doc_text
+    assert "legacy 兼容模式" in doc_text
+
+
+def test_dev_ops_doc_mentions_management_server_as_primary_path():
+    root = Path(__file__).resolve().parents[1]
+    doc_text = (root / "docs" / "dev-ops-integration.md").read_text(encoding="utf-8")
+
+    assert "xuanwu-management-server" in doc_text
+    assert "默认主路径" in doc_text
+
+
 def test_main_readmes_include_management_server_migration_note():
     root = Path(__file__).resolve().parents[1]
     zh_text = (root / "main" / "README.md").read_text(encoding="utf-8")
@@ -76,5 +95,7 @@ def test_main_readmes_include_management_server_migration_note():
 
     assert "xuanwu-management-server" in zh_text
     assert "http://xuanwu-ai:8000" in zh_text
+    assert "默认主管理宿主" in zh_text
     assert "xuanwu-management-server" in en_text
     assert "http://xuanwu-ai:8000" in en_text
+    assert "default primary management host" in en_text

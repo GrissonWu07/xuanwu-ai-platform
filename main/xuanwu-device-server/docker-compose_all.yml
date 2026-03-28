@@ -30,7 +30,7 @@ services:
       # 模型文件挂接，很重要
       - ./models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-server/models/SenseVoiceSmall/model.pt
 
-  # Python 管理宿主，后续逐步替代 legacy manager-api / manager-web
+  # Python 默认主管理宿主，负责当前主路径上的管理与控制面能力
   xuanwu-management-server:
     image: python:3.11-slim
     container_name: xuanwu-management-server
@@ -52,7 +52,7 @@ services:
     volumes:
       - ../xuanwu-management-server:/opt/xuanwu-management-server
 
-  # manager-api和manager-web模块
+  # legacy manager-api 和 manager-web 兼容模块，仅在需要旧 Java 管理链路时启用
   xuanwu-device-server-web:
     image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
     container_name: xuanwu-device-server-web
