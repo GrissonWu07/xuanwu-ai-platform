@@ -17,6 +17,8 @@ def test_docker_compose_mentions_management_server_and_xuanwu_address():
     assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in compose_text
     assert "默认主管理宿主" in compose_text
     assert "兼容模块" in compose_text
+    assert "profiles:" in compose_text
+    assert "legacy-java" in compose_text
 
 
 def test_management_server_readme_mentions_transition_and_xuanwu_address():
@@ -78,6 +80,7 @@ def test_deployment_doc_prefers_management_server_over_legacy_java_path():
     assert "xuanwu-management-server" in doc_text
     assert "默认主管理宿主" in doc_text
     assert "legacy 兼容模式" in doc_text
+    assert "--profile legacy-java" in doc_text
 
 
 def test_dev_ops_doc_mentions_management_server_as_primary_path():

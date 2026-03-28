@@ -6,6 +6,8 @@
 > 当前 Docker 全模块部署里的默认主管理宿主已经是 `xuanwu-management-server`，它会再把智能体配置相关请求转发到 `XuanWu`。
 >
 > `manager-api` / `manager-web` 现在只作为 legacy 兼容模式保留，不再是推荐的新部署主路径。
+>
+> 如果你确实还需要旧 Java 管理链路，请显式使用 `docker compose --profile legacy-java -f docker-compose_all.yml up -d`。
 
 ## 1. 安装docker
 
@@ -133,6 +135,12 @@ docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 
 ```
 docker compose -f docker-compose_all.yml up -d
+```
+
+如果你需要同时启动 legacy `manager-api` / `manager-web` 兼容模块，请改用：
+
+```
+docker compose --profile legacy-java -f docker-compose_all.yml up -d
 ```
 
 执行完后，再执行以下命令，查看日志信息。

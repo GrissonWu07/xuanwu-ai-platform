@@ -6,9 +6,6 @@ services:
   xuanwu-device-server:
     image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
     container_name: xuanwu-device-server
-    depends_on:
-      - xuanwu-device-server-db
-      - xuanwu-device-server-redis
     restart: always
     networks:
       - default
@@ -56,6 +53,8 @@ services:
   xuanwu-device-server-web:
     image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
     container_name: xuanwu-device-server-web
+    profiles:
+      - legacy-java
     restart: always
     networks:
       - default
@@ -82,6 +81,8 @@ services:
   xuanwu-device-server-db:
     image: mysql:latest
     container_name: xuanwu-device-server-db
+    profiles:
+      - legacy-java
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
       timeout: 45s
@@ -102,6 +103,8 @@ services:
   # redis模块
   xuanwu-device-server-redis:
     image: redis:8.0
+    profiles:
+      - legacy-java
     expose:
       - 6379
     container_name: xuanwu-device-server-redis
