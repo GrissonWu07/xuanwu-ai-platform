@@ -185,18 +185,25 @@ def should_use_private_config_resolution(config):
 
 
 def is_manager_api_enabled(config):
-    return bool(config.get("manager-api", {}).get("url"))
+    manager_api_config = config.get("manager-api", {})
+    enabled = manager_api_config.get("enabled", False)
+    if isinstance(enabled, str):
+        enabled = enabled.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(enabled) and bool(manager_api_config.get("url"))
 
 
 def resolve_control_secret(config):
     control_plane_config = config.get("control-plane", {})
     server_config = config.get("server", {})
+    manager_api_secret = ""
+    if is_manager_api_enabled(config):
+        manager_api_secret = config.get("manager-api", {}).get("secret", "")
     return (
         control_plane_config.get("secret")
         or server_config.get("runtime_secret")
         or server_config.get("auth_key")
         or config.get("xuanwu-management-server", {}).get("secret", "")
-        or config.get("manager-api", {}).get("secret", "")
+        or manager_api_secret
     )
 
 

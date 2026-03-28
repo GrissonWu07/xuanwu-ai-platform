@@ -13,6 +13,9 @@ class ManageApiClient:
 
     Preferred runtime configuration flow is:
     xuanwu-device-server -> xuanwu-management-server -> XuanWu
+
+    This client should only be reached when manager-api compatibility
+    mode is explicitly enabled in configuration.
     """
 
     _instance = None

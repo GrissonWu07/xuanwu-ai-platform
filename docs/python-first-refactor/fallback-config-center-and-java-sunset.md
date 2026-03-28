@@ -5,6 +5,8 @@
 > 当前仓库里的 Python 控制面宿主已经明确为 `main/xuanwu-management-server`，不再建议把新的控制面实现继续塞回 `xuanwu-device-server`。
 >
 > 当前 `XuanWu` 服务访问地址先固定为 `http://xuanwu-ai:8000`，由 `xuanwu-management-server` 通过 `/control-plane/v1/xuanwu/*` 代理入口统一转发。
+>
+> 当前 `manager-api` 只保留显式兼容模式：只有 `manager-api.enabled=true` 且 `url` 已配置时，`xuanwu-device-server` 才会回退到 Java 配置源。
 
 ## 1. 目的
 

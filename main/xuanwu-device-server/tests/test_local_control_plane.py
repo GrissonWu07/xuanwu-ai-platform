@@ -462,9 +462,40 @@ class LocalControlPlaneStoreTests(unittest.TestCase):
 
         self.assertEqual("control-secret", resolve_control_secret(config))
 
-    def test_manager_api_helper_only_depends_on_url(self):
-        self.assertTrue(is_manager_api_enabled({"manager-api": {"url": "http://example"}}))
-        self.assertFalse(is_manager_api_enabled({"manager-api": {}}))
+    def test_control_secret_ignores_disabled_manager_api_secret(self):
+        config = {
+            "server": {},
+            "control-plane": {},
+            "manager-api": {
+                "enabled": False,
+                "url": "http://legacy-manager.internal",
+                "secret": "manager-secret",
+            },
+        }
+
+        self.assertEqual("", resolve_control_secret(config))
+
+    def test_manager_api_helper_requires_explicit_enabled_flag(self):
+        self.assertFalse(is_manager_api_enabled({"manager-api": {"url": "http://example"}}))
+        self.assertFalse(
+            is_manager_api_enabled(
+                {
+                    "manager-api": {
+                        "enabled": True,
+                    }
+                }
+            )
+        )
+        self.assertTrue(
+            is_manager_api_enabled(
+                {
+                    "manager-api": {
+                        "enabled": True,
+                        "url": "http://example",
+                    }
+                }
+            )
+        )
 
     def test_xuanwu_management_server_respects_enabled_flag(self):
         self.assertFalse(

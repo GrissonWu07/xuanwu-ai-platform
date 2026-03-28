@@ -52,6 +52,13 @@ xuanwu-management-server:
   secret: xuanwu-management-local-secret
   timeout: 10
 
+# legacy manager-api 兼容配置源。
+# 默认不会启用；只有 enabled=true 且 url 已配置时才会作为兼容回退链路生效。
+manager-api:
+  enabled: false
+  url:
+  secret:
+
 log:
   # 设置控制台输出的日志格式，时间、日志级别、标签、消息
   log_format: "<green>{time:YYMMDD HH:mm:ss}</green>[{version}_{selected_module}][<light-blue>{extra[tag]}</light-blue>]-<level>{level}</level>-<light-green>{message}</light-green>"

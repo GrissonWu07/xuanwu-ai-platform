@@ -38,6 +38,16 @@ def test_device_server_config_mentions_management_server_settings():
     assert "url: http://127.0.0.1:18082" in config_text
 
 
+def test_manager_api_compatibility_template_requires_explicit_enable():
+    root = Path(__file__).resolve().parents[1]
+    template_text = (
+        root / "main" / "xuanwu-device-server" / "config_from_api.yaml"
+    ).read_text(encoding="utf-8")
+
+    assert "enabled: true" in template_text
+    assert "兼容模式" in template_text
+
+
 def test_refactor_doc_mentions_management_server_transition():
     root = Path(__file__).resolve().parents[1]
     doc_text = (

@@ -48,7 +48,7 @@ async def main():
     check_ffmpeg_installed()
     config = load_config()
 
-    # auth_key优先级：配置文件server.auth_key > manager-api.secret > 自动生成
+    # auth_key优先级：配置文件server.auth_key > control-plane/xuanwu-management-server secret > legacy manager-api.secret(仅兼容模式开启时) > 自动生成
     # auth_key用于jwt认证，比如视觉分析接口的jwt认证、ota接口的token生成与websocket认证
     # 获取配置文件中的auth_key
     auth_key = config["server"].get("auth_key", "")
