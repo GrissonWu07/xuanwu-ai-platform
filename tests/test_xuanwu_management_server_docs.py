@@ -25,6 +25,7 @@ def test_management_server_readme_mentions_transition_and_xuanwu_address():
 
     assert "xuanwu-management-server" in readme_text
     assert "http://xuanwu-ai:8000" in readme_text
+    assert "/control-plane/v1/xuanwu/agents/{agent_id}" in readme_text
 
 
 def test_device_server_config_mentions_management_server_settings():
@@ -35,3 +36,27 @@ def test_device_server_config_mentions_management_server_settings():
 
     assert "xuanwu-management-server:" in config_text
     assert "url: http://127.0.0.1:18082" in config_text
+
+
+def test_refactor_doc_mentions_management_server_transition():
+    root = Path(__file__).resolve().parents[1]
+    doc_text = (
+        root
+        / "docs"
+        / "python-first-refactor"
+        / "fallback-config-center-and-java-sunset.md"
+    ).read_text(encoding="utf-8")
+
+    assert "xuanwu-management-server" in doc_text
+    assert "http://xuanwu-ai:8000" in doc_text
+
+
+def test_main_readmes_include_management_server_migration_note():
+    root = Path(__file__).resolve().parents[1]
+    zh_text = (root / "main" / "README.md").read_text(encoding="utf-8")
+    en_text = (root / "main" / "README_en.md").read_text(encoding="utf-8")
+
+    assert "xuanwu-management-server" in zh_text
+    assert "http://xuanwu-ai:8000" in zh_text
+    assert "xuanwu-management-server" in en_text
+    assert "http://xuanwu-ai:8000" in en_text

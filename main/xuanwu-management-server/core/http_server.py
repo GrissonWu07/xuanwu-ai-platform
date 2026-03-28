@@ -59,15 +59,87 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.get(
                 "/control-plane/v1/xuanwu/agents",
-                xuanwu_proxy_handler.handle_agents,
+                xuanwu_proxy_handler.handle_agent_collection,
+            ),
+            web.post(
+                "/control-plane/v1/xuanwu/agents",
+                xuanwu_proxy_handler.handle_agent_collection,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/agents",
+                xuanwu_proxy_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/xuanwu/agents/{agent_id}",
+                xuanwu_proxy_handler.handle_agent_item,
+            ),
+            web.put(
+                "/control-plane/v1/xuanwu/agents/{agent_id}",
+                xuanwu_proxy_handler.handle_agent_item,
+            ),
+            web.delete(
+                "/control-plane/v1/xuanwu/agents/{agent_id}",
+                xuanwu_proxy_handler.handle_agent_item,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/agents/{agent_id}",
+                xuanwu_proxy_handler.handle_options,
             ),
             web.get(
                 "/control-plane/v1/xuanwu/model-providers",
-                xuanwu_proxy_handler.handle_model_providers,
+                xuanwu_proxy_handler.handle_model_provider_collection,
+            ),
+            web.post(
+                "/control-plane/v1/xuanwu/model-providers",
+                xuanwu_proxy_handler.handle_model_provider_collection,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/model-providers",
+                xuanwu_proxy_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/xuanwu/model-providers/{provider_id}",
+                xuanwu_proxy_handler.handle_model_provider_item,
+            ),
+            web.put(
+                "/control-plane/v1/xuanwu/model-providers/{provider_id}",
+                xuanwu_proxy_handler.handle_model_provider_item,
+            ),
+            web.delete(
+                "/control-plane/v1/xuanwu/model-providers/{provider_id}",
+                xuanwu_proxy_handler.handle_model_provider_item,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/model-providers/{provider_id}",
+                xuanwu_proxy_handler.handle_options,
             ),
             web.get(
                 "/control-plane/v1/xuanwu/models",
-                xuanwu_proxy_handler.handle_models,
+                xuanwu_proxy_handler.handle_model_collection,
+            ),
+            web.post(
+                "/control-plane/v1/xuanwu/models",
+                xuanwu_proxy_handler.handle_model_collection,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/models",
+                xuanwu_proxy_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/xuanwu/models/{model_id}",
+                xuanwu_proxy_handler.handle_model_item,
+            ),
+            web.put(
+                "/control-plane/v1/xuanwu/models/{model_id}",
+                xuanwu_proxy_handler.handle_model_item,
+            ),
+            web.delete(
+                "/control-plane/v1/xuanwu/models/{model_id}",
+                xuanwu_proxy_handler.handle_model_item,
+            ),
+            web.options(
+                "/control-plane/v1/xuanwu/models/{model_id}",
+                xuanwu_proxy_handler.handle_options,
             ),
         ]
     )

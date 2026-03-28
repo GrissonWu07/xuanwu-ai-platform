@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from aiohttp import ClientError, ClientSession, ClientTimeout
 
@@ -23,15 +24,65 @@ class XuanWuClient:
         }
 
     async def list_agents(self, request_id: str):
-        return await self._get_json("/xuanwu/v1/admin/agents", request_id)
+        return await self.request_agents("GET", request_id)
 
     async def list_model_providers(self, request_id: str):
-        return await self._get_json("/xuanwu/v1/admin/model-providers", request_id)
+        return await self.request_model_providers("GET", request_id)
 
     async def list_models(self, request_id: str):
-        return await self._get_json("/xuanwu/v1/admin/models", request_id)
+        return await self.request_models("GET", request_id)
 
-    async def _get_json(self, path: str, request_id: str):
+    async def request_agents(
+        self,
+        method: str,
+        request_id: str,
+        *,
+        payload: dict[str, Any] | None = None,
+        agent_id: str | None = None,
+        query: dict[str, str] | None = None,
+    ):
+        path = "/xuanwu/v1/admin/agents"
+        if agent_id:
+            path = f"{path}/{agent_id}"
+        return await self._request_json(method, path, request_id, payload=payload, query=query)
+
+    async def request_model_providers(
+        self,
+        method: str,
+        request_id: str,
+        *,
+        payload: dict[str, Any] | None = None,
+        provider_id: str | None = None,
+        query: dict[str, str] | None = None,
+    ):
+        path = "/xuanwu/v1/admin/model-providers"
+        if provider_id:
+            path = f"{path}/{provider_id}"
+        return await self._request_json(method, path, request_id, payload=payload, query=query)
+
+    async def request_models(
+        self,
+        method: str,
+        request_id: str,
+        *,
+        payload: dict[str, Any] | None = None,
+        model_id: str | None = None,
+        query: dict[str, str] | None = None,
+    ):
+        path = "/xuanwu/v1/admin/models"
+        if model_id:
+            path = f"{path}/{model_id}"
+        return await self._request_json(method, path, request_id, payload=payload, query=query)
+
+    async def _request_json(
+        self,
+        method: str,
+        path: str,
+        request_id: str,
+        *,
+        payload: dict[str, Any] | None = None,
+        query: dict[str, str] | None = None,
+    ):
         if not self.base_url:
             return 503, {
                 "ok": False,
@@ -41,10 +92,15 @@ class XuanWuClient:
         timeout = ClientTimeout(total=self.timeout_seconds)
         try:
             async with ClientSession(timeout=timeout) as session:
-                async with session.get(
+                async with session.request(
+                    method.upper(),
                     f"{self.base_url}{path}",
                     headers=self.build_headers(request_id),
+                    json=payload,
+                    params=query,
                 ) as response:
+                    if response.status == 204:
+                        return 204, {}
                     try:
                         payload = await response.json()
                     except Exception:

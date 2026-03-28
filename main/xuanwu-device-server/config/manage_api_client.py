@@ -9,6 +9,12 @@ TAG = __name__
 
 
 class ManageApiClient:
+    """Legacy Java manager-api compatibility client.
+
+    Preferred runtime configuration flow is:
+    xuanwu-device-server -> xuanwu-management-server -> XuanWu
+    """
+
     _instance = None
     _async_clients = {}  # 为每个事件循环存储独立的客户端
     _secret = None

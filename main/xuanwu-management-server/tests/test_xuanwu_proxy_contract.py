@@ -70,8 +70,11 @@ def test_create_app_registers_xuanwu_proxy_routes():
     )
 
     assert "/control-plane/v1/xuanwu/agents" in registered_paths
+    assert "/control-plane/v1/xuanwu/agents/{agent_id}" in registered_paths
     assert "/control-plane/v1/xuanwu/model-providers" in registered_paths
+    assert "/control-plane/v1/xuanwu/model-providers/{provider_id}" in registered_paths
     assert "/control-plane/v1/xuanwu/models" in registered_paths
+    assert "/control-plane/v1/xuanwu/models/{model_id}" in registered_paths
 
 
 def test_proxy_handler_returns_upstream_agent_payload():
@@ -130,6 +133,94 @@ def test_proxy_handler_preserves_upstream_model_error_status():
     assert response.text == '{"ok":false,"error":{"code":"upstream_unauthorized"}}'
 
 
+def test_proxy_handler_forwards_agent_create_payload():
+    handler = XuanWuProxyHandler(
+        {
+            "xuanwu": {
+                "base_url": "http://xuanwu.internal",
+                "control_plane_secret": "cp-secret-001",
+            }
+        }
+    )
+
+    class FakeClient:
+        async def request_agents(
+            self,
+            method: str,
+            request_id: str,
+            *,
+            payload=None,
+            agent_id=None,
+            query=None,
+        ):
+            assert method == "POST"
+            assert request_id == "req-20260328-create-agent"
+            assert agent_id is None
+            assert query == {}
+            assert payload == {"name": "玄武客服", "status": "active"}
+            return 201, {"ok": True, "data": {"id": "agent-support"}}
+
+    handler.client = FakeClient()
+    request = make_mocked_request(
+        "POST",
+        "/control-plane/v1/xuanwu/agents",
+        headers={
+            "X-Request-Id": "req-20260328-create-agent",
+            "Content-Type": "application/json",
+        },
+    )
+    request._read_bytes = b'{"name":"\xe7\x8e\x84\xe6\xad\xa6\xe5\xae\xa2\xe6\x9c\x8d","status":"active"}'
+
+    response = asyncio.run(handler.handle_agent_collection(request))
+
+    assert response.status == 201
+    assert response.text == '{"ok":true,"data":{"id":"agent-support"}}'
+
+
+def test_proxy_handler_forwards_model_update_to_item_endpoint():
+    handler = XuanWuProxyHandler(
+        {
+            "xuanwu": {
+                "base_url": "http://xuanwu.internal",
+                "control_plane_secret": "cp-secret-001",
+            }
+        }
+    )
+
+    class FakeClient:
+        async def request_models(
+            self,
+            method: str,
+            request_id: str,
+            *,
+            payload=None,
+            model_id=None,
+            query=None,
+        ):
+            assert method == "PUT"
+            assert request_id == "req-20260328-update-model"
+            assert model_id == "model-main"
+            assert payload == {"label": "主模型", "status": "active"}
+            return 200, {"ok": True, "data": {"id": "model-main", "label": "主模型"}}
+
+    handler.client = FakeClient()
+    request = make_mocked_request(
+        "PUT",
+        "/control-plane/v1/xuanwu/models/model-main",
+        headers={
+            "X-Request-Id": "req-20260328-update-model",
+            "Content-Type": "application/json",
+        },
+        match_info={"model_id": "model-main"},
+    )
+    request._read_bytes = b'{"label":"\xe4\xb8\xbb\xe6\xa8\xa1\xe5\x9e\x8b","status":"active"}'
+
+    response = asyncio.run(handler.handle_model_item(request))
+
+    assert response.status == 200
+    assert response.text == '{"ok":true,"data":{"id":"model-main","label":"主模型"}}'
+
+
 def test_xuanwu_client_calls_configured_agent_endpoint():
     async def scenario():
         received: dict[str, str] = {}
@@ -169,6 +260,59 @@ def test_xuanwu_client_calls_configured_agent_endpoint():
             "path": "/xuanwu/v1/admin/agents",
             "secret": "cp-secret-live",
             "request_id": "req-live-agents",
+        }
+
+    asyncio.run(scenario())
+
+
+def test_xuanwu_client_posts_to_configured_provider_endpoint():
+    async def scenario():
+        received: dict[str, object] = {}
+
+        async def handle_create_provider(request: web.Request):
+            received["path"] = request.path
+            received["secret"] = request.headers.get("X-Xiaozhi-Control-Plane-Secret", "")
+            received["request_id"] = request.headers.get("X-Request-Id", "")
+            received["payload"] = await request.json()
+            return web.json_response(
+                {"ok": True, "data": {"id": "provider-openai"}},
+                status=201,
+            )
+
+        upstream = web.Application()
+        upstream.router.add_post("/xuanwu/v1/admin/model-providers", handle_create_provider)
+
+        runner = web.AppRunner(upstream)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        sockets = site._server.sockets
+        assert sockets
+        port = sockets[0].getsockname()[1]
+
+        client = XuanWuClient(
+            {
+                "xuanwu": {
+                    "base_url": f"http://127.0.0.1:{port}/",
+                    "control_plane_secret": "cp-secret-live",
+                }
+            }
+        )
+        status, payload = await client.request_model_providers(
+            "POST",
+            "req-live-provider-create",
+            payload={"name": "OpenAI 主实例", "provider_type": "openai"},
+        )
+
+        await runner.cleanup()
+
+        assert status == 201
+        assert payload == {"ok": True, "data": {"id": "provider-openai"}}
+        assert received == {
+            "path": "/xuanwu/v1/admin/model-providers",
+            "secret": "cp-secret-live",
+            "request_id": "req-live-provider-create",
+            "payload": {"name": "OpenAI 主实例", "provider_type": "openai"},
         }
 
     asyncio.run(scenario())

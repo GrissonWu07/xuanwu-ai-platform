@@ -24,7 +24,8 @@ def check_config_file():
             "找不到data/.config.yaml文件，请按教程确认该配置文件是否存在"
         )
 
-    # 检查是否启用了 Java manager-api 兼容配置源
+    # 检查是否启用了 legacy manager-api 兼容配置源。
+    # 推荐主路径已经切换到 xuanwu-management-server。
     config = load_config()
     if is_manager_api_enabled(config):
         print("从API读取配置")

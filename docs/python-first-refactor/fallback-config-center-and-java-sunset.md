@@ -1,5 +1,11 @@
 ﻿# Fallback、本地配置中心与 Java 下线设计
 
+> 迁移补充说明（2026-03-28）
+>
+> 当前仓库里的 Python 控制面宿主已经明确为 `main/xuanwu-management-server`，不再建议把新的控制面实现继续塞回 `xuanwu-device-server`。
+>
+> 当前 `XuanWu` 服务访问地址先固定为 `http://xuanwu-ai:8000`，由 `xuanwu-management-server` 通过 `/control-plane/v1/xuanwu/*` 代理入口统一转发。
+
 ## 1. 目的
 
 本文档覆盖实施顺序中的最后一阶段：

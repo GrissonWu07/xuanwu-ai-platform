@@ -7,8 +7,12 @@
 - 独立托管 `/control-plane/v1/*`
 - 提供 `XuanWu` 代理入口：
   - `/control-plane/v1/xuanwu/agents`
+  - `/control-plane/v1/xuanwu/agents/{agent_id}`
   - `/control-plane/v1/xuanwu/model-providers`
+  - `/control-plane/v1/xuanwu/model-providers/{provider_id}`
   - `/control-plane/v1/xuanwu/models`
+  - `/control-plane/v1/xuanwu/models/{model_id}`
+- 当前已支持这 3 类资源的透明 CRUD 透传
 - 支持通过环境变量配置 `XuanWu` 访问地址
 
 当前默认配置：
