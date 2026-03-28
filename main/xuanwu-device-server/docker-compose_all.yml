@@ -1,8 +1,7 @@
-﻿# Docker安装全模块
+# Docker 安装全模块
 
-version: '3'
+version: "3"
 services:
-  # Server模块
   xuanwu-device-server:
     image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
     container_name: xuanwu-device-server
@@ -10,9 +9,7 @@ services:
     networks:
       - default
     ports:
-      # ws服务端
       - "8000:8000"
-      # http服务的端口，用于视觉分析接口
       - "8003:8003"
     security_opt:
       - seccomp:unconfined
@@ -22,12 +19,9 @@ services:
       - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
       - XUANWU_MANAGEMENT_SERVER_ENABLED=true
     volumes:
-      # 配置文件目录
       - ./data:/opt/xuanwu-device-server/data
-      # 模型文件挂接，很重要
       - ./models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-server/models/SenseVoiceSmall/model.pt
 
-  # Python 默认主管理宿主，负责当前主路径上的管理与控制面能力
   xuanwu-management-server:
     image: python:3.11-slim
     container_name: xuanwu-management-server
@@ -38,7 +32,7 @@ services:
       - "18082:18082"
     working_dir: /opt/xuanwu-management-server
     command: >
-      sh -c "pip install --no-cache-dir aiohttp pyyaml && python app.py"
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx && python app.py"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_HOST=0.0.0.0
@@ -49,74 +43,5 @@ services:
     volumes:
       - ../xuanwu-management-server:/opt/xuanwu-management-server
 
-  # legacy manager-api 和 manager-web 兼容模块，仅在需要旧 Java 管理链路时启用
-  xuanwu-device-server-web:
-    image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
-    container_name: xuanwu-device-server-web
-    profiles:
-      - legacy-java
-    restart: always
-    networks:
-      - default
-    depends_on:
-      xuanwu-device-server-db:
-        condition: service_healthy
-      xuanwu-device-server-redis:
-        condition: service_healthy
-    ports:
-      # 智控台
-      - "8002:8002"
-    environment:
-      - TZ=Asia/Shanghai
-      - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://xuanwu-device-server-db:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&connectTimeout=30000&socketTimeout=30000&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-      - SPRING_DATASOURCE_DRUID_USERNAME=root
-      - SPRING_DATASOURCE_DRUID_PASSWORD=123456
-      - SPRING_DATA_REDIS_HOST=xuanwu-device-server-redis
-      - SPRING_DATA_REDIS_PASSWORD=
-      - SPRING_DATA_REDIS_PORT=6379
-    volumes:
-      # 配置文件目录
-      - ./uploadfile:/uploadfile
-  # 数据库模块
-  xuanwu-device-server-db:
-    image: mysql:latest
-    container_name: xuanwu-device-server-db
-    profiles:
-      - legacy-java
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-    restart: always
-    networks:
-      - default
-    expose:
-      - 3306
-    volumes:
-      - ./mysql/data:/var/lib/mysql
-    environment:
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=xiaozhi_esp32_server
-      - MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-  # redis模块
-  xuanwu-device-server-redis:
-    image: redis:8.0
-    profiles:
-      - legacy-java
-    expose:
-      - 6379
-    container_name: xuanwu-device-server-redis
-    restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - default
 networks:
   default:
-
-

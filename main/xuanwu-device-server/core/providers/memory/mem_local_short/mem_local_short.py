@@ -4,8 +4,7 @@ import json
 import os
 import yaml
 from config.config_loader import get_project_dir
-from config.manage_api_client import generate_and_save_chat_summary
-import asyncio
+from config.xuanwu_management_client import generate_chat_summary
 from core.utils.util import check_model_key
 
 
@@ -190,7 +189,14 @@ class MemoryProvider(MemoryProviderBase):
         else:
             # 当save_to_file为False时，调用Java端的聊天记录总结接口
             summary_id = session_id if session_id else self.role_id
-            await generate_and_save_chat_summary(summary_id)
+            await generate_chat_summary(
+                self.config,
+                summary_id,
+                {
+                    "reason": "memory_rollup",
+                    "requested_by": "xuanwu-device-server",
+                },
+            )
         logger.bind(tag=TAG).info(
             f"Save memory successful - Role: {self.role_id}, Session: {session_id}"
         )

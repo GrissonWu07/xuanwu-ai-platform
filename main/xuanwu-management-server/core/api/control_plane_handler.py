@@ -125,3 +125,31 @@ class ControlPlaneHandler(BaseHandler):
                 "resolved_config": resolved_config,
             }
         )
+
+    async def handle_report_chat_history(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+
+        session_id = str(payload.get("session_id", "")).strip()
+        if not session_id:
+            return self._json_response({"error": "session_id_required"}, status=400)
+        record = self.store.append_chat_history(session_id, payload)
+        return self._json_response(record, status=201)
+
+    async def handle_generate_chat_summary(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+
+        summary_id = str(request.match_info["summary_id"]).strip()
+        if not summary_id:
+            return self._json_response({"error": "summary_id_required"}, status=400)
+        record = self.store.save_summary_request(summary_id, payload)
+        return self._json_response(record, status=202)

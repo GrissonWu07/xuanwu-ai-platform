@@ -36,12 +36,11 @@ from plugins_func.register import Action
 from core.auth import AuthenticationError
 from config.config_loader import (
     get_private_config_from_api,
-    is_manager_api_enabled,
     should_use_private_config_resolution,
 )
 from core.providers.tts.dto.dto import ContentType, TTSMessageDTO, SentenceType
 from config.logger import setup_logging, build_module_string, create_connection_logger
-from core.control_plane.exceptions import DeviceBindException, DeviceNotFoundException
+from core.runtime_config_exceptions import DeviceBindException, DeviceNotFoundException
 from core.utils.prompt_manager import PromptManager
 from core.utils.voiceprint_provider import VoiceprintProvider
 from core.utils.util import get_system_error_response
@@ -118,7 +117,9 @@ class ConnectionHandler:
         self.bind_prompt_interval = 60  # 绑定提示播放间隔(秒)
 
         self.read_config_from_api = self.config.get("read_config_from_api", False)
-        self.manage_api_enabled = is_manager_api_enabled(self.config)
+        self.management_server_enabled = should_use_private_config_resolution(
+            self.config
+        )
         self.use_private_config_resolution = should_use_private_config_resolution(
             self.config
         )
@@ -148,8 +149,8 @@ class ConnectionHandler:
         self.report_queue = queue.Queue()
         self.report_thread = None
         # 未来可以通过修改此处，调节asr的上报和tts的上报，目前默认都开启
-        self.report_asr_enable = self.manage_api_enabled
-        self.report_tts_enable = self.manage_api_enabled
+        self.report_asr_enable = self.management_server_enabled
+        self.report_tts_enable = self.management_server_enabled
 
         # 依赖的组件
         self.vad = None
@@ -561,7 +562,7 @@ class ConnectionHandler:
 
     def _init_report_threads(self):
         """初始化ASR和TTS上报线程"""
-        if not self.manage_api_enabled or self.need_bind:
+        if not self.management_server_enabled or self.need_bind:
             return
         if self.chat_history_conf == 0:
             return
@@ -768,7 +769,7 @@ class ConnectionHandler:
             role_id=self.device_id,
             llm=self.llm,
             summary_memory=self.config.get("summaryMemory", None),
-            save_to_file=not self.manage_api_enabled,
+            save_to_file=not self.management_server_enabled,
         )
 
         # 获取记忆总结配置

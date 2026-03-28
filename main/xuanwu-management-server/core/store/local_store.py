@@ -15,6 +15,8 @@ class LocalControlPlaneStore:
         self.root_dir.mkdir(parents=True, exist_ok=True)
         (self.root_dir / "devices").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "agents").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def from_config(cls, config: dict[str, Any], *, project_dir: str | Path | None = None):
@@ -48,6 +50,30 @@ class LocalControlPlaneStore:
         payload.setdefault("agent_id", agent_id)
         self._write_yaml(self.root_dir / "agents" / f"{agent_id}.yaml", payload)
         return payload
+
+    def load_chat_history(self, session_id: str) -> list[dict[str, Any]]:
+        records = self._read_yaml(
+            self.root_dir / "chat_history" / f"{session_id}.yaml",
+            default=[],
+        )
+        return records if isinstance(records, list) else []
+
+    def append_chat_history(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = dict(payload)
+        record.setdefault("session_id", session_id)
+        records = self.load_chat_history(session_id)
+        records.append(record)
+        self._write_yaml(self.root_dir / "chat_history" / f"{session_id}.yaml", records)
+        return record
+
+    def get_summary_request(self, summary_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "chat_summaries" / f"{summary_id}.yaml")
+
+    def save_summary_request(self, summary_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = dict(payload)
+        record.setdefault("summary_id", summary_id)
+        self._write_yaml(self.root_dir / "chat_summaries" / f"{summary_id}.yaml", record)
+        return record
 
     def build_server_config(self, base_config: dict[str, Any]) -> dict[str, Any]:
         server_profile = self.load_server_profile()

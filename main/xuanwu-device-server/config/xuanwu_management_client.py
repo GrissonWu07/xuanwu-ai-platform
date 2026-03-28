@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
+from core.runtime_config_exceptions import DeviceBindException, DeviceNotFoundException
 
 
 def is_xuanwu_management_server_enabled(config: dict[str, Any]) -> bool:
@@ -21,16 +22,20 @@ def _management_config(config: dict[str, Any]) -> dict[str, Any]:
     return management_config
 
 
-async def fetch_server_config(config: dict[str, Any]) -> dict[str, Any]:
+def _client_kwargs(config: dict[str, Any]) -> dict[str, Any]:
     management_config = _management_config(config)
-    async with httpx.AsyncClient(
-        base_url=str(management_config["url"]).rstrip("/"),
-        timeout=float(management_config.get("timeout", 10)),
-        headers={
+    return {
+        "base_url": str(management_config["url"]).rstrip("/"),
+        "timeout": float(management_config.get("timeout", 10)),
+        "headers": {
             "X-Xiaozhi-Control-Secret": str(management_config["secret"]).strip(),
             "Accept": "application/json",
         },
-    ) as client:
+    }
+
+
+async def fetch_server_config(config: dict[str, Any]) -> dict[str, Any]:
+    async with httpx.AsyncClient(**_client_kwargs(config)) as client:
         response = await client.get("/control-plane/v1/config/server")
         response.raise_for_status()
         return response.json()
@@ -42,15 +47,7 @@ async def resolve_private_config(
     client_id: str,
     selected_module: dict[str, Any],
 ) -> dict[str, Any]:
-    management_config = _management_config(config)
-    async with httpx.AsyncClient(
-        base_url=str(management_config["url"]).rstrip("/"),
-        timeout=float(management_config.get("timeout", 10)),
-        headers={
-            "X-Xiaozhi-Control-Secret": str(management_config["secret"]).strip(),
-            "Accept": "application/json",
-        },
-    ) as client:
+    async with httpx.AsyncClient(**_client_kwargs(config)) as client:
         response = await client.post(
             "/control-plane/v1/runtime/device-config:resolve",
             json={
@@ -59,6 +56,35 @@ async def resolve_private_config(
                 "selected_module": selected_module,
             },
         )
+        if response.status_code == 404:
+            raise DeviceNotFoundException(device_id)
+        if response.status_code == 409:
+            payload = response.json()
+            raise DeviceBindException(payload.get("bind_code"))
         response.raise_for_status()
         payload = response.json()
         return payload.get("resolved_config", payload)
+
+
+async def report_chat_history(
+    config: dict[str, Any],
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    async with httpx.AsyncClient(**_client_kwargs(config)) as client:
+        response = await client.post("/control-plane/v1/chat-history/report", json=payload)
+        response.raise_for_status()
+        return response.json()
+
+
+async def generate_chat_summary(
+    config: dict[str, Any],
+    summary_id: str,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    async with httpx.AsyncClient(**_client_kwargs(config)) as client:
+        response = await client.post(
+            f"/control-plane/v1/chat-summaries/{summary_id}:generate",
+            json=payload or {},
+        )
+        response.raise_for_status()
+        return response.json()

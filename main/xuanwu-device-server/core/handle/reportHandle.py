@@ -9,6 +9,7 @@ TTS上报功能已集成到ConnectionHandler类中。
 具体实现请参考core/connection.py中的相关代码。
 """
 
+import base64
 import time
 import opuslib_next
 from typing import TYPE_CHECKING
@@ -16,8 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.connection import ConnectionHandler
 
-from config.config_loader import is_manager_api_enabled
-from config.manage_api_client import report as manage_report
+from config.xuanwu_management_client import report_chat_history
 
 TAG = __name__
 
@@ -38,13 +38,16 @@ async def report(conn: "ConnectionHandler", type, text, opus_data, report_time):
         else:
             audio_data = None
         # 执行异步上报
-        await manage_report(
-            mac_address=conn.device_id,
-            session_id=conn.session_id,
-            chat_type=type,
-            content=text,
-            audio=audio_data,
-            report_time=report_time,
+        await report_chat_history(
+            conn.config,
+            {
+                "device_id": conn.device_id,
+                "session_id": conn.session_id,
+                "chat_type": type,
+                "content": text,
+                "audio_base64": audio_data and base64.b64encode(audio_data).decode("utf-8"),
+                "report_time": report_time,
+            },
         )
     except Exception as e:
         conn.logger.bind(tag=TAG).error(f"聊天记录上报失败: {e}")
@@ -106,7 +109,7 @@ def opus_to_wav(conn: "ConnectionHandler", opus_data):
 
 
 def enqueue_tts_report(conn: "ConnectionHandler", text, opus_data):
-    if not is_manager_api_enabled(conn.config) or conn.need_bind or not conn.report_tts_enable:
+    if conn.need_bind or not conn.report_tts_enable:
         return
     if conn.chat_history_conf == 0:
         return
@@ -134,7 +137,7 @@ def enqueue_tts_report(conn: "ConnectionHandler", text, opus_data):
 
 
 def enqueue_asr_report(conn: "ConnectionHandler", text, opus_data):
-    if not is_manager_api_enabled(conn.config) or conn.need_bind or not conn.report_asr_enable:
+    if conn.need_bind or not conn.report_asr_enable:
         return
     if conn.chat_history_conf == 0:
         return

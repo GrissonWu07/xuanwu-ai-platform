@@ -57,6 +57,22 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/runtime/device-config:resolve",
                 control_plane_handler.handle_options,
             ),
+            web.post(
+                "/control-plane/v1/chat-history/report",
+                control_plane_handler.handle_report_chat_history,
+            ),
+            web.options(
+                "/control-plane/v1/chat-history/report",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/chat-summaries/{summary_id}:generate",
+                control_plane_handler.handle_generate_chat_summary,
+            ),
+            web.options(
+                "/control-plane/v1/chat-summaries/{summary_id}:generate",
+                control_plane_handler.handle_options,
+            ),
             web.get(
                 "/control-plane/v1/xuanwu/agents",
                 xuanwu_proxy_handler.handle_agent_collection,

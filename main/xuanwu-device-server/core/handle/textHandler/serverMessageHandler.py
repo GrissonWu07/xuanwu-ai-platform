@@ -1,25 +1,19 @@
-import asyncio
 import json
-from typing import Dict, Any
+from typing import Any, Dict
 
-from config.config_loader import is_manager_api_enabled, resolve_control_secret
+from config.config_loader import resolve_control_secret
 from core.handle.textMessageHandler import TextMessageHandler
 from core.handle.textMessageType import TextMessageType
-from core.providers.tools.device_mcp import handle_mcp_message
 
 TAG = __name__
 
-class ServerTextMessageHandler(TextMessageHandler):
-    """MCP消息处理器"""
 
+class ServerTextMessageHandler(TextMessageHandler):
     @property
     def message_type(self) -> TextMessageType:
         return TextMessageType.SERVER
 
     async def handle(self, conn, msg_json: Dict[str, Any]) -> None:
-        # Java 管理 API 的兼容控制消息；本地 control-plane 不走这条路径
-        if not is_manager_api_enabled(conn.config):
-            return
         post_secret = msg_json.get("content", {}).get("secret", "")
         secret = resolve_control_secret(conn.config)
         if post_secret != secret:
@@ -33,10 +27,9 @@ class ServerTextMessageHandler(TextMessageHandler):
                 )
             )
             return
-        # 动态更新配置
+
         if msg_json["action"] == "update_config":
             try:
-                # 更新WebSocketServer的配置
                 if not conn.server:
                     await conn.websocket.send(
                         json.dumps(
@@ -63,7 +56,6 @@ class ServerTextMessageHandler(TextMessageHandler):
                     )
                     return
 
-                # 发送成功响应
                 await conn.websocket.send(
                     json.dumps(
                         {
@@ -86,6 +78,5 @@ class ServerTextMessageHandler(TextMessageHandler):
                         }
                     )
                 )
-        # 重启服务器
         elif msg_json["action"] == "restart":
             await conn.handle_restart(msg_json)

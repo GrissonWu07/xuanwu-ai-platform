@@ -11,6 +11,11 @@ import sys
 
 if str(SERVICE_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVICE_ROOT))
+for module_name in list(sys.modules):
+    if module_name == "config" or module_name.startswith("config."):
+        sys.modules.pop(module_name, None)
+    if module_name == "core" or module_name.startswith("core."):
+        sys.modules.pop(module_name, None)
 
 from core.api.control_plane_handler import ControlPlaneHandler
 from core.store.exceptions import DeviceBindException
@@ -153,3 +158,63 @@ def test_import_control_plane_bundle_writes_server_agents_and_devices():
         assert store.load_server_profile()["server"]["runtime_secret"] == "secret-a"
         assert store.get_agent("default")["prompt"] == "agent prompt"
         assert store.get_device("esp32-kitchen")["bind_status"] == "bound"
+
+
+def test_control_plane_chat_history_report_persists_payload():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/chat-history/report",
+            headers={"X-Xiaozhi-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"device_id":"esp32-living-room","session_id":"sess-20260328-001",'
+            b'"chat_type":1,"content":"\xe4\xbb\x8a\xe5\xa4\xa9\xe6\x9d\xad\xe5\xb7\x9e\xe5\xa4\xa9\xe6\xb0\x94\xe6\x80\x8e\xe4\xb9\x88\xe6\xa0\xb7",'
+            b'"report_time":1711612800,"audio_base64":"UklGRg=="}'
+        )
+
+        response = asyncio.run(handler.handle_report_chat_history(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 201
+        assert payload["session_id"] == "sess-20260328-001"
+        records = handler.store.load_chat_history("sess-20260328-001")
+        assert len(records) == 1
+        assert records[0]["device_id"] == "esp32-living-room"
+        assert records[0]["content"] == "今天杭州天气怎么样"
+
+
+def test_control_plane_summary_generation_request_persists_payload():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/chat-summaries/sess-20260328-001:generate",
+            headers={"X-Xiaozhi-Control-Secret": "runtime-secret"},
+            match_info={"summary_id": "sess-20260328-001"},
+        )
+        request._read_bytes = (
+            b'{"reason":"memory_rollup","requested_by":"xuanwu-device-server"}'
+        )
+
+        response = asyncio.run(handler.handle_generate_chat_summary(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 202
+        assert payload["summary_id"] == "sess-20260328-001"
+        summary_request = handler.store.get_summary_request("sess-20260328-001")
+        assert summary_request["reason"] == "memory_rollup"
+        assert summary_request["requested_by"] == "xuanwu-device-server"

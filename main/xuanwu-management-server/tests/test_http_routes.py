@@ -41,3 +41,5 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
     assert "/control-plane/v1/agents/{agent_id}" in registered_paths
     assert "/control-plane/v1/runtime/device-config:resolve" in registered_paths
+    assert "/control-plane/v1/chat-history/report" in registered_paths
+    assert "/control-plane/v1/chat-summaries/{summary_id}:generate" in registered_paths
