@@ -2,7 +2,6 @@ import asyncio
 from aiohttp import web
 from config.config_loader import is_manager_api_enabled
 from config.logger import setup_logging
-from core.api.control_plane_handler import ControlPlaneHandler
 from core.api.ota_handler import OTAHandler
 from core.api.vision_handler import VisionHandler
 from core.api.runtime_handler import RuntimeHandler
@@ -17,7 +16,6 @@ class SimpleHttpServer:
         self.ota_handler = OTAHandler(config)
         self.vision_handler = VisionHandler(config)
         self.runtime_handler = RuntimeHandler(config)
-        self.control_plane_handler = ControlPlaneHandler(config)
 
     def _get_websocket_url(self, local_ip: str, port: int) -> str:
         """获取websocket地址
@@ -69,50 +67,6 @@ class SimpleHttpServer:
                     )
                 app.add_routes(
                     [
-                        web.get(
-                            "/control-plane/v1/config/server",
-                            self.control_plane_handler.handle_get_server_config,
-                        ),
-                        web.put(
-                            "/control-plane/v1/config/server",
-                            self.control_plane_handler.handle_put_server_config,
-                        ),
-                        web.options(
-                            "/control-plane/v1/config/server",
-                            self.control_plane_handler.handle_options,
-                        ),
-                        web.get(
-                            "/control-plane/v1/devices/{device_id}",
-                            self.control_plane_handler.handle_get_device,
-                        ),
-                        web.put(
-                            "/control-plane/v1/devices/{device_id}",
-                            self.control_plane_handler.handle_put_device,
-                        ),
-                        web.options(
-                            "/control-plane/v1/devices/{device_id}",
-                            self.control_plane_handler.handle_options,
-                        ),
-                        web.get(
-                            "/control-plane/v1/agents/{agent_id}",
-                            self.control_plane_handler.handle_get_agent,
-                        ),
-                        web.put(
-                            "/control-plane/v1/agents/{agent_id}",
-                            self.control_plane_handler.handle_put_agent,
-                        ),
-                        web.options(
-                            "/control-plane/v1/agents/{agent_id}",
-                            self.control_plane_handler.handle_options,
-                        ),
-                        web.post(
-                            "/control-plane/v1/runtime/device-config:resolve",
-                            self.control_plane_handler.handle_resolve_device_config,
-                        ),
-                        web.options(
-                            "/control-plane/v1/runtime/device-config:resolve",
-                            self.control_plane_handler.handle_options,
-                        ),
                         web.get(
                             "/runtime/v1/sessions/{runtime_session_id}/context",
                             self.runtime_handler.handle_context,

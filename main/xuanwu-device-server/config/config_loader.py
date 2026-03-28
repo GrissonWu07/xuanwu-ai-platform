@@ -4,6 +4,11 @@ from collections.abc import Mapping
 
 from core.control_plane.local_store import LocalControlPlaneStore
 from config.manage_api_client import init_service, get_server_config, get_agent_models
+from config.xuanwu_management_client import (
+    fetch_server_config as fetch_xuanwu_management_server_config,
+    is_xuanwu_management_server_enabled,
+    resolve_private_config as resolve_xuanwu_management_private_config,
+)
 
 
 def get_project_dir():
@@ -22,7 +27,7 @@ def load_bootstrap_config():
     custom_config_path = get_project_dir() + "data/.config.yaml"
     default_config = read_config(default_config_path)
     custom_config = read_config(custom_config_path)
-    return merge_configs(default_config, custom_config)
+    return apply_environment_overrides(merge_configs(default_config, custom_config))
 
 
 def load_config():
@@ -58,12 +63,58 @@ def load_config():
     return config
 
 
+def apply_environment_overrides(config):
+    config = merge_configs({}, config)
+    management_config = config.setdefault("xuanwu-management-server", {})
+    management_url = os.environ.get("XUANWU_MANAGEMENT_SERVER_URL", "").strip()
+    management_secret = os.environ.get("XUANWU_MANAGEMENT_SERVER_SECRET", "").strip()
+    management_enabled = os.environ.get("XUANWU_MANAGEMENT_SERVER_ENABLED", "").strip()
+
+    if management_url:
+        management_config["url"] = management_url
+    if management_secret:
+        management_config["secret"] = management_secret
+    if management_enabled:
+        management_config["enabled"] = management_enabled.lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+    elif management_url or management_secret:
+        management_config["enabled"] = True
+    return config
+
+
 async def get_config_from_api_async(config):
     """从动态控制面获取配置（异步版本，优先本地 control-plane）"""
     control_plane_store = _get_local_control_plane_store(config)
     if control_plane_store is not None:
         config_data = control_plane_store.build_server_config(config)
         config_data["read_config_from_api"] = False
+        return config_data
+
+    if is_xuanwu_management_server_enabled(config):
+        config_data = await fetch_xuanwu_management_server_config(config)
+        config_data["read_config_from_api"] = True
+        config_data["xuanwu-management-server"] = {
+            "url": config["xuanwu-management-server"].get("url", ""),
+            "secret": config["xuanwu-management-server"].get("secret", ""),
+        }
+        auth_enabled = config_data.get("server", {}).get("auth", {}).get("enabled", False)
+        if config.get("server"):
+            config_data["server"] = {
+                **config_data.get("server", {}),
+                "ip": config["server"].get("ip", ""),
+                "port": config["server"].get("port", ""),
+                "http_port": config["server"].get("http_port", ""),
+                "vision_explain": config["server"].get("vision_explain", ""),
+                "auth_key": config["server"].get("auth_key", ""),
+            }
+        config_data.setdefault("server", {})
+        config_data["server"]["auth"] = {"enabled": auth_enabled}
+        if not config_data.get("prompt_template"):
+            config_data["prompt_template"] = config.get("prompt_template")
         return config_data
 
     # 初始化API客户端
@@ -107,18 +158,29 @@ async def get_private_config_from_api(config, device_id, client_id):
             selected_module=None,
         )
         return resolved["resolved_config"]
+    if is_xuanwu_management_server_enabled(config):
+        return await resolve_xuanwu_management_private_config(
+            config,
+            device_id,
+            client_id,
+            config["selected_module"],
+        )
     return await get_agent_models(device_id, client_id, config["selected_module"])
 
 
 def should_use_dynamic_server_config(config):
-    return _get_local_control_plane_store(config) is not None or is_manager_api_enabled(
-        config
+    return (
+        _get_local_control_plane_store(config) is not None
+        or is_xuanwu_management_server_enabled(config)
+        or is_manager_api_enabled(config)
     )
 
 
 def should_use_private_config_resolution(config):
-    return _get_local_control_plane_store(config) is not None or is_manager_api_enabled(
-        config
+    return (
+        _get_local_control_plane_store(config) is not None
+        or is_xuanwu_management_server_enabled(config)
+        or is_manager_api_enabled(config)
     )
 
 
@@ -133,6 +195,7 @@ def resolve_control_secret(config):
         control_plane_config.get("secret")
         or server_config.get("runtime_secret")
         or server_config.get("auth_key")
+        or config.get("xuanwu-management-server", {}).get("secret", "")
         or config.get("manager-api", {}).get("secret", "")
     )
 

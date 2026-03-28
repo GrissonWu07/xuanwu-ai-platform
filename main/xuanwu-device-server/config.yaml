@@ -41,6 +41,16 @@ server:
   mqtt_signature_key: null
   # UDP网关配置
   udp_gateway: null
+
+# 新的 Python 管理宿主配置。
+# 当 url 和 secret 都已配置时，xuanwu-device-server 会优先从这里读取运行配置，
+# 不再优先依赖 legacy manager-api。
+xuanwu-management-server:
+  enabled: false
+  url: http://127.0.0.1:18082
+  secret: xuanwu-management-local-secret
+  timeout: 10
+
 log:
   # 设置控制台输出的日志格式，时间、日志级别、标签、消息
   log_format: "<green>{time:YYMMDD HH:mm:ss}</green>[{version}_{selected_module}][<light-blue>{extra[tag]}</light-blue>]-<level>{level}</level>-<light-green>{message}</light-green>"

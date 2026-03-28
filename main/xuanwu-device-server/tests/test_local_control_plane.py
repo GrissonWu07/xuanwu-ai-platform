@@ -2,13 +2,30 @@ import tempfile
 import unittest
 import sys
 import types
+import asyncio
+import os
 from pathlib import Path
 
 import yaml
+from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from config.config_loader import get_config_from_api_async, get_private_config_from_api
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
+if str(SERVICE_ROOT) not in sys.path:
+    sys.path.insert(0, str(SERVICE_ROOT))
+for module_name in list(sys.modules):
+    if module_name == "config" or module_name.startswith("config."):
+        sys.modules.pop(module_name, None)
+    if module_name == "core" or module_name.startswith("core."):
+        sys.modules.pop(module_name, None)
+
+from config.config_loader import (
+    apply_environment_overrides,
+    get_config_from_api_async,
+    get_private_config_from_api,
+)
 from config.config_loader import is_manager_api_enabled, resolve_control_secret
+from config.xuanwu_management_client import is_xuanwu_management_server_enabled
 from core.control_plane.import_bundle import import_control_plane_bundle
 from core.control_plane.local_store import LocalControlPlaneStore
 from core.control_plane.exceptions import DeviceBindException, DeviceNotFoundException
@@ -208,6 +225,129 @@ class LocalControlPlaneStoreTests(unittest.TestCase):
         self.assertEqual("agent prompt", resolved["prompt"])
         self.assertEqual("AgentLLM", resolved["selected_module"]["LLM"])
 
+    def test_get_config_from_api_async_supports_xuanwu_management_server(self):
+        async def scenario():
+            received: dict[str, str] = {}
+
+            async def handle_server_config(request: web.Request):
+                received["path"] = request.path
+                received["secret"] = request.headers.get("X-Xiaozhi-Control-Secret", "")
+                return web.json_response(
+                    {
+                        "server": {"runtime_secret": "mgmt-runtime-secret"},
+                        "prompt": "management prompt",
+                    }
+                )
+
+            upstream = web.Application()
+            upstream.router.add_get(
+                "/control-plane/v1/config/server",
+                handle_server_config,
+            )
+            runner = web.AppRunner(upstream)
+            await runner.setup()
+            site = web.TCPSite(runner, "127.0.0.1", 0)
+            await site.start()
+            sockets = site._server.sockets
+            self.assertTrue(sockets)
+            port = sockets[0].getsockname()[1]
+
+            config = {
+                **self.base_config,
+                "control-plane": {"enabled": False},
+                "manager-api": {},
+                "xuanwu-management-server": {
+                    "enabled": True,
+                    "url": f"http://127.0.0.1:{port}",
+                    "secret": "mgmt-secret-001",
+                },
+            }
+            resolved = await get_config_from_api_async(config)
+
+            await runner.cleanup()
+
+            self.assertEqual("management prompt", resolved["prompt"])
+            self.assertEqual(
+                "mgmt-runtime-secret",
+                resolved["server"]["runtime_secret"],
+            )
+            self.assertTrue(resolved["read_config_from_api"])
+            self.assertEqual(
+                {
+                    "path": "/control-plane/v1/config/server",
+                    "secret": "mgmt-secret-001",
+                },
+                received,
+            )
+
+        asyncio.run(scenario())
+
+    def test_get_private_config_from_api_supports_xuanwu_management_server(self):
+        async def scenario():
+            received: dict[str, object] = {}
+
+            async def handle_resolve(request: web.Request):
+                received["path"] = request.path
+                received["secret"] = request.headers.get("X-Xiaozhi-Control-Secret", "")
+                received["payload"] = await request.json()
+                return web.json_response(
+                    {
+                        "resolved_config": {
+                            "prompt": "remote agent prompt",
+                            "selected_module": {"LLM": "RemoteLLM"},
+                        }
+                    }
+                )
+
+            upstream = web.Application()
+            upstream.router.add_post(
+                "/control-plane/v1/runtime/device-config:resolve",
+                handle_resolve,
+            )
+            runner = web.AppRunner(upstream)
+            await runner.setup()
+            site = web.TCPSite(runner, "127.0.0.1", 0)
+            await site.start()
+            sockets = site._server.sockets
+            self.assertTrue(sockets)
+            port = sockets[0].getsockname()[1]
+
+            config = {
+                **self.base_config,
+                "control-plane": {"enabled": False},
+                "manager-api": {},
+                "xuanwu-management-server": {
+                    "enabled": True,
+                    "url": f"http://127.0.0.1:{port}",
+                    "secret": "mgmt-secret-002",
+                },
+            }
+
+            resolved = await get_private_config_from_api(
+                config,
+                "esp32-remote-001",
+                "client-remote-001",
+            )
+
+            await runner.cleanup()
+
+            self.assertEqual("remote agent prompt", resolved["prompt"])
+            self.assertEqual("RemoteLLM", resolved["selected_module"]["LLM"])
+            self.assertEqual(
+                {
+                    "path": "/control-plane/v1/runtime/device-config:resolve",
+                    "secret": "mgmt-secret-002",
+                    "payload": {
+                        "device_id": "esp32-remote-001",
+                        "client_id": "client-remote-001",
+                        "selected_module": self.base_config["selected_module"],
+                    },
+                },
+                received,
+            )
+
+        asyncio.run(scenario())
+
     def test_control_plane_get_server_config_requires_secret_and_returns_payload(self):
         self._write_yaml(
             "server.yaml",
@@ -325,6 +465,71 @@ class LocalControlPlaneStoreTests(unittest.TestCase):
     def test_manager_api_helper_only_depends_on_url(self):
         self.assertTrue(is_manager_api_enabled({"manager-api": {"url": "http://example"}}))
         self.assertFalse(is_manager_api_enabled({"manager-api": {}}))
+
+    def test_xuanwu_management_server_respects_enabled_flag(self):
+        self.assertFalse(
+            is_xuanwu_management_server_enabled(
+                {
+                    "xuanwu-management-server": {
+                        "enabled": False,
+                        "url": "http://127.0.0.1:18082",
+                    }
+                }
+            )
+        )
+
+    def test_environment_overrides_can_enable_xuanwu_management_server(self):
+        config = {
+            "xuanwu-management-server": {
+                "enabled": False,
+                "url": "http://127.0.0.1:18082",
+                "secret": "local-secret",
+            }
+        }
+
+        previous = {
+            "XUANWU_MANAGEMENT_SERVER_URL": os.environ.get(
+                "XUANWU_MANAGEMENT_SERVER_URL"
+            ),
+            "XUANWU_MANAGEMENT_SERVER_SECRET": os.environ.get(
+                "XUANWU_MANAGEMENT_SERVER_SECRET"
+            ),
+            "XUANWU_MANAGEMENT_SERVER_ENABLED": os.environ.get(
+                "XUANWU_MANAGEMENT_SERVER_ENABLED"
+            ),
+        }
+        os.environ["XUANWU_MANAGEMENT_SERVER_URL"] = "http://mgmt.internal:18082"
+        os.environ["XUANWU_MANAGEMENT_SERVER_SECRET"] = "env-secret"
+        os.environ["XUANWU_MANAGEMENT_SERVER_ENABLED"] = "true"
+
+        try:
+            overridden = apply_environment_overrides(config)
+        finally:
+            for key, value in previous.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+        self.assertTrue(overridden["xuanwu-management-server"]["enabled"])
+        self.assertEqual(
+            "http://mgmt.internal:18082",
+            overridden["xuanwu-management-server"]["url"],
+        )
+        self.assertEqual(
+            "env-secret",
+            overridden["xuanwu-management-server"]["secret"],
+        )
+        self.assertTrue(
+            is_xuanwu_management_server_enabled(
+                {
+                    "xuanwu-management-server": {
+                        "enabled": True,
+                        "url": "http://127.0.0.1:18082",
+                    }
+                }
+            )
+        )
 
     def test_import_control_plane_bundle_writes_server_agents_and_devices(self):
         store = LocalControlPlaneStore(self.root)
