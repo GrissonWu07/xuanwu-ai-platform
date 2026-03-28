@@ -341,37 +341,28 @@ xuanwu-device-server
     *   **Server -> ESP32:** 服务器可能发送控制指令给设备（如“开始监听”、“停止监听”、调整灵敏度、下发特定配置参数）。
     *   `core/handle/abortHandle.py`（处理中断请求）、`core/handle/reportHandle.py`（处理设备报告）等模块负责解析和响应这些控制/状态消息。
 
-**4.2.管理与配置流程 (`manager-web` <-> `manager-api` <-> `xuanwu-device-server`)**
+**4.2.管理与配置流程 (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-server`)**
 
 此流程主要依赖于基于HTTP/HTTPS的RESTful API进行请求-响应式的交互。
 
-*   **管理员UI后端交互 (`manager-web` -> `manager-api`):**
-    *   当管理员在`manager-web`界面执行操作时（例如保存一项配置、添加一个新用户、注册一台ESP32设备）：
-        *   Vue.js前端应用 (`manager-web`) 会通过其API封装模块（位于`src/apis/module/`）向`manager-api`的对应REST API端点发起异步HTTP请求（通常是GET, POST, PUT, DELETE）。
-        *   请求体和响应体通常使用JSON格式。
-        *   `manager-api`中的`@RestController`类接收这些请求。**Apache Shiro**框架会首先对请求进行认证和授权检查。
-        *   通过验证后，Controller将请求分发给相应的Service层处理业务逻辑。Service层可能会与MySQL数据库（通过MyBatis-Plus）交互，并可能利用Redis进行数据缓存。
-        *   处理完成后，`manager-api`向`manager-web`返回一个JSON格式的HTTP响应。
-        *   `manager-web`根据响应结果更新其Vuex状态存储和用户界面显示。
+*   **管理员管理主线 (`管理前端` -> `xuanwu-management-server`):**
+    *   当前推荐的管理入口是 `xuanwu-management-server`。管理员侧请求先进入 Python 管理宿主，再由它负责控制面逻辑、权限边界和上游转发。
+    *   与智能体配置相关的管理请求，会继续通过 `xuanwu-management-server -> XuanWu` 代理、校验和落盘。
 
-*   **配置同步 (`manager-api` -> `xuanwu-device-server`):**
-    *   `xuanwu-device-server`的运行依赖于从`manager-api`获取的动态配置（例如当前选用的AI服务提供商及其API密钥）。
-    *   **拉取机制 (Pull Mechanism):** `xuanwu-device-server`内部的`config/manage_api_client.py`模块，在服务器启动时或通过特定更新触发器（例如`WebSocketServer.update_config()`被调用），会向`manager-api`的一个指定端点（例如由`modules/config/controller/`中的某个Controller提供）发起HTTP GET请求。
-    *   `manager-api`响应该请求，返回`xuanwu-device-server`所需的配置数据（JSON格式）。
-    *   `xuanwu-device-server`接收到配置后，会更新其内部状态，并可能重新初始化相关的AI服务模块，以使新配置生效。
+*   **运行时配置同步 (`xuanwu-management-server` -> `xuanwu-device-server`):**
+    *   `xuanwu-device-server` 当前优先从 `xuanwu-management-server` 获取动态运行配置。
+    *   这条链路由 `config/config_loader.py`、`config/xuanwu_management_client.py` 等模块负责。
+    *   只有当 legacy 兼容模式显式开启时，`xuanwu-device-server` 才会回退到 `manager-api`。
 
-*   **OTA固件更新流程 (概念性描述):**
-    *   管理员通过`manager-web`界面上传新的ESP32固件包到`manager-api`的特定端点。
-    *   `manager-api`将固件文件存储起来，并记录相关元数据（版本号、适用设备型号等）。
-    *   当管理员触发对特定设备的OTA更新时：
-        *   `manager-api`可能会通知`xuanwu-device-server`（具体通知机制可能是一个轮询检查点，或`xuanwu-device-server`暴露一个接收更新通知的API，或者更松耦合的如消息队列）。
-        *   `xuanwu-device-server`随后可以通过WebSocket向目标ESP32设备发送一条包含固件下载URL的指令消息。
-        *   ESP32设备收到指令后，通过HTTP GET请求从该URL下载固件。此URL可能指向`xuanwu-device-server`自身运行的`SimpleHttpServer`所服务的路径（如`/xiaozhi/ota/`），或者在某些架构中，也可能直接指向`manager-api`或专用的文件服务器。
+*   **OTA 与控制面数据:**
+    *   默认主路径下，OTA 元数据和控制面配置应由 Python 管理宿主承接。
+    *   设备最终仍通过 `xuanwu-device-server` 的运行时链路接收 OTA 下载地址或控制指令。
+    *   如果仍使用旧 Java 管理链路，则该路径属于兼容模式，不再是默认说明。
 
 **4.3. 主要协议总结:**
 
 *   **WebSocket:** 被选用于ESP32与`xuanwu-device-server`之间的通信链路，因为它非常适合实时、低延迟、双向的数据流传输（尤其是音频），以及异步控制消息的传递。
-*   **RESTful APIs (基于HTTP/HTTPS，通常使用JSON作为数据交换格式):** 这是Web服务间通信的标准方式。用于`manager-web`（客户端）与`manager-api`（服务器）之间的请求-响应交互，也用于`xuanwu-device-server`（作为客户端）从`manager-api`（作为服务器）拉取配置信息。其无状态特性、广泛的库支持和易于理解的语义使其成为此类交互的理想选择。
+*   **RESTful APIs (基于HTTP/HTTPS，通常使用JSON作为数据交换格式):** 这是服务间通信的标准方式。当前主要用于 `xuanwu-management-server` 与 `XuanWu` 之间的代理调用，以及 `xuanwu-device-server` 从 `xuanwu-management-server` 拉取运行配置。legacy `manager-api` 只在兼容模式下保留。
 
 这种多协议并用的通信策略，确保了系统内不同类型的交互需求都能得到高效和恰当的处理，兼顾了实时性和标准化的请求-响应模式。
 
@@ -431,13 +422,14 @@ xuanwu-device-server
 项目可以通过多种方式部署，主要包括使用Docker简化安装过程，或直接从源代码部署以获得更大的控制权和进行开发。
 
 1.  **基于Docker的部署:**
-    *   **简化安装 (仅`xuanwu-device-server`):** 此选项仅部署核心的基于Python的`xuanwu-device-server`。它适用于主要需要语音AI处理能力和IoT控制，而不需要完整Web管理界面和数据库支持功能（如OTA）的用户。在此模式下，配置通常通过本地文件（`config.yaml`）管理，但如果需要，仍可将其指向一个已存在的`manager-api`实例。
-    *   **全模块安装 (所有组件):** 此方案部署所有核心组件：`xuanwu-device-server`、基于Java的`manager-api`、以及基于Vue.js的`manager-web`，同时还包括所需的数据库服务（MySQL和Redis）。这提供了完整的系统体验，包括用于全面配置和管理的Web控制面板。
-    *   项目为每个服务提供了`Dockerfile`定义，并使用`docker-compose.yml`文件（例如`docker-compose.yml`用于基础版，`docker-compose_all.yml`用于全功能版）来编排和管理多容器的部署。此外，还可能提供一个`docker-setup.sh`脚本来辅助自动化部分Docker环境的搭建工作。
+    *   **简化安装 (仅`xuanwu-device-server`):** 此选项仅部署核心运行时服务，适合只需要语音AI处理和设备运行链路的场景。
+    *   **全模块安装（默认主路径）:** 当前推荐方案会部署 `xuanwu-device-server + xuanwu-management-server`，并把 `XuanWu` 作为外部智能体服务接入。
+    *   **legacy Java 兼容模式:** 如果确实还需要旧管理链路，才通过 `legacy-java profile` 显式拉起 `manager-api` / `manager-web` / MySQL / Redis`。
+    *   项目通过 `docker-compose_all.yml` 编排这些服务；默认 `docker compose -f docker-compose_all.yml up -d` 走 Python 主路径，只有 `docker compose --profile legacy-java -f docker-compose_all.yml up -d` 才会启用旧 Java 管理链路。
 
 2.  **源代码部署:**
-    *   这种方法需要为每个组件手动设置相应的开发环境：Python环境用于`xuanwu-device-server`，Java/Maven环境用于`manager-api`，Node.js/Vue CLI环境用于`manager-web`。
-    *   对于全模块安装，还需要手动安装和配置MySQL及Redis数据库服务。
+    *   当前默认主路径是 `xuanwu-device-server + xuanwu-management-server + XuanWu`。
+    *   只有在兼容旧 Java 管理链路时，才需要继续维护 `manager-api` / `manager-web` 及其数据库依赖。
     *   这种方式通常用于项目开发、深度定制、调试，或者在对环境有特殊要求的生产场景中。
 
 **配置管理:**
@@ -446,26 +438,25 @@ xuanwu-device-server
 
 1.  **`xuanwu-device-server` 配置:**
     *   **本地`config.yaml`:** 位于`xuanwu-device-server`根目录下的一个主要的YAML格式配置文件。它定义了服务器端口、选定的AI服务提供商（ASR、LLM、TTS、VAD、意图识别、记忆模块等）、它们各自的API密钥或模型路径、插件配置以及日志级别等。
-    *   **通过`manager-api`进行远程配置:** `xuanwu-device-server`被设计为可以从`manager-api`获取其运行配置。从`manager-api`获取的设置通常会覆盖本地`config.yaml`中的同名设置。这带来了两大好处：
-        *   **集中管理:** 所有配置都可以通过`manager-web`界面进行统一管理。
-        *   **动态更新:** `xuanwu-device-server`可以刷新其配置并重新初始化AI模块，而无需完全重启服务。
-    *   `xuanwu-device-server`中的`config/config_loader.py`和`config/manage_api_client.py`负责处理配置的加载、合并及从`manager-api`拉取的逻辑。
+    *   **动态远程配置:** `xuanwu-device-server` 当前优先从 `xuanwu-management-server` 获取其运行配置；管理宿主再将智能体配置请求转发到 `XuanWu`。这带来的好处包括：
+        *   **集中管理:** 配置可以先收口到 Python 管理宿主，再由其分发到运行时和智能体域。
+        *   **动态更新:** `xuanwu-device-server` 可以刷新其配置并重新初始化AI模块，而无需完全重启服务。
+    *   `xuanwu-device-server` 中的 `config/config_loader.py`、`config/xuanwu_management_client.py` 和 legacy `config/manage_api_client.py` 共同负责配置加载；其中 `manager-api` 只在显式兼容模式下生效。
 
-2.  **`manager-api` 配置:**
-    *   作为一个Spring Boot应用，其配置主要通过位于`src/main/resources`目录下的`application.properties`或`application.yml`文件进行管理。
-    *   关键配置项包括：数据库连接信息（MySQL的URL、用户名、密码）、Redis服务器地址和端口、应用服务端口（默认为8002）、Apache Shiro安全相关的设置，以及任何集成的第三方服务（如阿里云短信）的配置参数。
+2.  **`xuanwu-management-server` 配置:**
+    *   关键配置项包括管理宿主监听地址、控制面鉴权密钥、以及 `XuanWu` 的上游访问地址（当前固定约定为 `http://xuanwu-ai:8000`）。
 
-3.  **`manager-web` 配置:**
-    *   Vue.js前端应用的环境特定设置通过项目根目录下的`.env`系列文件（例如`.env`, `.env.development`, `.env.production`）进行管理。
-    *   这里最关键的配置通常是`manager-api`后端的API基础URL地址 (例如 `VUE_APP_API_BASE_URL`)，前端应用将向此地址发送所有API请求。
+3.  **legacy Java 配置:**
+    *   `manager-api` / `manager-web` 的配置仍保留在仓库中，但它们属于兼容参考实现。
+    *   只有在启用 `legacy-java profile` 或显式开启 `manager-api.enabled=true` 时，才需要关心这些配置。
 
 4.  **预定义的配置方案:**
     *   项目文档（通常是README）中会推荐一些常见的配置组合，例如：
         *   **“入门全免费设置”:** 该方案旨在利用云AI服务的免费套餐额度或完全免费的本地模型，以最大程度地降低用户的初始使用成本和运营费用。
         *   **“全流式配置”:** 该方案优先考虑系统的响应速度和交互的流畅性，通常会选用支持流式处理的（可能付费的）AI服务。
-    *   这些预定义方案为用户在`xuanwu-device-server`中配置AI服务提供商（通过`manager-web`界面或直接修改`config.yaml`）提供了指导。
+    *   这些预定义方案为用户配置 `xuanwu-device-server` 和 `XuanWu` 的上游能力提供了指导。
 
-在全模块部署的情况下，推荐使用`manager-web`控制面板作为大多数配置任务的主要操作界面，因为它提供了一种用户友好的方式来管理由`manager-api`持久化并最终由`xuanwu-device-server`使用的各项设置。
+在当前全模块部署下，推荐优先使用 `xuanwu-management-server` 作为主要操作入口；`manager-web` 只作为 legacy 兼容参考界面保留。
 
 ---
 

@@ -242,37 +242,28 @@ This flow is real-time, primarily using WebSocket for low-latency, bidirectional
     *   **Server -> ESP32:** The server may send control instructions to the device (such as "start listening", "stop listening", adjust sensitivity, send specific configuration parameters).
     *   Modules like `core/handle/abortHandle.py` (handling interrupt requests), `core/handle/reportHandle.py` (handling device reports) are responsible for parsing and responding to these control/status messages.
 
-**4.2. Management and Configuration Flow (`manager-web` <-> `manager-api` <-> `xuanwu-device-server`)**
+**4.2. Management and Configuration Flow (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-server`)**
 
 This flow primarily relies on HTTP/HTTPS-based RESTful API for request-response interactions.
 
-*   **Administrator UI Backend Interaction (`manager-web` -> `manager-api`):**
-    *   When administrators perform operations in the `manager-web` interface (e.g., saving a configuration, adding a new user, registering an ESP32 device):
-        *   The Vue.js frontend application (`manager-web`) will initiate asynchronous HTTP requests (usually GET, POST, PUT, DELETE) to the corresponding REST API endpoints of `manager-api` through its API encapsulation module (located in `src/apis/module/`).
-        *   Request and response bodies typically use JSON format.
-        *   The `@RestController` classes in `manager-api` receive these requests. The **Apache Shiro** framework will first perform authentication and authorization checks on the requests.
-        *   After verification, the Controller distributes the request to the corresponding Service layer to handle business logic. The Service layer may interact with the MySQL database (through MyBatis-Plus) and may utilize Redis for data caching.
-        *   After processing, `manager-api` returns an HTTP response in JSON format to `manager-web`.
-        *   `manager-web` updates its Vuex state store and user interface display based on the response results.
+*   **Administrator Management Main Line (`management frontend` -> `xuanwu-management-server`):**
+    *   The recommended management entrypoint is now `xuanwu-management-server`. Requests first enter the Python management host, which owns control-plane responsibilities, management-domain logic, and upstream proxying.
+    *   Requests related to agent configuration continue through `xuanwu-management-server -> XuanWu` for proxying, validation, and persistence.
 
-*   **Configuration Synchronization (`manager-api` -> `xuanwu-device-server`):**
-    *   The operation of `xuanwu-device-server` depends on dynamic configurations obtained from `manager-api` (such as currently selected AI service providers and their API keys).
-    *   **Pull Mechanism:** The `config/manage_api_client.py` module within `xuanwu-device-server`, when the server starts or through specific update triggers (e.g., when `WebSocketServer.update_config()` is called), will initiate an HTTP GET request to a specified endpoint of `manager-api` (e.g., provided by a Controller in `modules/config/controller/`).
-    *   `manager-api` responds to this request, returning the configuration data required by `xuanwu-device-server` (in JSON format).
-    *   After receiving the configuration, `xuanwu-device-server` will update its internal state and may reinitialize relevant AI service modules to make the new configuration effective.
+*   **Runtime Configuration Synchronization (`xuanwu-management-server` -> `xuanwu-device-server`):**
+    *   `xuanwu-device-server` now prefers dynamic runtime configuration from `xuanwu-management-server`.
+    *   This path is implemented by modules such as `config/config_loader.py` and `config/xuanwu_management_client.py`.
+    *   `manager-api` is used only when legacy compatibility mode is explicitly enabled.
 
-*   **OTA Firmware Update Flow (Conceptual Description):**
-    *   Administrators upload new ESP32 firmware packages to specific endpoints of `manager-api` through the `manager-web` interface.
-    *   `manager-api` stores the firmware files and records related metadata (version number, applicable device models, etc.).
-    *   When administrators trigger OTA updates for specific devices:
-        *   `manager-api` may notify `xuanwu-device-server` (the specific notification mechanism may be a polling checkpoint, or `xuanwu-device-server` exposes an API to receive update notifications, or more loosely coupled like message queues).
-        *   `xuanwu-device-server` can then send an instruction message containing the firmware download URL to the target ESP32 device through WebSocket.
-        *   After receiving the instruction, the ESP32 device downloads the firmware through an HTTP GET request from that URL. This URL may point to a path served by the `SimpleHttpServer` running on `xuanwu-device-server` itself (such as `/xiaozhi/ota/`), or in some architectures, it may directly point to `manager-api` or a dedicated file server.
+*   **OTA and control-plane data:**
+    *   In the default primary path, OTA metadata and control-plane configuration should be owned by the Python management host.
+    *   Devices still receive OTA download URLs or control instructions through the runtime path of `xuanwu-device-server`.
+    *   If the old Java management chain is still used, it is now documented as compatibility behavior rather than the default path.
 
 **4.3. Main Protocol Summary:**
 
 *   **WebSocket:** Selected for the communication link between ESP32 and `xuanwu-device-server` because it is very suitable for real-time, low-latency, bidirectional data stream transmission (especially audio), as well as asynchronous control message delivery.
-*   **RESTful APIs (based on HTTP/HTTPS, usually using JSON as the data exchange format):** This is the standard way for web service communication. Used for request-response interactions between `manager-web` (client) and `manager-api` (server), and also for `xuanwu-device-server` (as client) to pull configuration information from `manager-api` (as server). Its stateless nature, wide library support, and easy-to-understand semantics make it an ideal choice for such interactions.
+*   **RESTful APIs (based on HTTP/HTTPS, usually using JSON as the data exchange format):** This is the standard service-to-service communication model. It is now used primarily between `xuanwu-management-server` and `XuanWu`, and between `xuanwu-device-server` and `xuanwu-management-server`. `manager-api` remains only as a compatibility-path dependency.
 
 This multi-protocol communication strategy ensures that different types of interaction requirements within the system can be handled efficiently and appropriately, balancing real-time performance and standardized request-response patterns.
 
@@ -332,13 +323,14 @@ The `xuanwu-device-server` system is designed with flexibility in mind, providin
 The project can be deployed in multiple ways, mainly including using Docker to simplify the installation process, or deploying directly from source code for greater control and development.
 
 1.  **Docker-based Deployment:**
-    *   **Simplified Installation (Only `xuanwu-device-server`):** This option only deploys the core Python-based `xuanwu-device-server`. It is suitable for users who mainly need voice AI processing capabilities and IoT control, without requiring the complete Web management interface and database support functions (such as OTA). In this mode, configuration is typically managed through local files (`config.yaml`), but if needed, it can still point to an existing `manager-api` instance.
-    *   **Full Module Installation (All Components):** This scheme deploys all core components: `xuanwu-device-server`, Java-based `manager-api`, and Vue.js-based `manager-web`, along with required database services (MySQL and Redis). This provides a complete system experience, including a Web control panel for comprehensive configuration and management.
-    *   The project provides `Dockerfile` definitions for each service and uses `docker-compose.yml` files (e.g., `docker-compose.yml` for basic version, `docker-compose_all.yml` for full-featured version) to orchestrate and manage multi-container deployment. Additionally, a `docker-setup.sh` script may be provided to assist in automating part of the Docker environment setup work.
+    *   **Simplified Installation (Only `xuanwu-device-server`):** This option deploys only the runtime service and is suitable when voice AI processing and device runtime flow are the primary goals.
+    *   **Full Module Installation (Default Primary Path):** The recommended current path deploys `xuanwu-device-server + xuanwu-management-server`, with `XuanWu` connected as the external agent service.
+    *   **Legacy Java compatibility mode:** If the old management chain is still required, `manager-api` / `manager-web` / MySQL / Redis are brought up explicitly through the `legacy-java profile`.
+    *   The project uses `docker-compose_all.yml` to orchestrate these services. The default `docker compose -f docker-compose_all.yml up -d` follows the Python-primary path, while `docker compose --profile legacy-java -f docker-compose_all.yml up -d` enables the legacy Java management stack.
 
 2.  **Source Code Deployment:**
-    *   This method requires manual setup of the corresponding development environment for each component: Python environment for `xuanwu-device-server`, Java/Maven environment for `manager-api`, Node.js/Vue CLI environment for `manager-web`.
-    *   For full module installation, MySQL and Redis database services also need to be manually installed and configured.
+    *   The current default primary path is `xuanwu-device-server + xuanwu-management-server + XuanWu`.
+    *   `manager-api` / `manager-web` and their database dependencies are only required when maintaining the legacy compatibility path.
     *   This approach is typically used for project development, deep customization, debugging, or in production scenarios with special environmental requirements.
 
 **Configuration Management:**
@@ -347,26 +339,25 @@ Configuration is key to customizing system behavior, especially in selecting AI 
 
 1.  **`xuanwu-device-server` Configuration:**
     *   **Local `config.yaml`:** A main YAML format configuration file located in the `xuanwu-device-server` root directory. It defines server ports, selected AI service providers (ASR, LLM, TTS, VAD, Intent Recognition, Memory modules, etc.), their respective API keys or model paths, plugin configurations, and log levels.
-    *   **Remote Configuration through `manager-api`:** `xuanwu-device-server` is designed to obtain its operation configuration from `manager-api`. Settings obtained from `manager-api` typically override settings with the same name in the local `config.yaml`. This brings two major benefits:
-        *   **Centralized Management:** All configurations can be managed uniformly through the `manager-web` interface.
-        *   **Dynamic Updates:** `xuanwu-device-server` can refresh its configuration and reinitialize AI modules without completely restarting the service.
-    *   `config/config_loader.py` and `config/manage_api_client.py` in `xuanwu-device-server` are responsible for handling configuration loading, merging, and pulling logic from `manager-api`.
+    *   **Dynamic Remote Configuration:** `xuanwu-device-server` now prefers runtime configuration from `xuanwu-management-server`, while agent-domain requests are proxied onward to `XuanWu`. This provides:
+        *   **Centralized Management:** Configuration can be centralized in the Python management host before being distributed to runtime and agent domains.
+        *   **Dynamic Updates:** `xuanwu-device-server` can refresh configuration and reinitialize AI modules without a full restart.
+    *   `config/config_loader.py`, `config/xuanwu_management_client.py`, and legacy `config/manage_api_client.py` handle configuration loading together, with `manager-api` active only in explicit compatibility mode.
 
-2.  **`manager-api` Configuration:**
-    *   As a Spring Boot application, its configuration is mainly managed through the `application.properties` or `application.yml` file located in the `src/main/resources` directory.
-    *   Key configuration items include: database connection information (MySQL URL, username, password), Redis server address and port, application service port (default 8002), Apache Shiro security-related settings, and configuration parameters for any integrated third-party services (such as Aliyun SMS).
+2.  **`xuanwu-management-server` Configuration:**
+    *   Key configuration includes the management-host listen address, control-plane auth secret, and the upstream `XuanWu` endpoint (currently fixed to `http://xuanwu-ai:8000`).
 
-3.  **`manager-web` Configuration:**
-    *   Environment-specific settings for the Vue.js frontend application are managed through `.env` series files (e.g., `.env`, `.env.development`, `.env.production`) in the project root directory.
-    *   The most critical configuration here is usually the API base URL address of the `manager-api` backend (e.g., `VUE_APP_API_BASE_URL`), to which the frontend application will send all API requests.
+3.  **Legacy Java Configuration:**
+    *   `manager-api` / `manager-web` settings remain in the repository as compatibility references.
+    *   They matter only when `legacy-java profile` or `manager-api.enabled=true` is intentionally used.
 
 4.  **Predefined Configuration Schemes:**
     *   The project documentation (usually README) will recommend some common configuration combinations, for example:
         *   **"Entry Level Free Settings":** This scheme aims to utilize free tier quotas of cloud AI services or completely free local models to minimize users' initial usage costs and operating expenses.
         *   **"Full Streaming Configuration":** This scheme prioritizes system response speed and interaction fluency, typically choosing AI services that support streaming processing (possibly paid).
-    *   These predefined schemes provide guidance for users to configure AI service providers in `xuanwu-device-server` (through the `manager-web` interface or directly modifying `config.yaml`).
+    *   These predefined schemes provide guidance for configuring upstream capabilities for `xuanwu-device-server` and `XuanWu`.
 
-In the case of full module deployment, it is recommended to use the `manager-web` control panel as the main operation interface for most configuration tasks, as it provides a user-friendly way to manage various settings that are persisted by `manager-api` and ultimately used by `xuanwu-device-server`.
+In the current full deployment model, `xuanwu-management-server` is the recommended primary operations entrypoint. `manager-web` remains only as a legacy compatibility reference interface.
 
 ---
 

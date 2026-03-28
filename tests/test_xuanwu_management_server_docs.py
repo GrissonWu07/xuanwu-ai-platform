@@ -116,3 +116,19 @@ def test_docker_setup_mentions_legacy_manager_api_compatibility_mode():
 
     assert "legacy 兼容模式" in setup_text
     assert "manager-api" in setup_text
+
+
+def test_main_readmes_reframe_management_flow_and_deployment_to_python_primary_path():
+    root = Path(__file__).resolve().parents[1]
+    zh_text = (root / "main" / "README.md").read_text(encoding="utf-8")
+    en_text = (root / "main" / "README_en.md").read_text(encoding="utf-8")
+
+    assert "管理与配置流程 (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-server`)" in zh_text
+    assert "动态远程配置" in zh_text
+    assert "全模块安装（默认主路径）" in zh_text
+    assert "legacy-java profile" in zh_text
+
+    assert "Management and Configuration Flow (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-server`)" in en_text
+    assert "Dynamic Remote Configuration" in en_text
+    assert "Full Module Installation (Default Primary Path)" in en_text
+    assert "legacy-java profile" in en_text
