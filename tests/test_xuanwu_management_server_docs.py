@@ -48,6 +48,14 @@ def test_manager_api_compatibility_template_requires_explicit_enable():
     assert "兼容模式" in template_text
 
 
+def test_docker_setup_explicitly_enables_manager_api_compatibility_mode():
+    root = Path(__file__).resolve().parents[1]
+    setup_text = (root / "docker-setup.sh").read_text(encoding="utf-8")
+
+    assert "config['manager-api']" in setup_text
+    assert "\"enabled\": True" in setup_text or "'enabled': True" in setup_text
+
+
 def test_refactor_doc_mentions_management_server_transition():
     root = Path(__file__).resolve().parents[1]
     doc_text = (

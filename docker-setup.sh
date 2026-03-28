@@ -393,7 +393,7 @@ import sys, yaml;
 config_path = '/opt/xuanwu-device-server/data/.config.yaml'; 
 with open(config_path, 'r') as f: 
     config = yaml.safe_load(f) or {}; 
-config['manager-api'] = {'url': 'http://xuanwu-device-server-web:8002/xiaozhi', 'secret': '$SECRET_KEY'}; 
+config['manager-api'] = {'enabled': True, 'url': 'http://xuanwu-device-server-web:8002/xiaozhi', 'secret': '$SECRET_KEY'}; 
 with open(config_path, 'w') as f: 
     yaml.dump(config, f); 
 "
