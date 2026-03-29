@@ -64,7 +64,7 @@ async def main():
 
     port = int(config["server"].get("http_port", 8003))
     logger.bind(tag=TAG).info(
-        "OTA接口地址是\thttp://{}:{}/xiaozhi/ota/",
+        "OTA接口地址是\thttp://{}:{}/xuanwu/ota/",
         get_local_ip(),
         port,
     )
@@ -85,7 +85,7 @@ async def main():
 
     websocket_port = int(config.get("server", {}).get("port", 8000))
     logger.bind(tag=TAG).info(
-        "Websocket地址是\tws://{}:{}/xiaozhi/v1/",
+        "Websocket地址是\tws://{}:{}/xuanwu/v1/",
         get_local_ip(),
         websocket_port,
     )

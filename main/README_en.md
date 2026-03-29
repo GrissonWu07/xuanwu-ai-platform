@@ -1,4 +1,4 @@
-﻿# Technical Documentation: `xuanwu-device-server`
+# Technical Documentation: `xuanwu-device-server`
 
 > Migration note (2026-03-28)
 >
@@ -122,7 +122,7 @@ The `xuanwu-device-server` is the intelligent core of the system, responsible fo
         *   `config/assets/` stores predefined audio files for system notifications.
 
     6.  **Auxiliary HTTP Server (`core/http_server.py`):**
-        *   Handles specific HTTP requests, notably for OTA firmware updates (`/xiaozhi/ota/`) and other utility endpoints.
+        *   Handles specific HTTP requests, notably for OTA firmware updates (`/xuanwu/ota/`) and other utility endpoints.
 
 ### 3.2. `manager-api` (Management Backend - Java Spring Boot Implementation)
 
@@ -214,7 +214,7 @@ This flow is real-time, primarily using WebSocket for low-latency, bidirectional
         *   Error handling mechanism
 
 *   **Connection Establishment and Handshake:**
-    *   The ESP32 device, as a client, actively initiates a WebSocket connection request to the specified endpoint of `xuanwu-device-server` (e.g., `ws://<server-IP>:<WebSocket-port>/xiaozhi/v1/`).
+    *   The ESP32 device, as a client, actively initiates a WebSocket connection request to the specified endpoint of `xuanwu-device-server` (e.g., `ws://<server-IP>:<WebSocket-port>/xuanwu/v1/`).
     *   `xuanwu-device-server` (`core/websocket_server.py`) receives the connection and instantiates an independent `ConnectionHandler` object for each successfully connected ESP32 device to manage the entire lifecycle of that session.
     *   After the connection is established, an initial handshake process may be executed (handled by `core/handle/helloHandle.py`) to exchange device identification, authentication information, protocol version, or basic status.
 

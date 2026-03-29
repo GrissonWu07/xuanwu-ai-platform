@@ -1,11 +1,11 @@
-﻿[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
+[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Xiaozhi Backend Service xuanwu-device-server</h1>
+<h1 align="center">Xuanwu Backend Service xuanwu-device-server</h1>
 
 <p align="center">
 This project is based on human-machine symbiotic intelligence theory and technology to develop intelligent terminal hardware and software systems<br/>providing backend services for the open-source intelligent hardware project
-<a href="https://github.com/78/xiaozhi-esp32">xiaozhi-esp32</a><br/>
-Implemented using Python, Java, and Vue according to the <a href="https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh">Xiaozhi Communication Protocol</a><br/>
+<a href="https://github.com/78/xuanwu-esp32">xuanwu-esp32</a><br/>
+Implemented using Python, Java, and Vue according to the <a href="https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh">Xuanwu Communication Protocol</a><br/>
 Support for MQTT+UDP protocol, Websocket protocol, MCP access point, voiceprint recognition, and knowledge base
 </p>
 
@@ -45,7 +45,7 @@ Spearheaded by Professor Siyuan Liu's Team (South China University of Technology
 
 ## Target Users 👥
 
-This project requires ESP32 hardware devices to work. If you have purchased ESP32-related hardware, successfully connected to Brother Xia's deployed backend service, and want to build your own `xiaozhi-esp32` backend service independently, then this project is perfect for you.
+This project requires ESP32 hardware devices to work. If you have purchased ESP32-related hardware, successfully connected to Brother Xia's deployed backend service, and want to build your own `xuanwu-esp32` backend service independently, then this project is perfect for you.
 
 Want to see the usage effects? Click the videos below 🎥
 
@@ -194,8 +194,8 @@ Intelligent Control Console Address: https://2662r3426b.vicp.fun
 Intelligent Control Console Address (H5): https://2662r3426b.vicp.fun/h5/index.html
 
 Service Test Tool: https://2662r3426b.vicp.fun/test/
-OTA Interface Address: https://2662r3426b.vicp.fun/xiaozhi/ota/
-Websocket Interface Address: wss://2662r3426b.vicp.fun/xiaozhi/v1/
+OTA Interface Address: https://2662r3426b.vicp.fun/xuanwu/ota/
+Websocket Interface Address: wss://2662r3426b.vicp.fun/xuanwu/v1/
 ```
 
 #### 🚩 Configuration Description and Recommendations
@@ -217,7 +217,7 @@ Websocket Interface Address: wss://2662r3426b.vicp.fun/xiaozhi/v1/
 | Intent(Intent Recognition) | function_call(Function calling) | function_call(Function calling) |
 | Memory(Memory function) | mem_local_short(Local short-term memory) | mem_local_short(Local short-term memory) |
 
-If you are concerned about the latency of each component, please refer to the [Xiaozhi Component Performance Test Report](https://github.com/xinnan-tech/xiaozhi-performance-research), and test in your own environment following the test methods in the report.
+If you are concerned about the latency of each component, please refer to the [Xuanwu Component Performance Test Report](https://github.com/xinnan-tech/xuanwu-performance-research), and test in your own environment following the test methods in the report.
 
 #### 🔧 Testing Tools
 This project provides the following testing tools to help you verify the system and choose suitable models:
@@ -259,7 +259,7 @@ If you are a software developer, here is an [Open Letter to Developers](docs/con
 ---
 
 ## Product Ecosystem 👬
-Xiaozhi is an ecosystem. When using this product, you can also check out other [excellent projects](https://github.com/78/xiaozhi-esp32/blob/main/README_zh.md#%E7%9B%B8%E5%85%B3%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE) in this ecosystem
+Xuanwu is an ecosystem. When using this product, you can also check out other [excellent projects](https://github.com/78/xuanwu-esp32/blob/main/README_zh.md#%E7%9B%B8%E5%85%B3%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE) in this ecosystem
 
 ---
 
@@ -358,7 +358,7 @@ In fact, any VLLM that supports OpenAI interface calls can be integrated and use
 | Logo | Project/Company | Description |
 |:---:|:---:|:---|
 | <img src="./docs/images/logo_bailing.png" width="160"> | [Bailing Voice Dialogue Robot](https://github.com/wwbin2017/bailing) | This project is inspired by [Bailing Voice Dialogue Robot](https://github.com/wwbin2017/bailing) and implemented on its basis |
-| <img src="./docs/images/logo_tenclass.png" width="160"> | [Tenclass](https://www.tenclass.com/) | Thanks to [Tenclass](https://www.tenclass.com/) for formulating standard communication protocols, multi-device compatibility solutions, and high-concurrency scenario practice demonstrations for the Xiaozhi ecosystem; providing full-link technical documentation support for this project |
+| <img src="./docs/images/logo_tenclass.png" width="160"> | [Tenclass](https://www.tenclass.com/) | Thanks to [Tenclass](https://www.tenclass.com/) for formulating standard communication protocols, multi-device compatibility solutions, and high-concurrency scenario practice demonstrations for the Xuanwu ecosystem; providing full-link technical documentation support for this project |
 | <img src="./docs/images/logo_xuanfeng.png" width="160"> | [Xuanfeng Technology](https://github.com/Eric0308) | Thanks to [Xuanfeng Technology](https://github.com/Eric0308) for contributing function calling framework, MCP communication protocol, and plugin-based calling mechanism implementation code. Through standardized instruction scheduling system and dynamic expansion capabilities, it significantly improves the interaction efficiency and functional extensibility of frontend devices (IoT) |
 | <img src="./docs/images/logo_junsen.png" width="160"> | [huangjunsen](https://github.com/huangjunsen0406) | Thanks to [huangjunsen](https://github.com/huangjunsen0406) for contributing the `Smart Control Console Mobile` module, which enables efficient control and real-time interaction across mobile devices, significantly enhancing the system's operational convenience and management efficiency in mobile scenarios. |
 | <img src="./docs/images/logo_huiyuan.png" width="160"> | [Huiyuan Design](http://ui.kwd988.net/) | Thanks to [Huiyuan Design](http://ui.kwd988.net/) for providing professional visual solutions for this project, using their design practical experience serving over a thousand enterprises to empower this project's product user experience |

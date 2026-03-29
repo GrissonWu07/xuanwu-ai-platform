@@ -20,7 +20,7 @@ class ControlPlaneHandler(BaseHandler):
         expected = str(self.control_secret or "").strip()
         if not expected:
             return False
-        provided = request.headers.get("X-Xiaozhi-Control-Secret", "").strip()
+        provided = request.headers.get("X-Xuanwu-Control-Secret", "").strip()
         return bool(provided) and provided == expected
 
     def _json_response(self, payload: dict, *, status: int = 200) -> web.Response:

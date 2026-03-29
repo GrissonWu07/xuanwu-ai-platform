@@ -1,8 +1,8 @@
-﻿# 协议与接口冻结设计
+# 协议与接口冻结设计
 
 ## 1. 目的
 
-本文档冻结 `xiaozhi-server` 与 `AtlasClaw` 之间的核心协议，作为后续所有实现的基础。
+本文档冻结 `xuanwu-server` 与 `AtlasClaw` 之间的核心协议，作为后续所有实现的基础。
 
 本阶段只做接口与契约设计，不涉及代码实现。
 
@@ -17,8 +17,8 @@
 ## 2. 核心原则
 
 - 协议一旦冻结，后续实现不得在开发中临时扩字段或改语义
-- `AtlasClaw` 只通过 HTTP/SSE 和 `xiaozhi-server` 交互
-- `xiaozhi-server` 不暴露内部对象给 `AtlasClaw`
+- `AtlasClaw` 只通过 HTTP/SSE 和 `xuanwu-server` 交互
+- `xuanwu-server` 不暴露内部对象给 `AtlasClaw`
 - `AtlasClaw` 的主输入是文本与设备上下文，不是原始音频
 
 ## 3. session_key 规范
@@ -34,11 +34,11 @@
 
 主格式：
 
-`agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}`
+`agent:main:user:device-{device_id}:xuanwu:dm:{device_id}`
 
 多连接隔离格式：
 
-`agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}:topic:{client_id}`
+`agent:main:user:device-{device_id}:xuanwu:dm:{device_id}:topic:{client_id}`
 
 ### 3.3 字段含义
 
@@ -47,7 +47,7 @@
 | `agent` | 固定 | AtlasClaw 会话前缀 |
 | `main` | 固定 | 主代理 ID |
 | `user:device-{device_id}` | 派生 | 将设备映射为会话主体 |
-| `xiaozhi` | 固定 | 来源 channel |
+| `xuanwu` | 固定 | 来源 channel |
 | `dm` | 固定 | 会话类型 |
 | `{device_id}` | 动态 | 设备 peer_id |
 | `topic:{client_id}` | 可选 | 并发连接隔离 |
@@ -58,7 +58,7 @@
 - `client_id` 可选
 - 若单设备同时只允许一个对话连接，则不带 `topic`
 - 若允许多连接，则必须带 `topic:{client_id}`
-- `xiaozhi-server` 是唯一允许生成 `session_key` 的组件
+- `xuanwu-server` 是唯一允许生成 `session_key` 的组件
 
 ## 4. AgentRunRequest.context 冻结
 
@@ -70,14 +70,14 @@
 
 ```json
 {
-  "session_key": "agent:main:user:device-esp32-001:xiaozhi:dm:esp32-001",
+  "session_key": "agent:main:user:device-esp32-001:xuanwu:dm:esp32-001",
   "message": "帮我查一下今天上海天气",
   "timeout_seconds": 120,
   "context": {
     "device_id": "esp32-001",
     "client_id": "client-001",
     "runtime_session_id": "rt-001",
-    "channel": "xiaozhi",
+    "channel": "xuanwu",
     "bind_status": "bound",
     "locale": "zh-CN",
     "audio_format": "opus",
@@ -102,7 +102,7 @@
 | `device_id` | string | 是 | 设备主标识 |
 | `client_id` | string | 否 | 当前连接实例 ID |
 | `runtime_session_id` | string | 是 | 本地运行时会话 ID |
-| `channel` | string | 是 | 固定 `xiaozhi` |
+| `channel` | string | 是 | 固定 `xuanwu` |
 | `bind_status` | string | 是 | `bound` / `pending` / `unknown` |
 | `locale` | string | 否 | 语言偏好 |
 | `audio_format` | string | 否 | 设备音频编码 |
@@ -141,7 +141,7 @@
   "runtime_session_id": "rt-001",
   "device_id": "esp32-001",
   "client_id": "client-001",
-  "atlas_session_key": "agent:main:user:device-esp32-001:xiaozhi:dm:esp32-001",
+  "atlas_session_key": "agent:main:user:device-esp32-001:xuanwu:dm:esp32-001",
   "connected": true,
   "capabilities": {
     "speaker": true,
@@ -230,9 +230,9 @@
 
 ## 6. 运行时鉴权冻结
 
-- Header: `X-Xiaozhi-Runtime-Secret`
+- Header: `X-Xuanwu-Runtime-Secret`
 - 所有 `/runtime/v1/*` 接口均强制校验
-- `AtlasClaw` 与 `xiaozhi-server` 使用服务间固定密钥
+- `AtlasClaw` 与 `xuanwu-server` 使用服务间固定密钥
 - 不复用设备 token
 
 ## 7. SSE 事件映射冻结
@@ -270,7 +270,7 @@ runtime API 统一错误码：
 
 协议冻结后，后续实现必须遵守以下边界：
 
-- 本地工具不由 `xiaozhi-server` 自主智能决定
+- 本地工具不由 `xuanwu-server` 自主智能决定
 - 本地工具只能由 `AtlasClaw` 通过 runtime API 调用
 - `manager-web`、`manager-api` 不参与主对话链路
 

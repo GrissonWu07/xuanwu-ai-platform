@@ -163,7 +163,7 @@ The first real `Agent` page must also be added to the new management server even
 
 `xuanwu-management-server -> XuanWu` must send:
 
-- `X-Xiaozhi-Control-Plane-Secret`
+- `X-Xuanwu-Control-Plane-Secret`
 - `X-Request-Id`
 
 It must proxy and normalize:

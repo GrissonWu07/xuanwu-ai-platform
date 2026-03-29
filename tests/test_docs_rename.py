@@ -7,3 +7,5 @@ def test_root_docs_use_xuanwu_device_server():
 
     assert "xuanwu-device-server" in readme_text
     assert "玄武AI" in readme_text
+    assert "/xuanwu/ota/" in readme_text
+    assert "/xuanwu/v1/" in readme_text

@@ -124,7 +124,7 @@ def test_control_plane_get_server_config_requires_secret_and_returns_payload():
         request = make_mocked_request(
             "GET",
             "/control-plane/v1/config/server",
-            headers={"X-Xiaozhi-Control-Secret": "runtime-secret"},
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
         )
 
         response = asyncio.run(handler.handle_get_server_config(request))
@@ -172,7 +172,7 @@ def test_control_plane_chat_history_report_persists_payload():
         request = make_mocked_request(
             "POST",
             "/control-plane/v1/chat-history/report",
-            headers={"X-Xiaozhi-Control-Secret": "runtime-secret"},
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
         )
         request._read_bytes = (
             b'{"device_id":"esp32-living-room","session_id":"sess-20260328-001",'
@@ -203,7 +203,7 @@ def test_control_plane_summary_generation_request_persists_payload():
         request = make_mocked_request(
             "POST",
             "/control-plane/v1/chat-summaries/sess-20260328-001:generate",
-            headers={"X-Xiaozhi-Control-Secret": "runtime-secret"},
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
             match_info={"summary_id": "sess-20260328-001"},
         )
         request._read_bytes = (

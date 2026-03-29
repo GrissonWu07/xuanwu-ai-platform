@@ -1,4 +1,4 @@
-﻿# MCP 接入点使用指南
+# MCP 接入点使用指南
 
 本教程以虾哥开源的mcp计算器功能为示例，介绍如何将自己自定义的mcp服务接入到自己的接入点里。
 
@@ -18,10 +18,10 @@
 ```
 250705[__main__]-INFO-初始化组件: vad成功 SileroVAD
 250705[__main__]-INFO-初始化组件: asr成功 FunASRServer
-250705[__main__]-INFO-OTA接口是          http://192.168.1.25:8002/xiaozhi/ota/
+250705[__main__]-INFO-OTA接口是          http://192.168.1.25:8002/xuanwu/ota/
 250705[__main__]-INFO-视觉分析接口是     http://192.168.1.25:8002/mcp/vision/explain
 250705[__main__]-INFO-mcp接入点是        ws://192.168.1.25:8004/mcp_endpoint/mcp/?token=abc
-250705[__main__]-INFO-Websocket地址是    ws://192.168.1.25:8000/xiaozhi/v1/
+250705[__main__]-INFO-Websocket地址是    ws://192.168.1.25:8000/xuanwu/v1/
 250705[__main__]-INFO-=======上面的地址是websocket协议地址，请勿用浏览器访问=======
 250705[__main__]-INFO-如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
 250705[__main__]-INFO-=============================================================

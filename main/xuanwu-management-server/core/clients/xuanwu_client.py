@@ -19,7 +19,7 @@ class XuanWuClient:
 
     def build_headers(self, request_id: str) -> dict[str, str]:
         return {
-            "X-Xiaozhi-Control-Plane-Secret": self.control_plane_secret,
+            "X-Xuanwu-Control-Plane-Secret": self.control_plane_secret,
             "X-Request-Id": request_id,
         }
 

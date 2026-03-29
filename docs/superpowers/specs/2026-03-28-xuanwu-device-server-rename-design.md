@@ -1,4 +1,4 @@
-﻿# Xuanwu Device Server Rename Design
+# Xuanwu Device Server Rename Design
 
 **Date:** 2026-03-28
 
@@ -21,8 +21,8 @@ Rename the Python runtime service from `xuanwu-device-server` to `xuanwu-device-
 
 - `main/manager-api`
 - `main/manager-web`
-- Java package names such as `xiaozhi.*`
-- Protocol paths such as `/xiaozhi`
+- Java package names such as `xuanwu.*`
+- Protocol paths such as `/xuanwu`
 - Historical external repository URLs, release badges, and star-history targets
 
 ## Rename Rules
@@ -54,7 +54,7 @@ Rename the Python runtime service from `xuanwu-device-server` to `xuanwu-device-
 
 The following must remain unchanged for now:
 
-- `/xiaozhi` protocol route strings
+- `/xuanwu` protocol route strings
 - Java package namespaces
 - existing external repository links
 - upstream star/release badge URLs
@@ -68,7 +68,7 @@ This is a naming and identity consolidation task, not a protocol migration task.
 - Docker and CI paths may break after the directory rename
 - Shell scripts may still assume `/opt/xuanwu-device-server`
 - Documentation can drift if root docs and runtime docs are not updated together
-- Accidentally renaming `/xiaozhi` protocol paths or Java package names would break compatibility
+- Accidentally renaming `/xuanwu` protocol paths or Java package names would break compatibility
 
 ## Mitigations
 
@@ -93,6 +93,6 @@ This is a naming and identity consolidation task, not a protocol migration task.
 - Chinese docs/comments in scope use `鐜勬AI` instead of `灏忔櫤`
 - `main/manager-mobile` is removed
 - `manager-api` and `manager-web` remain untouched
-- No `/xiaozhi` protocol route is renamed
+- No `/xuanwu` protocol route is renamed
 
 

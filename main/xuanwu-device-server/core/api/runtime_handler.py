@@ -24,7 +24,7 @@ class RuntimeHandler(BaseHandler):
         expected = str(self.runtime_secret or "").strip()
         if not expected:
             return False
-        provided = request.headers.get("X-Xiaozhi-Runtime-Secret", "").strip()
+        provided = request.headers.get("X-Xuanwu-Runtime-Secret", "").strip()
         return bool(provided) and provided == expected
 
     def _json_response(self, payload: dict, *, status: int = 200) -> web.Response:

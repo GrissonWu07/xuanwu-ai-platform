@@ -1,11 +1,11 @@
-﻿# AtlasClaw 涓诲璇濆紩鎿庝笓椤硅璁℃枃妗?
+# AtlasClaw 涓诲璇濆紩鎿庝笓椤硅璁℃枃妗?
 
 ## 1. 鏂囨。鐩殑
 
-鏈枃妗ｅ畾涔?`xiaozhi-server` 涓?`AtlasClaw` 鐨勯噸鏋勭洰鏍囨灦鏋勶紝骞舵槑纭湰娆￠噸鏋勭殑鏍稿績鍐崇瓥锛?
+鏈枃妗ｅ畾涔?`xuanwu-server` 涓?`AtlasClaw` 鐨勯噸鏋勭洰鏍囨灦鏋勶紝骞舵槑纭湰娆￠噸鏋勭殑鏍稿績鍐崇瓥锛?
 
 - `AtlasClaw` 鎴愪负鍞竴涓诲璇濆紩鎿?
-- `xiaozhi-server` 淇濈暀涓鸿澶囨帴鍏ヤ笌鎵ц灞?
+- `xuanwu-server` 淇濈暀涓鸿澶囨帴鍏ヤ笌鎵ц灞?
 - 褰撳墠鏈湴 `LLM`銆乣Intent`銆乣Memory` 涓嶅啀鎵挎媴涓诲璇濊亴璐?
 - 璁惧鏈湴鑳藉姏閫氳繃杩愯鏃?API 鏆撮湶缁?`AtlasClaw`锛岀敱 `AtlasClaw` 缁熶竴瑙勫垝涓庤皟搴?
 
@@ -13,7 +13,7 @@
 
 ## 2. 鑳屾櫙涓庨棶棰?
 
-褰撳墠椤圭洰涓紝`xiaozhi-server` 鍚屾椂鎵挎媴浜嗕互涓嬭亴璐ｏ細
+褰撳墠椤圭洰涓紝`xuanwu-server` 鍚屾椂鎵挎媴浜嗕互涓嬭亴璐ｏ細
 
 - 璁惧 WebSocket 鎺ュ叆
 - 闊抽杈撳叆杈撳嚭涓庢祦鎺?
@@ -36,15 +36,15 @@
 
 ### 3.1 鏍稿績鐩爣
 
-- 璁惧杩炴帴銆侀煶棰戦噰闆嗐€乀TS 鎾斁浠嶇敱 `xiaozhi-server` 璐熻矗
+- 璁惧杩炴帴銆侀煶棰戦噰闆嗐€乀TS 鎾斁浠嶇敱 `xuanwu-server` 璐熻矗
 - 鐢ㄦ埛鏂囨湰涓€鏃﹀舰鎴愶紝鍗崇敱 `AtlasClaw` 璐熻矗涓诲璇濄€佷换鍔¤鍒掋€佸伐鍏烽€夋嫨鍜岃蹇嗙鐞?
 - 鎵€鏈夊鏉傝涔変唬鐞嗚涓虹粺涓€鏀舵暃鍒?`AtlasClaw`
-- `xiaozhi-server` 鍙仛杩愯鏃舵墽琛屻€佸崗璁浆鎹㈠拰瀹炴椂鎺у埗
+- `xuanwu-server` 鍙仛杩愯鏃舵墽琛屻€佸崗璁浆鎹㈠拰瀹炴椂鎺у埗
 
 ### 3.2 闈炵洰鏍?
 
 - 鏈樁娈典笉閲嶅啓 Web 绠＄悊鍙版垨绉诲姩绔?
-- 鏈樁娈典笉灏?`AtlasClaw` 鍐呭祵鍒?`xiaozhi-server` 杩涚▼鍐?
+- 鏈樁娈典笉灏?`AtlasClaw` 鍐呭祵鍒?`xuanwu-server` 杩涚▼鍐?
 - 鏈樁娈典笉淇濈暀鈥滃弻涓诲紩鎿庘€濋暱鏈熷苟琛屾ā寮?
 - 鏈樁娈典笉閲嶆柊璁捐璁惧鍗忚
 
@@ -52,7 +52,7 @@
 
 ### 4.1 閲嶆瀯鍚庣殑鑱岃矗杈圭晫
 
-`xiaozhi-server` 璐熻矗锛?
+`xuanwu-server` 璐熻矗锛?
 
 - 璁惧鍗忚鎺ュ叆
 - WebSocket / HTTP / OTA / MQTT
@@ -77,7 +77,7 @@
 ```mermaid
 sequenceDiagram
     participant Device as Device/ESP32
-    participant XZ as xiaozhi-server
+    participant XZ as xuanwu-server
     participant AC as AtlasClaw
 
     Device->>XZ: audio / hello / ping / abort
@@ -95,13 +95,13 @@ sequenceDiagram
 
 ### 5.1 褰撳墠涓诲璇濋摼璺?
 
-褰撳墠 `xiaozhi-server` 鐨勪富瀵硅瘽閾捐矾涓昏浣嶄簬浠ヤ笅鏂囦欢锛?
+褰撳墠 `xuanwu-server` 鐨勪富瀵硅瘽閾捐矾涓昏浣嶄簬浠ヤ笅鏂囦欢锛?
 
-- `main/xiaozhi-server/core/handle/receiveAudioHandle.py`
-- `main/xiaozhi-server/core/handle/intentHandler.py`
-- `main/xiaozhi-server/core/connection.py`
-- `main/xiaozhi-server/core/utils/modules_initialize.py`
-- `main/xiaozhi-server/core/providers/tools/unified_tool_handler.py`
+- `main/xuanwu-server/core/handle/receiveAudioHandle.py`
+- `main/xuanwu-server/core/handle/intentHandler.py`
+- `main/xuanwu-server/core/connection.py`
+- `main/xuanwu-server/core/utils/modules_initialize.py`
+- `main/xuanwu-server/core/providers/tools/unified_tool_handler.py`
 
 褰撳墠娴佺▼澶ц嚧涓猴細
 
@@ -165,7 +165,7 @@ sequenceDiagram
 
 鍥犳鏈璁捐閲囩敤锛?
 
-- `xiaozhi-server` 鑷鏋勯€犵ǔ瀹氱殑 `session_key`
+- `xuanwu-server` 鑷鏋勯€犵ǔ瀹氱殑 `session_key`
 - 鐩存帴璋冪敤 `AtlasClaw /agent/run`
 - 涓嶄緷璧?`AtlasClaw /sessions` 鎺ュ彛鏉ュ垎閰嶄細璇濊韩浠?
 
@@ -179,7 +179,7 @@ sequenceDiagram
 
 - `device_id`锛氳澶囨爣璇嗭紝涓讳細璇濅富浣?
 - `client_id`锛氬崟璁惧涓嬬殑杩炴帴瀹炰緥鏍囪瘑
-- `runtime_session_id`锛歚xiaozhi-server` 鏈湴浼氳瘽 ID
+- `runtime_session_id`锛歚xuanwu-server` 鏈湴浼氳瘽 ID
 - `atlas_session_key`锛氬彂缁?`AtlasClaw` 鐨勭ǔ瀹氫細璇濋敭
 
 ### 7.2 `atlas_session_key` 瑙勮寖
@@ -187,21 +187,21 @@ sequenceDiagram
 鎺ㄨ崘瑙勮寖濡備笅锛?
 
 - 鍗曡澶囧崟浼氳瘽锛?
-  - `agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}`
+  - `agent:main:user:device-{device_id}:xuanwu:dm:{device_id}`
 - 鍗曡澶囧骞跺彂杩炴帴锛?
-  - `agent:main:user:device-{device_id}:xiaozhi:dm:{device_id}:topic:{client_id}`
+  - `agent:main:user:device-{device_id}:xuanwu:dm:{device_id}:topic:{client_id}`
 
 瑙勫垯锛?
 
 - `agent_id` 鍥哄畾涓?`main`
 - `user_id` 鍥哄畾鏄犲皠涓?`device-{device_id}`
-- `channel` 鍥哄畾涓?`xiaozhi`
+- `channel` 鍥哄畾涓?`xuanwu`
 - `peer_id` 鍥哄畾涓?`device_id`
 - 濡傞渶骞跺彂闅旂锛屼娇鐢?`topic:{client_id}`
 
 ### 7.3 鏈湴杩愯鏃朵細璇濇敞鍐岃〃
 
-`xiaozhi-server` 闇€瑕佹柊澧炶繍琛屾椂娉ㄥ唽琛細
+`xuanwu-server` 闇€瑕佹柊澧炶繍琛屾椂娉ㄥ唽琛細
 
 - `runtime_session_id -> websocket connection`
 - `runtime_session_id -> device_id`
@@ -211,7 +211,7 @@ sequenceDiagram
 
 寤鸿鏂板妯″潡锛?
 
-- `main/xiaozhi-server/core/runtime/session_registry.py`
+- `main/xuanwu-server/core/runtime/session_registry.py`
 
 寤鸿鎺ュ彛锛?
 
@@ -251,14 +251,14 @@ class RuntimeSessionRegistry:
 
 ```json
 {
-  "session_key": "agent:main:user:device-esp32-001:xiaozhi:dm:esp32-001",
+  "session_key": "agent:main:user:device-esp32-001:xuanwu:dm:esp32-001",
   "message": "甯垜鐪嬩竴涓嬬獥澶栧ぉ姘?,
   "timeout_seconds": 120,
   "context": {
     "device_id": "esp32-001",
     "client_id": "client-001",
     "runtime_session_id": "rt-123",
-    "channel": "xiaozhi",
+    "channel": "xuanwu",
     "bind_status": "bound",
     "locale": "zh-CN",
     "audio_format": "opus",
@@ -282,8 +282,8 @@ class RuntimeSessionRegistry:
 |---|---|---:|---|
 | `device_id` | string | 鏄?| 璁惧 ID |
 | `client_id` | string | 鍚?| 褰撳墠杩炴帴瀹炰緥 ID |
-| `runtime_session_id` | string | 鏄?| `xiaozhi-server` 鏈湴杩愯鏃朵細璇?ID |
-| `channel` | string | 鏄?| 鍥哄畾涓?`xiaozhi` |
+| `runtime_session_id` | string | 鏄?| `xuanwu-server` 鏈湴杩愯鏃朵細璇?ID |
+| `channel` | string | 鏄?| 鍥哄畾涓?`xuanwu` |
 | `bind_status` | string | 鏄?| `bound` / `pending` / `unknown` |
 | `locale` | string | 鍚?| 浼氳瘽璇█鍋忓ソ |
 | `audio_format` | string | 鍚?| 璁惧闊抽缂栫爜 |
@@ -302,7 +302,7 @@ class RuntimeSessionRegistry:
 
 鍏朵腑鏄犲皠瑙勫垯濡備笅锛?
 
-| AtlasClaw 浜嬩欢 | xiaozhi-server 琛屼负 |
+| AtlasClaw 浜嬩欢 | xuanwu-server 琛屼负 |
 |---|---|
 | `lifecycle:start` | 鏍囪杩滅瀵硅瘽寮€濮?|
 | `thinking:start` | 鍙€夊彂閫佲€滄€濊€冧腑鈥濆唴閮ㄧ姸鎬侊紝涓嶆挱鎶?|
@@ -319,7 +319,7 @@ class RuntimeSessionRegistry:
 绾﹀畾锛?
 
 - `assistant` 浜嬩欢鍐呭鎸夊閲忔枃鏈鐞?
-- `xiaozhi-server` 瀵瑰閲忔枃鏈仛鍙ヨ竟鐣岀紦鍐?
+- `xuanwu-server` 瀵瑰閲忔枃鏈仛鍙ヨ竟鐣岀紦鍐?
 - 姣忓埌鍙ュ瓙绾ф柇鐐瑰嵆鍠傜粰 TTS
 - `lifecycle:end` 鏃跺啿鍒峰墿浣欐枃鏈?
 
@@ -329,11 +329,11 @@ class RuntimeSessionRegistry:
 
 寤鸿浣嶇疆锛?
 
-- `main/xiaozhi-server/core/providers/agent/atlasclaw_stream_bridge.py`
+- `main/xuanwu-server/core/providers/agent/atlasclaw_stream_bridge.py`
 
-## 9. xiaozhi-server 杩愯鏃?API 璁捐
+## 9. xuanwu-server 杩愯鏃?API 璁捐
 
-`AtlasClaw` 浣滀负涓诲紩鎿庡悗锛岄渶瑕佸洖璋冭澶囨湰鍦拌兘鍔涖€備负姝?`xiaozhi-server` 蹇呴』鎻愪緵杩愯鏃?API銆?
+`AtlasClaw` 浣滀负涓诲紩鎿庡悗锛岄渶瑕佸洖璋冭澶囨湰鍦拌兘鍔涖€備负姝?`xuanwu-server` 蹇呴』鎻愪緵杩愯鏃?API銆?
 
 缁熶竴鍓嶇紑锛?
 
@@ -355,7 +355,7 @@ class RuntimeSessionRegistry:
   "runtime_session_id": "rt-123",
   "device_id": "esp32-001",
   "client_id": "client-001",
-  "atlas_session_key": "agent:main:user:device-esp32-001:xiaozhi:dm:esp32-001",
+  "atlas_session_key": "agent:main:user:device-esp32-001:xuanwu:dm:esp32-001",
   "connected": true,
   "capabilities": {
     "speaker": true,
@@ -451,19 +451,19 @@ class RuntimeSessionRegistry:
 
 鎵€鏈?`/runtime/v1/*` 鎺ュ彛缁熶竴閲囩敤鏈嶅姟鍒版湇鍔″瘑閽ワ細
 
-- Header: `X-Xiaozhi-Runtime-Secret`
+- Header: `X-Xuanwu-Runtime-Secret`
 
 榛樿绛栫暐锛?
 
-- 瀵嗛挜浠?`xiaozhi-server` 鏈湴閰嶇疆璇诲彇
+- 瀵嗛挜浠?`xuanwu-server` 鏈湴閰嶇疆璇诲彇
 - `AtlasClaw` 浣跨敤鐜鍙橀噺閰嶇疆
 - 浠呭厑璁稿唴缃戣皟鐢?
 
 ## 10. AtlasClaw Provider 璁捐
 
-### 10.1 鏂板 `xiaozhi-runtime provider`
+### 10.1 鏂板 `xuanwu-runtime provider`
 
-璇?provider 鐨勮亴璐ｆ槸灏?`AtlasClaw` 鍐呴儴 Tool 璋冪敤妗ユ帴鍒?`xiaozhi-server` 鐨勮繍琛屾椂 API銆?
+璇?provider 鐨勮亴璐ｆ槸灏?`AtlasClaw` 鍐呴儴 Tool 璋冪敤妗ユ帴鍒?`xuanwu-server` 鐨勮繍琛屾椂 API銆?
 
 寤鸿鑳藉姏鍖呮嫭锛?
 
@@ -475,7 +475,7 @@ class RuntimeSessionRegistry:
 
 寤鸿鐩綍锛?
 
-- `C:/Projects/cmps/atlasclaw-providers/providers/xiaozhi-runtime-provider`
+- `C:/Projects/cmps/atlasclaw-providers/providers/xuanwu-runtime-provider`
 
 濡傛殏涓嶄娇鐢ㄧ嫭绔?provider 浠撳簱锛屼篃鍙互鍏堟斁鍦ㄥ唴缃?provider 鎴?skills 鐩綍涓€?
 
@@ -483,12 +483,12 @@ class RuntimeSessionRegistry:
 
 寤鸿绗竴鎵瑰伐鍏凤細
 
-- `xiaozhi_get_runtime_context`
-- `xiaozhi_take_photo`
-- `xiaozhi_speak_text`
-- `xiaozhi_interrupt`
-- `xiaozhi_execute_iot_action`
-- `xiaozhi_execute_mcp_tool`
+- `xuanwu_get_runtime_context`
+- `xuanwu_take_photo`
+- `xuanwu_speak_text`
+- `xuanwu_interrupt`
+- `xuanwu_execute_iot_action`
+- `xuanwu_execute_mcp_tool`
 
 ### 10.3 Tool 杈撳叆绾﹀畾
 
@@ -504,7 +504,7 @@ class RuntimeSessionRegistry:
 - 涓嶈姹傛瘡娆″伐鍏疯皟鐢ㄩ兘閲嶅浼?`runtime_session_id`
 - 鑻ユ樉寮忎紶鍙備笌涓婁笅鏂囧啿绐侊紝浠ユ樉寮忎紶鍙備负鍑?
 
-## 11. xiaozhi-server 鍐呴儴閲嶆瀯璁捐
+## 11. xuanwu-server 鍐呴儴閲嶆瀯璁捐
 
 ### 11.1 鏂板 `DialogueEngine`
 
@@ -523,9 +523,9 @@ class DialogueEngine(Protocol):
 
 寤鸿浣嶇疆锛?
 
-- `main/xiaozhi-server/core/providers/agent/dialogue_engine.py`
-- `main/xiaozhi-server/core/providers/agent/atlasclaw.py`
-- `main/xiaozhi-server/core/providers/agent/local_fallback.py`
+- `main/xuanwu-server/core/providers/agent/dialogue_engine.py`
+- `main/xuanwu-server/core/providers/agent/atlasclaw.py`
+- `main/xuanwu-server/core/providers/agent/local_fallback.py`
 
 ### 11.2 `receiveAudioHandle.startToChat()` 璋冩暣
 
@@ -593,7 +593,7 @@ Agent:
     type: atlasclaw
     base_url: http://127.0.0.1:8000
     timeout_seconds: 120
-    runtime_secret: ${XIAOZHI_RUNTIME_SECRET}
+    runtime_secret: ${XUANWU_RUNTIME_SECRET}
 selected_module:
   Agent: AtlasClaw
 ```
@@ -663,7 +663,7 @@ class AgentRunRequest(BaseModel):
 
 - 璇诲彇 `runtime_session_id`
 - 涓嶇洿鎺ユ寔鏈?WebSocket
-- 涓嶇洿鎺ヤ緷璧?`xiaozhi-server` 鍐呴儴浠ｇ爜
+- 涓嶇洿鎺ヤ緷璧?`xuanwu-server` 鍐呴儴浠ｇ爜
 - 鍙€氳繃杩愯鏃?API 璋冪敤璁惧鏈湴鑳藉姏
 
 ## 13. 澶辫触澶勭悊涓庨檷绾х瓥鐣?
@@ -688,7 +688,7 @@ fallback 鑼冨洿锛?
 
 ### 13.2 杩愯鏃跺伐鍏疯皟鐢ㄥけ璐?
 
-鑻?`AtlasClaw` 璋冪敤 `xiaozhi runtime API` 澶辫触锛?
+鑻?`AtlasClaw` 璋冪敤 `xuanwu runtime API` 澶辫触锛?
 
 - 杩斿洖缁撴瀯鍖栭敊璇粰 `AtlasClaw`
 - 鐢?`AtlasClaw` 鍐冲畾鏄惁鏀圭敤鍏朵粬宸ュ叿鎴栧悜鐢ㄦ埛瑙ｉ噴澶辫触
@@ -705,14 +705,14 @@ fallback 鑼冨洿锛?
 
 褰撶敤鎴锋柊涓€杞闊宠緭鍏ュ紑濮嬫椂锛?
 
-- `xiaozhi-server` 浼樺厛鏈湴涓柇 TTS 鎾姤
+- `xuanwu-server` 浼樺厛鏈湴涓柇 TTS 鎾姤
 - 濡傚瓨鍦ㄥ湪閫?`AtlasClaw run_id`锛岃皟鐢?`/agent/runs/{run_id}/abort`
 
 ## 14. 瀹夊叏璁捐
 
 ### 14.1 鏈嶅姟闂磋璇?
 
-- `AtlasClaw -> xiaozhi-server runtime API` 蹇呴』浣跨敤鏈嶅姟瀵嗛挜
+- `AtlasClaw -> xuanwu-server runtime API` 蹇呴』浣跨敤鏈嶅姟瀵嗛挜
 - 瀵嗛挜涓嶈兘澶嶇敤璁惧 JWT
 - 鎵€鏈夎皟鐢ㄨ褰曡姹?ID 鍜?session ID
 
@@ -721,7 +721,7 @@ fallback 鑼冨洿锛?
 鍘熷垯锛?
 
 - `AtlasClaw` 璐熻矗鍐崇瓥
-- `xiaozhi-server` 璐熻矗鎵ц
+- `xuanwu-server` 璐熻矗鎵ц
 - 鐪熸鎺ヨЕ璁惧纭欢銆佹憚鍍忓ご銆両oT銆侀害鍏嬮鐨勬潈闄愯竟鐣岄兘鐣欏湪鏈湴
 
 ### 14.3 瀹¤
@@ -740,7 +740,7 @@ fallback 鑼冨洿锛?
 - 鍐荤粨 `session_key` 瑙勮寖
 - 鍐荤粨 `AgentRunRequest.context`
 - 鍐荤粨 runtime API 濂戠害
-- 鍐荤粨 `xiaozhi-runtime` tool 娓呭崟
+- 鍐荤粨 `xuanwu-runtime` tool 娓呭崟
 
 ### Phase 2: AtlasClaw 瀵规帴灞?
 
@@ -752,7 +752,7 @@ fallback 鑼冨洿锛?
 
 - 澧炲姞 `runtime/v1` API
 - 灏?`UnifiedToolHandler` 鏀惧埌杩愯鏃?API 鑳屽悗
-- 澧炲姞 `xiaozhi-runtime provider`
+- 澧炲姞 `xuanwu-runtime provider`
 
 ### Phase 4: 涓婚摼璺垏鎹?
 
@@ -773,7 +773,7 @@ fallback 鑼冨洿锛?
 - 璁惧绔枃鏈緭鍏ラ粯璁ゅ叏閮ㄨ繘鍏?`AtlasClaw`
 - 鏈湴涓嶅啀鎵挎媴涓诲洖澶嶇敓鎴?
 - `AtlasClaw` 鑳介€氳繃 SSE 鎸佺画杩斿洖鏂囨湰娴?
-- `xiaozhi-server` 鑳芥妸 `assistant` 浜嬩欢绋冲畾杞崲涓?TTS 鎾姤
+- `xuanwu-server` 鑳芥妸 `assistant` 浜嬩欢绋冲畾杞崲涓?TTS 鎾姤
 - `AtlasClaw` 鑳介€氳繃 runtime API 璋冪敤璁惧鏈湴宸ュ叿
 - 鐢ㄦ埛鎵撴柇鏃惰兘鍚屾椂涓柇鏈湴 TTS 鍜岃繙绔?`AtlasClaw run`
 - `AtlasClaw` 涓嶅彲鐢ㄦ椂绯荤粺鑳借繘鍏ユ槑纭殑 fallback 妯″紡
@@ -781,24 +781,24 @@ fallback 鑼冨洿锛?
 
 ## 17. 浠ｇ爜鏀瑰姩娓呭崟
 
-### 17.1 xiaozhi-server
+### 17.1 xuanwu-server
 
 閲嶇偣淇敼锛?
 
-- `main/xiaozhi-server/core/handle/receiveAudioHandle.py`
-- `main/xiaozhi-server/core/handle/intentHandler.py`
-- `main/xiaozhi-server/core/connection.py`
-- `main/xiaozhi-server/core/utils/modules_initialize.py`
-- `main/xiaozhi-server/core/providers/tools/unified_tool_handler.py`
+- `main/xuanwu-server/core/handle/receiveAudioHandle.py`
+- `main/xuanwu-server/core/handle/intentHandler.py`
+- `main/xuanwu-server/core/connection.py`
+- `main/xuanwu-server/core/utils/modules_initialize.py`
+- `main/xuanwu-server/core/providers/tools/unified_tool_handler.py`
 
 寤鸿鏂板锛?
 
-- `main/xiaozhi-server/core/providers/agent/dialogue_engine.py`
-- `main/xiaozhi-server/core/providers/agent/atlasclaw.py`
-- `main/xiaozhi-server/core/providers/agent/atlasclaw_stream_bridge.py`
-- `main/xiaozhi-server/core/providers/agent/local_fallback.py`
-- `main/xiaozhi-server/core/runtime/session_registry.py`
-- `main/xiaozhi-server/core/api/runtime_tool_handler.py`
+- `main/xuanwu-server/core/providers/agent/dialogue_engine.py`
+- `main/xuanwu-server/core/providers/agent/atlasclaw.py`
+- `main/xuanwu-server/core/providers/agent/atlasclaw_stream_bridge.py`
+- `main/xuanwu-server/core/providers/agent/local_fallback.py`
+- `main/xuanwu-server/core/runtime/session_registry.py`
+- `main/xuanwu-server/core/api/runtime_tool_handler.py`
 
 ### 17.2 AtlasClaw
 
@@ -810,8 +810,8 @@ fallback 鑼冨洿锛?
 
 寤鸿鏂板锛?
 
-- `xiaozhi-runtime provider`
-- `xiaozhi-runtime tools`
+- `xuanwu-runtime provider`
+- `xuanwu-runtime tools`
 
 ## 18. 榛樿瀹炵幇鍋囪
 
@@ -819,11 +819,11 @@ fallback 鑼冨洿锛?
 
 - `AtlasClaw` 涓哄敮涓€涓诲璇濆紩鎿?
 - 璁惧鏈湴瀵硅瘽寮曟搸鍙綔涓?fallback
-- `session_key` 鐢?`xiaozhi-server` 鏋勯€?
+- `session_key` 鐢?`xuanwu-server` 鏋勯€?
 - `AtlasClaw` 缁х画淇濈暀鍏剁幇鏈?SSE 璇箟锛屼笉鍋氬崗璁噸鍐?
 - 璁惧鏈湴鑳藉姏閫氳繃 HTTP runtime API 鏆撮湶锛屼笉鍋氳繘绋嬪唴鐩磋繛
 - `UnifiedToolHandler` 淇濈暀锛屽苟杞瀷涓烘湰鍦版墽琛屽眰
-- 鎵€鏈夎澶囨湰鍦伴珮鏉冮檺鍔ㄤ綔蹇呴』鐢?`xiaozhi-server` 鎵ц
+- 鎵€鏈夎澶囨湰鍦伴珮鏉冮檺鍔ㄤ綔蹇呴』鐢?`xuanwu-server` 鎵ц
 
 
 

@@ -1,6 +1,6 @@
-﻿# MQTT 网关部署教程
+# MQTT 网关部署教程
 
-`xuanwu-device-server`项目，可结合虾哥开源的[xiaozhi-mqtt-gateway](https://github.com/78/xiaozhi-mqtt-gateway) 项目进行简单改造，即可实现玄武AI硬件MQTT+UDP连接。
+`xuanwu-device-server`项目，可结合虾哥开源的[xuanwu-mqtt-gateway](https://github.com/78/xuanwu-mqtt-gateway) 项目进行简单改造，即可实现玄武AI硬件MQTT+UDP连接。
 本教程分为三部分，你可以根据你是全模块部署还是单模块部署，选择对应的部分接入MQTT网关：
 - 第一部分：部署MQTT网关
 - 第二部分：全模块运行实现玄武AI硬件MQTT+UDP连接
@@ -11,12 +11,12 @@
 
 1、如果你是源码部署，你的`mqtt-websocket`地址是：
 ```
-ws://127.0.0.1:8000/xiaozhi/v1/?from=mqtt_gateway
+ws://127.0.0.1:8000/xuanwu/v1/?from=mqtt_gateway
 ```
 
 2、如果你是docker部署，你的`mqtt-websocket`地址是
 ```
-ws://你宿主机局域网IP:8000/xiaozhi/v1/?from=mqtt_gateway
+ws://你宿主机局域网IP:8000/xuanwu/v1/?from=mqtt_gateway
 ```
 
 ## 重要提示
@@ -30,10 +30,10 @@ ws://你宿主机局域网IP:8000/xiaozhi/v1/?from=mqtt_gateway
 
 ## 第一部分：部署MQTT网关
 
-1. 克隆[改造后的xiaozhi-mqtt-gateway项目](https://github.com/xinnan-tech/xiaozhi-mqtt-gateway.git)：
+1. 克隆[改造后的xuanwu-mqtt-gateway项目](https://github.com/xinnan-tech/xuanwu-mqtt-gateway.git)：
 ```bash
-git clone https://ghfast.top/https://github.com/xinnan-tech/xiaozhi-mqtt-gateway.git
-cd xiaozhi-mqtt-gateway
+git clone https://ghfast.top/https://github.com/xinnan-tech/xuanwu-mqtt-gateway.git
+cd xuanwu-mqtt-gateway
 ```
 
 2. 安装依赖：
@@ -53,7 +53,7 @@ cp config/mqtt.json.example config/mqtt.json
 {
     "production": {
         "chat_servers": [
-            "ws://127.0.0.1:8000/xiaozhi/v1/?from=mqtt_gateway"
+            "ws://127.0.0.1:8000/xuanwu/v1/?from=mqtt_gateway"
         ]
     },
     "debug": false,
@@ -62,7 +62,7 @@ cp config/mqtt.json.example config/mqtt.json
         "capabilities": {
         },
         "client_info": {
-            "name": "xiaozhi-mqtt-client",
+            "name": "xuanwu-mqtt-client",
             "version": "1.0.0"
         },
         "max_tools_count": 128
@@ -132,9 +132,9 @@ pm2 restart xz-mqtt
 192.168.0.7:8007
 ```
 
-上面的配置完成后，你可以使用curl命令，验证你的ota地址是否会下发mqtt配置，把下面的`http://localhost:8002/xiaozhi/ota/`改成你的ota地址
+上面的配置完成后，你可以使用curl命令，验证你的ota地址是否会下发mqtt配置，把下面的`http://localhost:8002/xuanwu/ota/`改成你的ota地址
 ```
-curl 'http://localhost:8002/xiaozhi/ota/' \
+curl 'http://localhost:8002/xuanwu/ota/' \
   -H 'Content-Type: application/json' \
   -H 'Client-Id: 7b94d69a-9808-4c59-9c9b-704333b38aff' \
   -H 'Device-Id: 11:22:33:44:55:66' \
@@ -144,7 +144,7 @@ curl 'http://localhost:8002/xiaozhi/ota/' \
 如果返回的内容包含`mqtt`相关的配置，说明配置成功。类似这样
 
 ```
-{"server_time":{"timestamp":1757567894012,"timeZone":"Asia/Shanghai","timezone_offset":480},"activation":{"code":"460609","message":"http://xiaozhi.server.com\n460609","challenge":"11:22:33:44:55:66"},"firmware":{"version":"1.0.1","url":"http://xiaozhi.server.com:8002/xiaozhi/otaMag/download/NOT_ACTIVATED_FIRMWARE_THIS_IS_A_INVALID_URL"},"websocket":{"url":"ws://192.168.4.23:8000/xiaozhi/v1/"},"mqtt":{"endpoint":"192.168.0.7:1883","client_id":"GID_default@@@11_22_33_44_55_66@@@7b94d69a-9808-4c59-9c9b-704333b38aff","username":"eyJpcCI6IjA6MDowOjA6MDowOjA6MSJ9","password":"Y8XP9xcUhVIN9OmbCHT9ETBiYNE3l3Z07Wk46wV9PE8=","publish_topic":"xuanwu-device-server","subscribe_topic":"devices/p2p/11_22_33_44_55_66"}}
+{"server_time":{"timestamp":1757567894012,"timeZone":"Asia/Shanghai","timezone_offset":480},"activation":{"code":"460609","message":"http://xuanwu.server.com\n460609","challenge":"11:22:33:44:55:66"},"firmware":{"version":"1.0.1","url":"http://xuanwu.server.com:8002/xuanwu/otaMag/download/NOT_ACTIVATED_FIRMWARE_THIS_IS_A_INVALID_URL"},"websocket":{"url":"ws://192.168.4.23:8000/xuanwu/v1/"},"mqtt":{"endpoint":"192.168.0.7:1883","client_id":"GID_default@@@11_22_33_44_55_66@@@7b94d69a-9808-4c59-9c9b-704333b38aff","username":"eyJpcCI6IjA6MDowOjA6MDowOjA6MSJ9","password":"Y8XP9xcUhVIN9OmbCHT9ETBiYNE3l3Z07Wk46wV9PE8=","publish_topic":"xuanwu-device-server","subscribe_topic":"devices/p2p/11_22_33_44_55_66"}}
 ```
 
 由于MQTT信息是需要靠OTA地址下发的，因此只有你保证能正常连接服务器的OTA地址，重启唤醒即可。
@@ -167,16 +167,16 @@ pm2 logs xz-mqtt
 192.168.0.7:8884
 ```
 
-上面的配置完成后，你可以使用curl命令，验证你的ota地址是否会下发mqtt配置，把下面的`http://localhost:8002/xiaozhi/ota/`改成你的ota地址
+上面的配置完成后，你可以使用curl命令，验证你的ota地址是否会下发mqtt配置，把下面的`http://localhost:8002/xuanwu/ota/`改成你的ota地址
 ```
-curl 'http://localhost:8002/xiaozhi/ota/' \
+curl 'http://localhost:8002/xuanwu/ota/' \
   -H 'Device-Id: 11:22:33:44:55:66' \
   --data-raw $'{\n  "application": {\n    "version": "1.0.1",\n    "elf_sha256": "1"\n  },\n  "board": {\n    "mac": "11:22:33:44:55:66"\n  }\n}'
 ```
 
 如果返回的内容包含`mqtt`相关的配置，说明配置成功。类似这样
 ```
-{"server_time":{"timestamp":1758781561083,"timeZone":"GMT+08:00","timezone_offset":480},"activation":{"code":"527111","message":"http://xiaozhi.server.com\n527111","challenge":"11:22:33:44:55:66"},"firmware":{"version":"1.0.1","url":"http://xiaozhi.server.com:8002/xiaozhi/otaMag/download/NOT_ACTIVATED_FIRMWARE_THIS_IS_A_INVALID_URL"},"websocket":{"url":"ws://192.168.1.15:8000/xiaozhi/v1/"},"mqtt":{"endpoint":"192.168.1.15:1883","client_id":"GID_default@@@11_22_33_44_55_66@@@11_22_33_44_55_66","username":"eyJpcCI6IjE5Mi4xNjguMS4xNSJ9","password":"fjAYs49zTJecWqJ3jBt+kqxVn/x7vkXRAc85ak/va7Y=","publish_topic":"xuanwu-device-server","subscribe_topic":"devices/p2p/11_22_33_44_55_66"}}
+{"server_time":{"timestamp":1758781561083,"timeZone":"GMT+08:00","timezone_offset":480},"activation":{"code":"527111","message":"http://xuanwu.server.com\n527111","challenge":"11:22:33:44:55:66"},"firmware":{"version":"1.0.1","url":"http://xuanwu.server.com:8002/xuanwu/otaMag/download/NOT_ACTIVATED_FIRMWARE_THIS_IS_A_INVALID_URL"},"websocket":{"url":"ws://192.168.1.15:8000/xuanwu/v1/"},"mqtt":{"endpoint":"192.168.1.15:1883","client_id":"GID_default@@@11_22_33_44_55_66@@@11_22_33_44_55_66","username":"eyJpcCI6IjE5Mi4xNjguMS4xNSJ9","password":"fjAYs49zTJecWqJ3jBt+kqxVn/x7vkXRAc85ak/va7Y=","publish_topic":"xuanwu-device-server","subscribe_topic":"devices/p2p/11_22_33_44_55_66"}}
 ```
 
 由于MQTT信息是需要靠OTA地址下发的，因此只有你保证能正常连接服务器的OTA地址，重启唤醒即可。

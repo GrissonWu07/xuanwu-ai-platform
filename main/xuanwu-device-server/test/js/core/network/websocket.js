@@ -332,7 +332,7 @@ export class WebSocketHandler {
                             "tools": {}
                         },
                         "serverInfo": {
-                            "name": "xiaozhi-web-test",
+                            "name": "xuanwu-web-test",
                             "version": "2.1.0"
                         }
                     }

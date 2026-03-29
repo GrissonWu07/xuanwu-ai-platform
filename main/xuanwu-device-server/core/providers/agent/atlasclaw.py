@@ -205,7 +205,7 @@ class AtlasClawDialogueEngine:
             "device_id": conn.device_id,
             "client_id": headers.get("client-id"),
             "runtime_session_id": conn.runtime_session_id,
-            "channel": "xiaozhi",
+            "channel": "xuanwu",
             "bind_status": self._bind_status(conn),
             "locale": str(self.agent_config.get("locale") or conn.config.get("locale") or "zh-CN"),
             "audio_format": getattr(conn, "audio_format", "opus"),

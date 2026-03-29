@@ -28,7 +28,7 @@ def _client_kwargs(config: dict[str, Any]) -> dict[str, Any]:
         "base_url": str(management_config["url"]).rstrip("/"),
         "timeout": float(management_config.get("timeout", 10)),
         "headers": {
-            "X-Xiaozhi-Control-Secret": str(management_config["secret"]).strip(),
+            "X-Xuanwu-Control-Secret": str(management_config["secret"]).strip(),
             "Accept": "application/json",
         },
     }

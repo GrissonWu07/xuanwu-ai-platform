@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   // Login page related prompt text
   'login.requiredUsername': 'Username cannot be empty',
   'login.requiredPassword': 'Password cannot be empty',
@@ -203,7 +203,7 @@
   'firmwareDialog.firmwareFile': 'Firmware File',
   'firmwareDialog.clickUpload': 'Click to Upload',
   'firmwareDialog.uploadTip': 'Only firmware files (.bin/.apk) are supported, and size should not exceed 100MB',
-  'firmwareDialog.uploadHint': 'Warm reminder: Please upload the pre-merged xiaozhi.bin file, not the merged merged-binary.bin file',
+  'firmwareDialog.uploadHint': 'Warm reminder: Please upload the pre-merged xuanwu.bin file, not the merged merged-binary.bin file',
   'firmwareDialog.remark': 'Remark',
   'firmwareDialog.remarkPlaceholder': 'Please enter remark information',
   'firmwareDialog.requiredFirmwareName': 'Please enter firmware name (board + version)',
@@ -297,7 +297,7 @@
 
   // Register page related
   'register.title': 'Create Account',
-  'register.welcome': 'Welcome to XiaoZhi AI',
+  'register.welcome': 'Welcome to Xuanwu AI',
   'register.usernamePlaceholder': 'Please enter username',
   'register.mobilePlaceholder': 'Please enter mobile phone number',
   'register.captchaPlaceholder': 'Please enter captcha',
@@ -533,7 +533,7 @@
   'button.close': 'Close',
 
   // System information
-  'system.name': 'XiaoZhi Service',
+  'system.name': 'Xuanwu Service',
 
   // Voiceprint related
   'voiceprint.management': 'Voiceprint Management',
@@ -666,7 +666,7 @@
 
   // Home page text
   'home.addAgent': 'Add Agent',
-  'home.greeting': 'Hi XiaoZhi',
+  'home.greeting': 'Hi Xuanwu',
   'home.wish': "Let's have a wonderful day!",
   'home.languageModel': 'LLM',
   'home.voiceModel': 'TTS',

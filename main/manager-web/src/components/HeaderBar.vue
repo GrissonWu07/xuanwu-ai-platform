@@ -3,8 +3,8 @@
     <div class="header-container">
       <!-- 左侧元素 -->
       <div class="header-left" @click="goHome">
-        <img loading="lazy" alt="" src="@/assets/xiaozhi-logo.png" class="logo-img" />
-        <img loading="lazy" alt="" :src="xiaozhiAiIcon" class="brand-img" />
+        <img loading="lazy" alt="" src="@/assets/xuanwu-logo.png" class="logo-img" />
+        <img loading="lazy" alt="" :src="xuanwuAiIcon" class="brand-img" />
       </div>
 
       <!-- 中间导航菜单 -->
@@ -211,7 +211,7 @@ export default {
       // 搜索历史相关
       searchHistory: [],
       showHistory: false,
-      SEARCH_HISTORY_KEY: "xiaozhi_search_history",
+      SEARCH_HISTORY_KEY: "xuanwu_search_history",
       MAX_HISTORY_COUNT: 3,
       // Cascader 配置
       cascaderProps: {
@@ -254,24 +254,24 @@ export default {
           return this.$t("language.zhCN");
       }
     },
-    // 根据当前语言获取对应的xiaozhi-ai图标
-    xiaozhiAiIcon() {
+    // 根据当前语言获取对应的xuanwu-ai图标
+    xuanwuAiIcon() {
       const currentLang = this.currentLanguage;
       switch (currentLang) {
         case "zh_CN":
-          return require("@/assets/xiaozhi-ai.png");
+          return require("@/assets/xuanwu-ai.png");
         case "zh_TW":
-          return require("@/assets/xiaozhi-ai_zh_TW.png");
+          return require("@/assets/xuanwu-ai_zh_TW.png");
         case "en":
-          return require("@/assets/xiaozhi-ai_en.png");
+          return require("@/assets/xuanwu-ai_en.png");
         case "de":
-          return require("@/assets/xiaozhi-ai_de.png");
+          return require("@/assets/xuanwu-ai_de.png");
         case "vi":
-          return require("@/assets/xiaozhi-ai_vi.png");
+          return require("@/assets/xuanwu-ai_vi.png");
         case "pt_BR":
-          return require("@/assets/xiaozhi-ai_en.png");
+          return require("@/assets/xuanwu-ai_en.png");
         default:
-          return require("@/assets/xiaozhi-ai.png");
+          return require("@/assets/xuanwu-ai.png");
       }
     },
     // 用户菜单选项

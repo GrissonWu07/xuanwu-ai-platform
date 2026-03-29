@@ -1,4 +1,4 @@
-﻿# MCP 鎺ュ叆鐐归儴缃蹭娇鐢ㄦ寚鍗?
+# MCP 鎺ュ叆鐐归儴缃蹭娇鐢ㄦ寚鍗?
 
 鏈暀绋嬪寘鍚?涓儴鍒?
 - 1銆佸浣曢儴缃睲CP鎺ュ叆鐐硅繖涓湇鍔?
@@ -86,7 +86,7 @@ docker logs -f mcp-endpoint-server
 鍦ㄩ厤缃枃浠舵悳绱mcp_endpoint`锛屽鏋滄病鏈夋壘鍒帮紝浣犲氨澧炲姞`mcp_endpoint`閰嶇疆銆傜被浼兼垜鏄氨鏄繖鏍?
 ```
 server:
-  websocket: ws://浣犵殑ip鎴栬€呭煙鍚?绔彛鍙?xiaozhi/v1/
+  websocket: ws://浣犵殑ip鎴栬€呭煙鍚?绔彛鍙?xuanwu/v1/
   http_port: 8002
 log:
   log_level: INFO
@@ -99,7 +99,7 @@ mcp_endpoint: 浣犵殑鎺ュ叆鐐箇ebsocket鍦板潃
 
 ```
 server:
-  websocket: ws://浣犵殑ip鎴栬€呭煙鍚?绔彛鍙?xiaozhi/v1/
+  websocket: ws://浣犵殑ip鎴栬€呭煙鍚?绔彛鍙?xuanwu/v1/
   http_port: 8002
 log:
   log_level: INFO
@@ -113,10 +113,10 @@ mcp_endpoint: ws://192.168.1.25:8004/mcp_endpoint/mcp/?token=def
 ```
 250705[__main__]-INFO-鍒濆鍖栫粍浠? vad鎴愬姛 SileroVAD
 250705[__main__]-INFO-鍒濆鍖栫粍浠? asr鎴愬姛 FunASRServer
-250705[__main__]-INFO-OTA鎺ュ彛鏄?         http://192.168.1.25:8002/xiaozhi/ota/
+250705[__main__]-INFO-OTA鎺ュ彛鏄?         http://192.168.1.25:8002/xuanwu/ota/
 250705[__main__]-INFO-瑙嗚鍒嗘瀽鎺ュ彛鏄?    http://192.168.1.25:8002/mcp/vision/explain
 250705[__main__]-INFO-mcp鎺ュ叆鐐规槸        ws://192.168.1.25:8004/mcp_endpoint/mcp/?token=abc
-250705[__main__]-INFO-Websocket鍦板潃鏄?   ws://192.168.1.25:8000/xiaozhi/v1/
+250705[__main__]-INFO-Websocket鍦板潃鏄?   ws://192.168.1.25:8000/xuanwu/v1/
 250705[__main__]-INFO-=======涓婇潰鐨勫湴鍧€鏄痺ebsocket鍗忚鍦板潃锛岃鍕跨敤娴忚鍣ㄨ闂?======
 250705[__main__]-INFO-濡傛兂娴嬭瘯websocket璇风敤璋锋瓕娴忚鍣ㄦ墦寮€test鐩綍涓嬬殑test_page.html
 250705[__main__]-INFO-=============================================================

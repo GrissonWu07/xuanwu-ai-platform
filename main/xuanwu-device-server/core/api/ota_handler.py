@@ -138,7 +138,7 @@ class OTAHandler(BaseHandler):
         if "你的" not in websocket_config:
             return websocket_config
         else:
-            return f"ws://{local_ip}:{port}/xiaozhi/v1/"
+            return f"ws://{local_ip}:{port}/xuanwu/v1/"
 
     async def handle_post(self, request):
         """处理 OTA POST 请求
@@ -317,9 +317,9 @@ class OTAHandler(BaseHandler):
                         chosen_version = ver
                         # Use get_vision_url to get the base URL and replace the path
                         vision_url = get_vision_url(self.config)
-                        # Replace the path from "/mcp/vision/explain" to "/xiaozhi/ota/download/{fname}"
+                        # Replace the path from "/mcp/vision/explain" to "/xuanwu/ota/download/{fname}"
                         chosen_url = vision_url.replace(
-                            "/mcp/vision/explain", f"/xiaozhi/ota/download/{fname}"
+                            "/mcp/vision/explain", f"/xuanwu/ota/download/{fname}"
                         )
                         break
 
@@ -372,7 +372,7 @@ class OTAHandler(BaseHandler):
     async def handle_download(self, request):
         """
         下载固件接口
-        URL: /xiaozhi/ota/download/{filename}
+        URL: /xuanwu/ota/download/{filename}
         - 只允许下载 data/bin 目录下的 .bin 文件
         - filename 必须是 basename 且匹配安全的模式
         """

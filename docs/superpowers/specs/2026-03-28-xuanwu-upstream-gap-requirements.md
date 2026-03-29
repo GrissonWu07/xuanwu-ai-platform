@@ -28,7 +28,7 @@ This document records the `XuanWu` changes that `ai-assist-device` still depends
 
 Every proxied request from `xuanwu-management-server` must support:
 
-- `X-Xiaozhi-Control-Plane-Secret`
+- `X-Xuanwu-Control-Plane-Secret`
 - `X-Request-Id`
 
 Expected status handling:

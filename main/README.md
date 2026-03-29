@@ -1,4 +1,4 @@
-﻿# 技术文档：`xuanwu-device-server`
+# 技术文档：`xuanwu-device-server`
 
 > 迁移状态说明（2026-03-28）
 >
@@ -109,7 +109,7 @@ xuanwu-device-server
         *   **服务器启动与入口 (`app.py`):**
             *   `app.py` 作为主入口，负责初始化应用环境（如检查FFmpeg、加载配置、设置日志）。
             *   它会生成或加载一个 `auth_key` (JWT密钥)，用于保护特定的HTTP接口（如视觉分析接口 `/mcp/vision/explain`）。若配置中 `manager-api.secret` 为空，则会生成一个UUID作为 `auth_key`。
-            *   使用 `asyncio.create_task()` 并发启动 `WebSocketServer` (监听如 `ws://0.0.0.0:8000/xiaozhi/v1/`) 和 `SimpleHttpServer` (监听如 `http://0.0.0.0:8003/xiaozhi/ota/`)。
+            *   使用 `asyncio.create_task()` 并发启动 `WebSocketServer` (监听如 `ws://0.0.0.0:8000/xuanwu/v1/`) 和 `SimpleHttpServer` (监听如 `http://0.0.0.0:8003/xuanwu/ota/`)。
             *   包含一个 `monitor_stdin()` 协程，用于在某些环境下保持应用存活或处理终端输入。
         *   **WebSocket服务器核心 (`core/websocket_server.py`):**
             *   `WebSocketServer` 类使用 `websockets` 库监听来自ESP32设备的连接请求。
@@ -146,7 +146,7 @@ xuanwu-device-server
         *   **静态资源:** `config/assets/` 目录下存放了用于系统提示音的静态音频文件（如设备绑定提示音 `bind_code.wav`、错误提示音等）。
 
     6.  **辅助HTTP服务 (`core/http_server.py`):**
-        *   与WebSocket服务并行运行一个简单的HTTP服务器，用于处理特定的HTTP请求。最主要的功能是为ESP32设备提供OTA (Over-The-Air) 固件更新的下载服务 (通过 `/xiaozhi/ota/` 端点)。此外，也可能承载其他如 `/mcp/vision/explain` (视觉分析) 等工具性HTTP接口。
+        *   与WebSocket服务并行运行一个简单的HTTP服务器，用于处理特定的HTTP请求。最主要的功能是为ESP32设备提供OTA (Over-The-Air) 固件更新的下载服务 (通过 `/xuanwu/ota/` 端点)。此外，也可能承载其他如 `/mcp/vision/explain` (视觉分析) 等工具性HTTP接口。
 
 综上所述，`xuanwu-device-server` 是一个采用现代Python异步编程模型构建的、高度模块化、配置驱动的AI应用服务器。其精心设计的Provider模式和插件架构赋予了它强大的适应性和扩展性，能够灵活接入不同的AI能力并支持日益增长的功能需求。
 
@@ -171,7 +171,7 @@ xuanwu-device-server
     *   **Redis (通过 Spring Data Redis):** 一个高性能的内存数据结构存储，常用于实现数据缓存（例如缓存热点配置数据、用户会话信息），以显著提升API的响应速度。
     *   **Apache Shiro:** 一个成熟且易用的Java安全框架，负责处理应用的认证（用户身份验证）和授权（API访问权限控制）需求。
     *   **Liquibase:** 一个用于跟踪、管理和应用数据库 schéma（模式）变更的开源工具。它允许开发者以数据库无关的方式定义和版本化数据库结构变更。
-    *   **Knife4j:** 一个集成了Swagger并增强了UI的API文档生成工具，专为Java MVC框架（尤其是Spring Boot）设计。它能生成美观且易于交互的API文档界面（通常通过 `/xiaozhi/doc.html` 访问）。
+    *   **Knife4j:** 一个集成了Swagger并增强了UI的API文档生成工具，专为Java MVC框架（尤其是Spring Boot）设计。它能生成美观且易于交互的API文档界面（通常通过 `/xuanwu/doc.html` 访问）。
     *   **Maven:** 用于项目的构建自动化和依赖项管理。
     *   **Lombok:** 一个Java库，通过注解自动生成构造函数、getter/setter、equals/hashCode、toString等样板代码，减少冗余。
     *   **HuTool / Google Guava:** 提供大量实用工具类，简化常见编程任务。
@@ -180,13 +180,13 @@ xuanwu-device-server
 *   **关键实现细节:**
 
     1.  **模块化项目结构 (`modules/` 包):**
-        *   `manager-api` 的核心业务逻辑被清晰地划分到 `src/main/java/xiaozhi/modules/` 目录下的不同模块中。这种按功能领域划分模块的方式（例如 `sys` 负责系统管理，`agent` 负责智能体配置，`device` 负责设备管理，`config` 负责为`xuanwu-device-server`提供配置，`security` 负责安全，`timbre` 负责音色管理，`ota` 负责固件升级）极大地提高了代码的可维护性和可扩展性。
+        *   `manager-api` 的核心业务逻辑被清晰地划分到 `src/main/java/xuanwu/modules/` 目录下的不同模块中。这种按功能领域划分模块的方式（例如 `sys` 负责系统管理，`agent` 负责智能体配置，`device` 负责设备管理，`config` 负责为`xuanwu-device-server`提供配置，`security` 负责安全，`timbre` 负责音色管理，`ota` 负责固件升级）极大地提高了代码的可维护性和可扩展性。
         *   **各模块内部结构:** 每个业务模块通常遵循经典的三层架构或其变体：
-            *   **Controller (控制层):** 位于 `xiaozhi.modules.[模块名].controller`。
-            *   **Service (服务层):** 位于 `xiaozhi.modules.[模块名].service`。
-            *   **DAO/Mapper (数据访问层):** 位于 `xiaozhi.modules.[模块名].dao`。
-            *   **Entity (实体类):** 位于 `xiaozhi.modules.[模块名].entity`。
-            *   **DTO (数据传输对象):** 位于 `xiaozhi.modules.[模块名].dto`。
+            *   **Controller (控制层):** 位于 `xuanwu.modules.[模块名].controller`。
+            *   **Service (服务层):** 位于 `xuanwu.modules.[模块名].service`。
+            *   **DAO/Mapper (数据访问层):** 位于 `xuanwu.modules.[模块名].dao`。
+            *   **Entity (实体类):** 位于 `xuanwu.modules.[模块名].entity`。
+            *   **DTO (数据传输对象):** 位于 `xuanwu.modules.[模块名].dto`。
 
     2.  **分层架构实现:**
         *   **Controller层 (`@RestController`):** 这些类使用Spring MVC注解（如 `@GetMapping`, `@PostMapping` 等）来定义API的端点(endpoints)。它们负责接收HTTP请求，将请求体中的JSON数据反序列化为DTO对象，调用相应的Service层方法处理业务逻辑，最后将Service层的返回结果序列化为JSON并作为HTTP响应返回给客户端。
@@ -196,7 +196,7 @@ xuanwu-device-server
         *   **DTO层:** 用于在各层之间，特别是Controller层与Service层之间，以及API的请求/响应体中传递数据。使用DTO有助于解耦API接口的数据结构与数据库实体的数据结构，使API更稳定。
 
     3.  **通用功能与配置 (`common/` 包):**
-        *   `src/main/java/xiaozhi/common/` 包提供了一系列跨模块共享的通用组件和配置：
+        *   `src/main/java/xuanwu/common/` 包提供了一系列跨模块共享的通用组件和配置：
             *   **基类:** 如 `BaseDao`, `BaseEntity`, `BaseService`, `CrudService`，为各模块的相应组件提供通用的属性或方法。
             *   **全局配置:** 包括 `MybatisPlusConfig` (MyBatis-Plus的配置，如分页插件、数据权限插件等)、`RedisConfig` (Redis连接及序列化配置)、`SwaggerConfig` (Knife4j的配置)、`AsyncConfig` (异步任务执行器配置)。
             *   **自定义注解:** 例如 `@LogOperation` 用于通过AOP记录操作日志，`@DataFilter` 可能用于实现数据范围过滤。
@@ -217,7 +217,7 @@ xuanwu-device-server
         *   数据库的表结构、索引、初始数据等变更，都通过Liquibase的 `changelog` 文件（通常是XML格式）进行定义和版本化管理。当应用启动时，Liquibase会自动检查并应用必要的数据库结构更新，确保开发、测试和生产环境数据库结构的一致性。
 
     6.  **API文档:**
-        *   完整的API接口文档可通过以下地址访问: https://2662r3426b.vicp.fun/xiaozhi/doc.html
+        *   完整的API接口文档可通过以下地址访问: https://2662r3426b.vicp.fun/xuanwu/doc.html
         *   该文档使用Knife4j生成,提供了所有RESTful API端点的详细说明、请求/响应示例以及在线测试功能。
 
 `manager-api` 通过这些精心选择的技术和设计模式，构建了一个功能全面、结构清晰、安全可靠且易于维护和扩展的Java后端服务。其模块化的设计特别适合处理具有多种管理功能需求的复杂系统。
@@ -313,7 +313,7 @@ xuanwu-device-server
         *   错误处理机制
 
 *   **连接建立与握手:**
-    *   ESP32设备作为客户端，主动向`xuanwu-device-server`的指定端点（例如 `ws://<服务器IP>:<WebSocket端口>/xiaozhi/v1/`）发起WebSocket连接请求。
+    *   ESP32设备作为客户端，主动向`xuanwu-device-server`的指定端点（例如 `ws://<服务器IP>:<WebSocket端口>/xuanwu/v1/`）发起WebSocket连接请求。
     *   `xuanwu-device-server` (`core/websocket_server.py`) 接收连接，并为每个成功连接的ESP32设备实例化一个独立的`ConnectionHandler`对象来管理该会话的整个生命周期。
     *   连接建立后，可能会执行一个初始握手流程（由`core/handle/helloHandle.py`处理），用于交换设备标识、认证信息、协议版本或基本状态。
 

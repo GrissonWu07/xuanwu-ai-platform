@@ -24,7 +24,7 @@ class SimpleHttpServer:
 
         if websocket_config and "浣?" not in websocket_config:
             return websocket_config
-        return f"ws://{local_ip}:{port}/xiaozhi/v1/"
+        return f"ws://{local_ip}:{port}/xuanwu/v1/"
 
     async def start(self):
         try:
@@ -36,15 +36,15 @@ class SimpleHttpServer:
                 app = web.Application()
                 app.add_routes(
                     [
-                        web.get("/xiaozhi/ota/", self.ota_handler.handle_get),
-                        web.post("/xiaozhi/ota/", self.ota_handler.handle_post),
-                        web.options("/xiaozhi/ota/", self.ota_handler.handle_options),
+                        web.get("/xuanwu/ota/", self.ota_handler.handle_get),
+                        web.post("/xuanwu/ota/", self.ota_handler.handle_post),
+                        web.options("/xuanwu/ota/", self.ota_handler.handle_options),
                         web.get(
-                            "/xiaozhi/ota/download/{filename}",
+                            "/xuanwu/ota/download/{filename}",
                             self.ota_handler.handle_download,
                         ),
                         web.options(
-                            "/xiaozhi/ota/download/{filename}",
+                            "/xuanwu/ota/download/{filename}",
                             self.ota_handler.handle_options,
                         ),
                         web.get(

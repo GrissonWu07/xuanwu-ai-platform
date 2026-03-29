@@ -137,7 +137,7 @@ class XuanwuManagementConfigTests(unittest.TestCase):
 
             async def handle_server_config(request: web.Request):
                 received["path"] = request.path
-                received["secret"] = request.headers.get("X-Xiaozhi-Control-Secret", "")
+                received["secret"] = request.headers.get("X-Xuanwu-Control-Secret", "")
                 return web.json_response(
                     {
                         "server": {"runtime_secret": "mgmt-runtime-secret"},
@@ -198,7 +198,7 @@ class XuanwuManagementConfigTests(unittest.TestCase):
 
             async def handle_resolve(request: web.Request):
                 received["path"] = request.path
-                received["secret"] = request.headers.get("X-Xiaozhi-Control-Secret", "")
+                received["secret"] = request.headers.get("X-Xuanwu-Control-Secret", "")
                 received["payload"] = await request.json()
                 return web.json_response(
                     {

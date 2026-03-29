@@ -1,4 +1,4 @@
-﻿# Xuanwu Device Server Rename Implementation Plan
+# Xuanwu Device Server Rename Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -98,7 +98,7 @@ Expected: FAIL because runtime strings still include `灏忔櫤`
 
 - [ ] **Step 3: Update runtime comments and user-facing Chinese text**
 
-Change in-scope visible strings and comments from `灏忔櫤` to `鐜勬AI`, while preserving `/xiaozhi` route strings and other compatibility exceptions.
+Change in-scope visible strings and comments from `灏忔櫤` to `鐜勬AI`, while preserving `/xuanwu` route strings and other compatibility exceptions.
 
 - [ ] **Step 4: Run targeted runtime verification**
 

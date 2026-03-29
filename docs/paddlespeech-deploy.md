@@ -1,4 +1,4 @@
-﻿# PaddleSpeechTTS集成xiaozhi服务
+# PaddleSpeechTTS集成xuanwu服务
 
 ## 重点说明
 - 优点：本地离线部署、速度快
@@ -87,7 +87,7 @@ TTS:
       volume: 1.0  # 音量，1.0 表示正常音量，>1 表示增大，<1 表示减小
       save_path:   # 保存路径
 ```
-### 3.启动xiaozhi服务
+### 3.启动xuanwu服务
 ```py
 python app.py
 ```

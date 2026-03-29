@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   // 登录页面相关提示文本
   'login.requiredUsername': '用户名不能为空',
   'login.requiredPassword': '密码不能为空',
@@ -203,7 +203,7 @@
   'firmwareDialog.firmwareFile': '固件文件',
   'firmwareDialog.clickUpload': '点击上传',
   'firmwareDialog.uploadTip': '只能上传固件文件(.bin/.apk)，且不超过100MB',
-  'firmwareDialog.uploadHint': '温馨提示：请上传合并前的xiaozhi.bin文件，而不是合并后的merged-binary.bin文件',
+  'firmwareDialog.uploadHint': '温馨提示：请上传合并前的xuanwu.bin文件，而不是合并后的merged-binary.bin文件',
   'firmwareDialog.remark': '备注',
   'firmwareDialog.remarkPlaceholder': '请输入备注信息',
   'firmwareDialog.requiredFirmwareName': '请输入固件名称(板子+版本号)',

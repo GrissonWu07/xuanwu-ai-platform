@@ -48,7 +48,7 @@ def test_xuanwu_client_builds_required_headers():
 
     headers = client.build_headers("req-20260328-001")
 
-    assert headers["X-Xiaozhi-Control-Plane-Secret"] == "cp-secret-001"
+    assert headers["X-Xuanwu-Control-Plane-Secret"] == "cp-secret-001"
     assert headers["X-Request-Id"] == "req-20260328-001"
 
 
@@ -227,7 +227,7 @@ def test_xuanwu_client_calls_configured_agent_endpoint():
 
         async def handle_agents(request: web.Request):
             received["path"] = request.path
-            received["secret"] = request.headers.get("X-Xiaozhi-Control-Plane-Secret", "")
+            received["secret"] = request.headers.get("X-Xuanwu-Control-Plane-Secret", "")
             received["request_id"] = request.headers.get("X-Request-Id", "")
             return web.json_response({"ok": True, "data": {"items": [{"id": "agent-main"}]}})
 
@@ -271,7 +271,7 @@ def test_xuanwu_client_posts_to_configured_provider_endpoint():
 
         async def handle_create_provider(request: web.Request):
             received["path"] = request.path
-            received["secret"] = request.headers.get("X-Xiaozhi-Control-Plane-Secret", "")
+            received["secret"] = request.headers.get("X-Xuanwu-Control-Plane-Secret", "")
             received["request_id"] = request.headers.get("X-Request-Id", "")
             received["payload"] = await request.json()
             return web.json_response(

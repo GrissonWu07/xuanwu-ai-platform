@@ -1,19 +1,19 @@
-﻿# Java 下线检查清单
+# Java 下线检查清单
 
 ## 目标
 
-在不影响 `AtlasClaw -> xiaozhi-server -> device` 主对话链路的前提下，让 `manager-api`、`manager-web` 退出运行依赖，同时移除已下线的移动管理端残留。
+在不影响 `AtlasClaw -> xuanwu-server -> device` 主对话链路的前提下，让 `manager-api`、`manager-web` 退出运行依赖，同时移除已下线的移动管理端残留。
 
 ## 当前状态
 
 - 主对话链路已经切到 `AtlasClaw`。
-- `xiaozhi-server` 已具备本地 `control-plane`：
+- `xuanwu-server` 已具备本地 `control-plane`：
   - `GET/PUT /control-plane/v1/config/server`
   - `GET/PUT /control-plane/v1/devices/{device_id}`
   - `GET/PUT /control-plane/v1/agents/{agent_id}`
   - `POST /control-plane/v1/runtime/device-config:resolve`
 - 本地导入脚本已提供：
-  - `main/xiaozhi-server/scripts/import_control_plane_bundle.py`
+  - `main/xuanwu-server/scripts/import_control_plane_bundle.py`
 
 ## 下线前必须确认
 
@@ -21,7 +21,7 @@
 
 - 设备连接后，`startToChat()` 走 `DialogueEngine`。
 - `AtlasClaw` 不可用时，默认使用 Level 1 模板 fallback。
-- 本地工具不会在 `xiaozhi-server` 内被“智能决定”，而是只通过 runtime API 被 AtlasClaw 调用。
+- 本地工具不会在 `xuanwu-server` 内被“智能决定”，而是只通过 runtime API 被 AtlasClaw 调用。
 
 ### 2. 配置源确认
 
@@ -79,9 +79,9 @@ devices:
 导入命令示例：
 
 ```powershell
-python main/xiaozhi-server/scripts/import_control_plane_bundle.py `
+python main/xuanwu-server/scripts/import_control_plane_bundle.py `
   C:\path\to\bundle.yaml `
-  --output-dir C:\Projects\githubs\ai-assist-deviceserver\main\xiaozhi-server\data\control_plane
+  --output-dir C:\Projects\githubs\ai-assist-deviceserver\main\xuanwu-server\data\control_plane
 ```
 
 ## 验收口径

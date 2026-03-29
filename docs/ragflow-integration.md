@@ -1,4 +1,4 @@
-﻿# ragflow 集成指南
+# ragflow 集成指南
 
 本教程主要是是两部分
 
@@ -88,7 +88,7 @@ FLUSH PRIVILEGES;
 
 ## 第三步， 下载ragflow项目
 
-你需要在你电脑找一个文件夹，用来存放ragflow项目。例如我在`/home/system/xiaozhi`文件夹。
+你需要在你电脑找一个文件夹，用来存放ragflow项目。例如我在`/home/system/xuanwu`文件夹。
 
 你可以使用`git`命令，将ragflow项目下载到这个文件夹，本教程使用的是`v0.22.0`版本进行安装部署。
 ```

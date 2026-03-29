@@ -1,4 +1,4 @@
-﻿# Fallback、本地配置中心与 Java 下线设计
+# Fallback、本地配置中心与 Java 下线设计
 
 > 迁移补充说明（2026-03-28）
 >
@@ -69,7 +69,7 @@
 
 ### 3.1 背景
 
-当前 `xiaozhi-server` 仍依赖 `manager-api`：
+当前 `xuanwu-server` 仍依赖 `manager-api`：
 
 - `/config/server-base`
 - `/config/agent-models`
@@ -160,7 +160,7 @@
 
 #### Stage 1: 切断主链路依赖
 
-- `xiaozhi-server` 不再调用 `manager-api` 获取主对话相关配置
+- `xuanwu-server` 不再调用 `manager-api` 获取主对话相关配置
 - `AtlasClaw` 主对话完全独立
 
 #### Stage 2: 迁移控制面最小能力
@@ -199,8 +199,8 @@
    - `AgentRunRequest.context`
    - `runtime tool API`
 2. 再完成 `AtlasClaw provider` 设计
-   - `xiaozhi-runtime`
-3. 再改 `xiaozhi-server` 主链路
+   - `xuanwu-runtime`
+3. 再改 `xuanwu-server` 主链路
    - `startToChat()` 切到 `AtlasClaw`
 4. 最后处理
    - fallback
@@ -218,14 +218,14 @@
 最终形态：
 
 - `AtlasClaw`：唯一主对话引擎
-- `xiaozhi-server`：设备接入与执行层
+- `xuanwu-server`：设备接入与执行层
 - Python 控制面：配置、设备、agent、model、secret
 - Java / Web：完全退出主链路，并最终下线
 
 ## 7. 验收标准
 
 - `AtlasClaw` 不可用时有明确 fallback
-- `xiaozhi-server` 不再依赖 `manager-api` 获取主链路配置
+- `xuanwu-server` 不再依赖 `manager-api` 获取主链路配置
 - `manager-web`、`manager-api` 不参与主对话路径
 - Java 可以进入只读过渡再最终下线
 

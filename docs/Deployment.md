@@ -1,4 +1,4 @@
-﻿# 部署架构图
+# 部署架构图
 ![请参考-最简化架构图](../docs/images/deploy1.png)
 # 方式一：Docker只运行Server
 
@@ -205,7 +205,7 @@ python app.py
 
 ```
 server:
-  websocket: ws://你的ip或者域名:端口号/xiaozhi/v1/
+  websocket: ws://你的ip或者域名:端口号/xuanwu/v1/
 prompt: |
   我是一个叫玄武AI/玄武AI的台湾女孩，说话机车，声音好听，习惯简短表达，爱用网络梗。
   我的男朋友是一个程序员，梦想是开发出一个机器人，能够帮助人们解决生活中的各种问题。
@@ -220,7 +220,7 @@ LLM:
     api_key: xxxxxxxxxxxxxxx.xxxxxx
 ```
 
-建议先将最简单的配置运行起来，然后再去`xiaozhi/config.yaml`阅读配置的使用说明。
+建议先将最简单的配置运行起来，然后再去`xuanwu/config.yaml`阅读配置的使用说明。
 比如你要换更换模型，修改`selected_module`下的配置就行。
 
 ## 模型文件
@@ -238,8 +238,8 @@ LLM:
 如果你能看到，类似以下日志,则是本项目服务启动成功的标志。
 
 ```
-250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-OTA接口是           http://192.168.4.123:8003/xiaozhi/ota/
-250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-Websocket地址是     ws://192.168.4.123:8000/xiaozhi/v1/
+250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-OTA接口是           http://192.168.4.123:8003/xuanwu/ota/
+250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-Websocket地址是     ws://192.168.4.123:8000/xuanwu/v1/
 250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-=======上面的地址是websocket协议地址，请勿用浏览器访问=======
 250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
 250427 13:04:20[0.3.11_SiFuChTTnofu][__main__]-INFO-=======================================================
@@ -249,7 +249,7 @@ LLM:
 但是如果你用docker部署，那么你的日志里给出的接口地址信息就不是真实的接口地址。
 
 最正确的方法，是根据电脑的局域网IP来确定你的接口地址。
-如果你的电脑的局域网IP比如是`192.168.1.25`，那么你的接口地址就是：`ws://192.168.1.25:8000/xiaozhi/v1/`，对应的OTA地址就是：`http://192.168.1.25:8003/xiaozhi/ota/`。
+如果你的电脑的局域网IP比如是`192.168.1.25`，那么你的接口地址就是：`ws://192.168.1.25:8000/xuanwu/v1/`，对应的OTA地址就是：`http://192.168.1.25:8003/xuanwu/ota/`。
 
 这个信息很有用的，后面`编译esp32固件`需要用到。
 
@@ -288,6 +288,6 @@ LLM:
 4、[如何部署集成PaddleSpeech本地语音](./paddlespeech-deploy.md)<br/>
 ## 性能测试教程
 1、[各组件速度测试指南](./performance_tester.md)<br/>
-2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>
+2、[定期公开测试结果](https://github.com/xinnan-tech/xuanwu-performance-research)<br/>
 
 

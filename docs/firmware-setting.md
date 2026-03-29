@@ -1,14 +1,14 @@
-﻿# 鍩轰簬铏惧摜缂栬瘧濂界殑鍥轰欢閰嶇疆鑷畾涔夋湇鍔″櫒
+# 鍩轰簬铏惧摜缂栬瘧濂界殑鍥轰欢閰嶇疆鑷畾涔夋湇鍔″櫒
 
 ## 绗?姝?纭鐗堟湰
-鐑у綍铏惧摜宸茬粡缂栬瘧濂界殑[1.6.1鐗堟湰浠ヤ笂鍥轰欢](https://github.com/78/xiaozhi-esp32/releases)
+鐑у綍铏惧摜宸茬粡缂栬瘧濂界殑[1.6.1鐗堟湰浠ヤ笂鍥轰欢](https://github.com/78/xuanwu-esp32/releases)
 
 ## 绗?姝?鍑嗗浣犵殑ota鍦板潃
 濡傛灉浣犳寜鐓ф暀绋嬩娇鐢ㄧ殑鏄叏妯″潡閮ㄧ讲锛屽氨搴旇浼氭湁ota鍦板潃銆?
 
 姝ゅ埢锛岃浣犵敤娴忚鍣ㄦ墦寮€浣犵殑ota鍦板潃锛屼緥濡傛垜鐨刼ta鍦板潃
 ```
-https://2662r3426b.vicp.fun/xiaozhi/ota/
+https://2662r3426b.vicp.fun/xuanwu/ota/
 ```
 
 濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛寃ebsocket闆嗙兢鏁伴噺锛歑鈥濄€傞偅灏卞線涓嬨€?
@@ -22,7 +22,7 @@ https://2662r3426b.vicp.fun/xiaozhi/ota/
 - 3銆佸湪鍒楄〃涓壘鍒癭server.websocket`椤圭洰锛岃緭鍏ヤ綘鐨刞Websocket`鍦板潃銆備緥濡傛垜鐨勫氨鏄?
 
 ```
-wss://2662r3426b.vicp.fun/xiaozhi/v1/
+wss://2662r3426b.vicp.fun/xuanwu/v1/
 ```
 
 閰嶇疆瀹屽悗锛屽啀浣跨敤娴忚鍣ㄥ埛鏂颁綘鐨刼ta鎺ュ彛鍦板潃锛岀湅鐪嬫槸涓嶆槸姝ｅ父浜嗐€傚鏋滆繕涓嶆甯稿氨锛屽氨鍐嶆纭涓€涓媁ebsocket鏄惁姝ｅ父鍚姩锛屾槸鍚﹂厤缃簡Websocket鍦板潃銆?

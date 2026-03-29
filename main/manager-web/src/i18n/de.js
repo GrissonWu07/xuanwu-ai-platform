@@ -1,4 +1,4 @@
-﻿export default {
+export default {
   // Login page related prompt text
   'login.requiredUsername': 'Benutzername darf nicht leer sein',
   'login.requiredPassword': 'Passwort darf nicht leer sein',
@@ -203,7 +203,7 @@
   'firmwareDialog.firmwareFile': 'Firmware-Datei',
   'firmwareDialog.clickUpload': 'Zum Hochladen klicken',
   'firmwareDialog.uploadTip': 'Nur Firmware-Dateien (.bin/.apk) werden unterstützt, Größe sollte 100MB nicht überschreiten',
-  'firmwareDialog.uploadHint': 'Hinweis: Bitte die vorab zusammengeführte xiaozhi.bin-Datei hochladen, nicht die zusammengeführte merged-binary.bin-Datei',
+  'firmwareDialog.uploadHint': 'Hinweis: Bitte die vorab zusammengeführte xuanwu.bin-Datei hochladen, nicht die zusammengeführte merged-binary.bin-Datei',
   'firmwareDialog.remark': 'Bemerkung',
   'firmwareDialog.remarkPlaceholder': 'Bitte Bemerkungsinformationen eingeben',
   'firmwareDialog.requiredFirmwareName': 'Bitte Firmware-Namen eingeben (Board + Version)',
@@ -297,7 +297,7 @@
 
   // Register page related
   'register.title': 'Konto erstellen',
-  'register.welcome': 'Willkommen bei XiaoZhi AI',
+  'register.welcome': 'Willkommen bei Xuanwu AI',
   'register.usernamePlaceholder': 'Bitte Benutzernamen eingeben',
   'register.mobilePlaceholder': 'Bitte Handynummer eingeben',
   'register.captchaPlaceholder': 'Bitte Captcha eingeben',
@@ -533,7 +533,7 @@
   'button.close': 'Schließen',
 
   // System information
-  'system.name': 'XiaoZhi Service',
+  'system.name': 'Xuanwu Service',
 
   // Voiceprint related
   'voiceprint.management': 'Stimmabdruckverwaltung',
@@ -666,7 +666,7 @@
 
   // Home page text
   'home.addAgent': 'Agent hinzufügen',
-  'home.greeting': 'Hallo XiaoZhi',
+  'home.greeting': 'Hallo Xuanwu',
   'home.wish': 'Lassen Sie uns einen wunderbaren Tag haben!',
   'home.languageModel': 'LLM',
   'home.voiceModel': 'TTS',

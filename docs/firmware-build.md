@@ -1,4 +1,4 @@
-﻿# esp32鍥轰欢缂栬瘧
+# esp32鍥轰欢缂栬瘧
 
 ## 绗?姝?鍑嗗浣犵殑ota鍦板潃
 
@@ -9,9 +9,9 @@
 ### 濡傛灉浣犵敤鐨勬槸绠€鍗昐erver閮ㄧ讲
 姝ゅ埢锛岃浣犵敤娴忚鍣ㄦ墦寮€浣犵殑ota鍦板潃锛屼緥濡傛垜鐨刼ta鍦板潃
 ```
-http://192.168.1.25:8003/xiaozhi/ota/
+http://192.168.1.25:8003/xuanwu/ota/
 ```
-濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛屽悜璁惧鍙戦€佺殑websocket鍦板潃鏄細ws://xxx:8000/xiaozhi/v1/
+濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛屽悜璁惧鍙戦€佺殑websocket鍦板潃鏄細ws://xxx:8000/xuanwu/v1/
 
 浣犲彲浠ヤ娇鐢ㄩ」鐩嚜甯︾殑`test_page.html`娴嬭瘯涓€涓嬶紝鏄惁鑳借繛涓妎ta椤甸潰杈撳嚭鐨剋ebsocket鍦板潃銆?
 
@@ -22,7 +22,7 @@ http://192.168.1.25:8003/xiaozhi/ota/
 ### 濡傛灉浣犵敤鐨勬槸鍏ㄦā鍧楅儴缃?
 姝ゅ埢锛岃浣犵敤娴忚鍣ㄦ墦寮€浣犵殑ota鍦板潃锛屼緥濡傛垜鐨刼ta鍦板潃
 ```
-http://192.168.1.25:8002/xiaozhi/ota/
+http://192.168.1.25:8002/xuanwu/ota/
 ```
 
 濡傛灉鏄剧ず鈥淥TA鎺ュ彛杩愯姝ｅ父锛寃ebsocket闆嗙兢鏁伴噺锛歑鈥濄€傞偅灏卞線涓嬭繘琛?姝ャ€?
@@ -36,7 +36,7 @@ http://192.168.1.25:8002/xiaozhi/ota/
 - 3銆佸湪鍒楄〃涓壘鍒癭server.websocket`椤圭洰锛岃緭鍏ヤ綘鐨刞Websocket`鍦板潃銆備緥濡傛垜鐨勫氨鏄?
 
 ```
-ws://192.168.1.25:8000/xiaozhi/v1/
+ws://192.168.1.25:8000/xuanwu/v1/
 ```
 
 閰嶇疆瀹屽悗锛屽啀浣跨敤娴忚鍣ㄥ埛鏂颁綘鐨刼ta鎺ュ彛鍦板潃锛岀湅鐪嬫槸涓嶆槸姝ｅ父浜嗐€傚鏋滆繕涓嶆甯稿氨锛屽氨鍐嶆纭涓€涓媁ebsocket鏄惁姝ｅ父鍚姩锛屾槸鍚﹂厤缃簡Websocket鍦板潃銆?
@@ -47,20 +47,20 @@ ws://192.168.1.25:8000/xiaozhi/v1/
 ## 绗?姝?鎵撳紑閰嶇疆鏂囦欢
 閰嶇疆濂界紪璇戠幆澧冨悗锛屼笅杞借櫨鍝aozhi-esp32椤圭洰婧愮爜锛?
 
-浠庤繖閲屼笅杞借櫨鍝xiaozhi-esp32椤圭洰婧愮爜](https://github.com/78/xiaozhi-esp32)銆?
+浠庤繖閲屼笅杞借櫨鍝xuanwu-esp32椤圭洰婧愮爜](https://github.com/78/xuanwu-esp32)銆?
 
-涓嬭浇鍚庯紝鎵撳紑`xiaozhi-esp32/main/Kconfig.projbuild`鏂囦欢銆?
+涓嬭浇鍚庯紝鎵撳紑`xuanwu-esp32/main/Kconfig.projbuild`鏂囦欢銆?
 
 ## 绗?姝?淇敼OTA鍦板潃
 
-鎵惧埌`OTA_URL`鐨刞default`鐨勫唴瀹癸紝鎶奰https://api.tenclass.net/xiaozhi/ota/`
-   鏀规垚浣犺嚜宸辩殑鍦板潃锛屼緥濡傦紝鎴戠殑鎺ュ彛鍦板潃鏄痐http://192.168.1.25:8002/xiaozhi/ota/`锛屽氨鎶婂唴瀹规敼鎴愯繖涓€?
+鎵惧埌`OTA_URL`鐨刞default`鐨勫唴瀹癸紝鎶奰https://api.tenclass.net/xuanwu/ota/`
+   鏀规垚浣犺嚜宸辩殑鍦板潃锛屼緥濡傦紝鎴戠殑鎺ュ彛鍦板潃鏄痐http://192.168.1.25:8002/xuanwu/ota/`锛屽氨鎶婂唴瀹规敼鎴愯繖涓€?
 
 淇敼鍓嶏細
 ```
 config OTA_URL
     string "Default OTA URL"
-    default "https://api.tenclass.net/xiaozhi/ota/"
+    default "https://api.tenclass.net/xuanwu/ota/"
     help
         The application will access this URL to check for new firmwares and server address.
 ```
@@ -68,7 +68,7 @@ config OTA_URL
 ```
 config OTA_URL
     string "Default OTA URL"
-    default "http://192.168.1.25:8002/xiaozhi/ota/"
+    default "http://192.168.1.25:8002/xuanwu/ota/"
     help
         The application will access this URL to check for new firmwares and server address.
 ```
@@ -79,14 +79,14 @@ config OTA_URL
 
 ```
 # 缁堢鍛戒护琛岃繘鍏iaozhi-esp32鐨勬牴鐩綍
-cd xiaozhi-esp32
+cd xuanwu-esp32
 # 渚嬪鎴戜娇鐢ㄧ殑鏉垮瓙鏄痚sp32s3锛屾墍浠ヨ缃紪璇戠洰鏍囦负esp32s3锛屽鏋滀綘鐨勬澘瀛愭槸鍏朵粬鍨嬪彿锛岃鏇挎崲鎴愬搴旂殑鍨嬪彿
 idf.py set-target esp32s3
 # 杩涘叆鑿滃崟閰嶇疆
 idf.py menuconfig
 ```
 
-杩涘叆鑿滃崟閰嶇疆鍚庯紝鍐嶈繘鍏Xiaozhi Assistant`锛屽皢`BOARD_TYPE`璁剧疆浣犳澘瀛愮殑鍏蜂綋鍨嬪彿
+杩涘叆鑿滃崟閰嶇疆鍚庯紝鍐嶈繘鍏Xuanwu Assistant`锛屽皢`BOARD_TYPE`璁剧疆浣犳澘瀛愮殑鍏蜂綋鍨嬪彿
 淇濆瓨閫€鍑猴紝鍥炲埌缁堢鍛戒护琛屻€?
 
 ## 绗?姝?缂栬瘧鍥轰欢

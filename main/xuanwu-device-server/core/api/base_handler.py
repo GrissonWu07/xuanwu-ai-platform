@@ -11,7 +11,7 @@ class BaseHandler:
     def _add_cors_headers(self, response):
         response.headers["Access-Control-Allow-Headers"] = (
             "client-id, content-type, device-id, authorization, "
-            "x-xiaozhi-runtime-secret, x-xiaozhi-control-secret"
+            "x-xuanwu-runtime-secret, x-xuanwu-control-secret"
         )
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Origin"] = "*"

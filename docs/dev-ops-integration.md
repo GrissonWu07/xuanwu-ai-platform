@@ -1,4 +1,4 @@
-﻿# 全模块源码部署自动升级方法
+# 全模块源码部署自动升级方法
 
 本教程是方便全模块源码部署的爱好者，如何通过自动命令，自动拉取源码，自动编译，自动启动端口运行。实现最高效率的升级系统。
 
@@ -27,14 +27,14 @@
 
 例如，我规划了我的项目目录是，这是一个新建的空白的目录，如果你不想出错，可以和我一样
 ```
-/home/system/xiaozhi
+/home/system/xuanwu
 ```
 
 # 第二步 克隆本项目
 此刻，先要执行第一句话，拉取源码，这句命令适用于国内网络的服务器和电脑，无需翻墙
 
 ```
-cd /home/system/xiaozhi
+cd /home/system/xuanwu
 git clone https://ghproxy.net/https://github.com/GrissonWu07/ai-assist-deviceserver.git
 ```
 
@@ -47,29 +47,29 @@ git clone https://ghproxy.net/https://github.com/GrissonWu07/ai-assist-deviceser
 此刻你需要把`model.pt`文件复制到新的目录去，你可以这样
 ```
 # 创建需要的目录
-mkdir -p /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/data/
+mkdir -p /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/data/
 
-cp 你原来的.config.yaml完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/data/.config.yaml
-cp 你原来的model.pt完整路径 /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
+cp 你原来的.config.yaml完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/data/.config.yaml
+cp 你原来的model.pt完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
 ```
 
 # 第四步 建立三个自动编译文件
 
 ## 4.1 自动编译mananger-web模块
-在`/home/system/xiaozhi/`目录下，创建名字为`update_8001.sh`的文件，内容如下
+在`/home/system/xuanwu/`目录下，创建名字为`update_8001.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/ai-assist-deviceserver
+cd /home/system/xuanwu/ai-assist-deviceserver
 git fetch --all
 git reset --hard
 git pull origin main
 
 
-cd /home/system/xiaozhi/ai-assist-deviceserver/main/manager-web
+cd /home/system/xuanwu/ai-assist-deviceserver/main/manager-web
 npm install
 npm run build
-rm -rf /home/system/xiaozhi/manager-web
-mv /home/system/xiaozhi/ai-assist-deviceserver/main/manager-web/dist /home/system/xiaozhi/manager-web
+rm -rf /home/system/xuanwu/manager-web
+mv /home/system/xuanwu/ai-assist-deviceserver/main/manager-web/dist /home/system/xuanwu/manager-web
 ```
 
 保存好后执行赋权命令
@@ -79,23 +79,23 @@ chmod 777 update_8001.sh
 执行完后，继续往下
 
 ## 4.2 自动编译运行manager-api模块
-在`/home/system/xiaozhi/`目录下，创建名字为`update_8002.sh`的文件，内容如下
+在`/home/system/xuanwu/`目录下，创建名字为`update_8002.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/ai-assist-deviceserver
+cd /home/system/xuanwu/ai-assist-deviceserver
 git pull origin main
 
 
-cd /home/system/xiaozhi/ai-assist-deviceserver/main/manager-api
+cd /home/system/xuanwu/ai-assist-deviceserver/main/manager-api
 rm -rf target
 mvn clean package -Dmaven.test.skip=true
-cd /home/system/xiaozhi/
+cd /home/system/xuanwu/
 
 # 查找占用8002端口的进程号
 PID=$(sudo netstat -tulnp | grep 8002 | awk '{print $7}' | cut -d'/' -f1)
 
-rm -rf /home/system/xiaozhi/xiaozhi-esp32-api.jar
-mv /home/system/xiaozhi/ai-assist-deviceserver/main/manager-api/target/xiaozhi-esp32-api.jar /home/system/xiaozhi/xiaozhi-esp32-api.jar
+rm -rf /home/system/xuanwu/xuanwu-esp32-api.jar
+mv /home/system/xuanwu/ai-assist-deviceserver/main/manager-api/target/xuanwu-esp32-api.jar /home/system/xuanwu/xuanwu-esp32-api.jar
 
 # 检查是否找到进程号
 if [ -z "$PID" ]; then
@@ -108,7 +108,7 @@ else
   echo "已杀掉进程 $PID"
 fi
 
-nohup java -jar xiaozhi-esp32-api.jar --spring.profiles.active=dev &
+nohup java -jar xuanwu-esp32-api.jar --spring.profiles.active=dev &
 
 tail tail -f nohup.out
 ```
@@ -120,10 +120,10 @@ chmod 777 update_8002.sh
 执行完后，继续往下
 
 ## 4.3 自动编译运行Python项目
-在`/home/system/xiaozhi/`目录下，创建名字为`update_8000.sh`的文件，内容如下
+在`/home/system/xuanwu/`目录下，创建名字为`update_8000.sh`的文件，内容如下
 
 ```
-cd /home/system/xiaozhi/ai-assist-deviceserver
+cd /home/system/xuanwu/ai-assist-deviceserver
 git pull origin main
 
 # 查找占用8000端口的进程号
@@ -145,7 +145,7 @@ source ~/.bashrc
 conda activate xuanwu-device-server
 pip install -r requirements.txt
 nohup python app.py >/dev/null &
-tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
+tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
 ```
 
 保存好后执行赋权命令
@@ -159,7 +159,7 @@ chmod 777 update_8000.sh
 以上的脚本都建立好后，日常更新，我们只要依次执行以下命令就可以做到自动更新和启动
 
 ```
-cd /home/system/xiaozhi
+cd /home/system/xuanwu
 # 更新并启动Java程序
 ./update_8001.sh
 # 更新web程序
@@ -171,7 +171,7 @@ cd /home/system/xiaozhi
 # 后期想查看java日志，执行以下命令
 tail -f nohup.out
 # 后期想查看python日志，执行以下命令
-tail -f /home/system/xiaozhi/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
+tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
 ```
 
 # 注意事项

@@ -1,4 +1,4 @@
-﻿# 部署架构图
+# 部署架构图
 ![请参考-全模块安装架构图](../docs/images/deploy2.png)
 # 方式一：Docker运行全模块
 `0.8.2`版本开始，本项目发行的docker镜像只支持`x86架构`，如果需要在`arm64架构`的CPU上部署，可按照[这个教程](docker-build.md)在本机编译`arm64的镜像`。
@@ -153,8 +153,8 @@ docker logs -f xuanwu-device-server-web
 
 ```
 2025-xx-xx 22:11:12.445 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
-2025-xx-xx 21:28:53.873 [main] INFO  xiaozhi.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
-http://localhost:8002/xiaozhi/doc.html
+2025-xx-xx 21:28:53.873 [main] INFO  xuanwu.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
+http://localhost:8002/xuanwu/doc.html
 ```
 
 请注意此刻仅是`智控台`能运行，如果8000端口`xuanwu-device-server`报错，先不要理会。
@@ -173,21 +173,21 @@ http://localhost:8002/xiaozhi/doc.html
 
 ```
 manager-api:
-  url:  http://127.0.0.1:8002/xiaozhi
+  url:  http://127.0.0.1:8002/xuanwu
   secret: 你的server.secret值
 ```
 1、把你刚才从`智控台`复制过来的`server.secret`的`参数值`复制到`.config.yaml`文件里的`secret`里。
 
-2、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
+2、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xuanwu`
 
-3、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
+3、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xuanwu`
 
-4、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xiaozhi`
+4、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-server-web:8002/xuanwu`
 
 类似这样的效果
 ```
 manager-api:
-  url: http://xuanwu-device-server-web:8002/xiaozhi
+  url: http://xuanwu-device-server-web:8002/xuanwu
   secret: 12345678-xxxx-xxxx-xxxx-123456789000
 ```
 
@@ -208,7 +208,7 @@ docker logs -f xuanwu-device-server
 如果你能看到，类似以下日志,则是Server启动成功的标志。
 
 ```
-25-02-23 12:01:09[core.websocket_server] - INFO - Websocket地址是      ws://xxx.xx.xx.xx:8000/xiaozhi/v1/
+25-02-23 12:01:09[core.websocket_server] - INFO - Websocket地址是      ws://xxx.xx.xx.xx:8000/xuanwu/v1/
 25-02-23 12:01:09[core.websocket_server] - INFO - =======上面的地址是websocket协议地址，请勿用浏览器访问=======
 25-02-23 12:01:09[core.websocket_server] - INFO - 如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
 25-02-23 12:01:09[core.websocket_server] - INFO - =======================================================
@@ -218,12 +218,12 @@ docker logs -f xuanwu-device-server
 
 OTA接口：
 ```
-http://你宿主机局域网的ip:8002/xiaozhi/ota/
+http://你宿主机局域网的ip:8002/xuanwu/ota/
 ```
 
 Websocket接口：
 ```
-ws://你宿主机的ip:8000/xiaozhi/v1/
+ws://你宿主机的ip:8000/xuanwu/v1/
 ```
 
 ### 第三件重要的事情
@@ -243,16 +243,16 @@ ws://你宿主机的ip:8000/xiaozhi/v1/
 
 ## 1.安装MySQL数据库
 
-如果本机已经安装了MySQL，可以直接在数据库中创建名为`xiaozhi_esp32_server`的数据库。
+如果本机已经安装了MySQL，可以直接在数据库中创建名为`xuanwu_esp32_server`的数据库。
 
 ```sql
-CREATE DATABASE xiaozhi_esp32_server CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE xuanwu_esp32_server CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 如果还没有MySQL，你可以通过docker安装mysql
 
 ```
-docker run --name xuanwu-device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xiaozhi_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
+docker run --name xuanwu-device-server-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xuanwu_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
 ```
 
 ## 2.安装redis
@@ -299,15 +299,15 @@ spring:
 
 ```
 路径地址：
-src/main/java/xiaozhi/AdminApplication.java
+src/main/java/xuanwu/AdminApplication.java
 ```
 
 当你看到输出日志时，说明你的`manager-api`启动成功了。
 
 ```
 2025-xx-xx 22:11:12.445 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
-2025-xx-xx 21:28:53.873 [main] INFO  xiaozhi.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
-http://localhost:8002/xiaozhi/doc.html
+2025-xx-xx 21:28:53.873 [main] INFO  xuanwu.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
+http://localhost:8002/xuanwu/doc.html
 ```
 
 ## 4.运行manager-web程序
@@ -417,7 +417,7 @@ pip install -r requirements.txt
 
 ```
 manager-api:
-  url: http://127.0.0.1:8002/xiaozhi
+  url: http://127.0.0.1:8002/xuanwu
   secret: 你的server.secret值
 ```
 
@@ -426,7 +426,7 @@ manager-api:
 类似这样的效果
 ```
 manager-api:
-  url: http://127.0.0.1:8002/xiaozhi
+  url: http://127.0.0.1:8002/xuanwu
   secret: 12345678-xxxx-xxxx-xxxx-123456789000
 ```
 
@@ -441,7 +441,7 @@ python app.py
 如果你能看到，类似以下日志,则是本项目服务启动成功的标志。
 
 ```
-25-02-23 12:01:09[core.websocket_server] - INFO - Server is running at ws://xxx.xx.xx.xx:8000/xiaozhi/v1/
+25-02-23 12:01:09[core.websocket_server] - INFO - Server is running at ws://xxx.xx.xx.xx:8000/xuanwu/v1/
 25-02-23 12:01:09[core.websocket_server] - INFO - =======上面的地址是websocket协议地址，请勿用浏览器访问=======
 25-02-23 12:01:09[core.websocket_server] - INFO - 如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
 25-02-23 12:01:09[core.websocket_server] - INFO - =======================================================
@@ -451,12 +451,12 @@ python app.py
 
 OTA接口：
 ```
-http://你电脑局域网的ip:8002/xiaozhi/ota/
+http://你电脑局域网的ip:8002/xuanwu/ota/
 ```
 
 Websocket接口：
 ```
-ws://你电脑局域网的ip:8000/xiaozhi/v1/
+ws://你电脑局域网的ip:8000/xuanwu/v1/
 ```
 
 请你务必把以上两个接口地址写入到智控台中：他们将会影响websocket地址发放和自动升级功能。
@@ -501,6 +501,6 @@ ws://你电脑局域网的ip:8000/xiaozhi/v1/
 4、[如何部署集成PaddleSpeech本地语音](./paddlespeech-deploy.md)<br/>
 ## 性能测试教程
 1、[各组件速度测试指南](./performance_tester.md)<br/>
-2、[定期公开测试结果](https://github.com/xinnan-tech/xiaozhi-performance-research)<br/>
+2、[定期公开测试结果](https://github.com/xinnan-tech/xuanwu-performance-research)<br/>
 
 

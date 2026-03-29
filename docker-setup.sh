@@ -66,9 +66,9 @@ cat <<EOF
 玄武AI Python 管理路径已启动：
 
 - 管理宿主 xuanwu-management-server: http://$LOCAL_IP:18082
-- OTA 地址: http://$LOCAL_IP:8003/xiaozhi/ota/
+- OTA 地址: http://$LOCAL_IP:8003/xuanwu/ota/
 - 视觉分析接口: http://$LOCAL_IP:8003/mcp/vision/explain
-- WebSocket 地址: ws://$LOCAL_IP:8000/xiaozhi/v1/
+- WebSocket 地址: ws://$LOCAL_IP:8000/xuanwu/v1/
 
 请确认外部 XuanWu 服务可通过 docker-compose 中的 XUANWU_BASE_URL 访问。
 EOF

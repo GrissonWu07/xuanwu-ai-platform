@@ -13,7 +13,7 @@ def build_atlas_session_key(
     client_id: str | None = None,
     *,
     agent_id: str = "main",
-    channel: str = "xiaozhi",
+    channel: str = "xuanwu",
 ) -> str:
     device_key = _normalize(device_id, "unknown-device")
     user_id = f"device-{device_key}"
