@@ -15,6 +15,9 @@ class LocalControlPlaneStore:
         self.root_dir.mkdir(parents=True, exist_ok=True)
         (self.root_dir / "devices").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "agents").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "users").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "channels").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "device_agent_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
 
@@ -50,6 +53,58 @@ class LocalControlPlaneStore:
         payload.setdefault("agent_id", agent_id)
         self._write_yaml(self.root_dir / "agents" / f"{agent_id}.yaml", payload)
         return payload
+
+    def get_user(self, user_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "users" / f"{user_id}.yaml")
+
+    def create_user(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        user_id = str(payload.get("user_id", "")).strip()
+        if not user_id:
+            raise ValueError("user_id_required")
+        payload.setdefault("status", "active")
+        self._write_yaml(self.root_dir / "users" / f"{user_id}.yaml", payload)
+        return payload
+
+    def list_users(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "users")
+
+    def get_channel(self, channel_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "channels" / f"{channel_id}.yaml")
+
+    def create_channel(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        channel_id = str(payload.get("channel_id", "")).strip()
+        if not channel_id:
+            raise ValueError("channel_id_required")
+        payload.setdefault("status", "active")
+        self._write_yaml(self.root_dir / "channels" / f"{channel_id}.yaml", payload)
+        return payload
+
+    def list_channels(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "channels")
+
+    def bind_device_agent(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        mapping_id = str(payload.get("mapping_id", "")).strip()
+        if not mapping_id:
+            raise ValueError("mapping_id_required")
+        payload.setdefault("enabled", True)
+        self._write_yaml(self.root_dir / "device_agent_mappings" / f"{mapping_id}.yaml", payload)
+        return payload
+
+    def get_active_device_agent_mapping(self, device_id: str) -> dict[str, Any] | None:
+        mappings_dir = self.root_dir / "device_agent_mappings"
+        for path in sorted(mappings_dir.glob("*.yaml")):
+            payload = self._read_yaml(path)
+            if not isinstance(payload, dict):
+                continue
+            if payload.get("device_id") != device_id:
+                continue
+            if payload.get("enabled", True) is False:
+                continue
+            return payload
+        return None
 
     def load_chat_history(self, session_id: str) -> list[dict[str, Any]]:
         records = self._read_yaml(
@@ -96,7 +151,8 @@ class LocalControlPlaneStore:
             raise DeviceBindException(bind_code)
 
         resolved_config = self.build_server_config(base_config)
-        agent_id = device.get("agent_id") or "default"
+        binding = self.get_active_device_agent_mapping(device_id) or {}
+        agent_id = str(binding.get("agent_id") or device.get("agent_id") or "default")
         agent = self.get_agent(agent_id) or {"agent_id": agent_id}
 
         resolved_config = self._deep_merge(resolved_config, agent)
@@ -119,6 +175,7 @@ class LocalControlPlaneStore:
                 "bind_status": bind_status,
                 "bind_code": bind_code or None,
             },
+            "binding": deepcopy(binding),
             "agent": {
                 "agent_id": agent_id,
                 "prompt": resolved_config.get("prompt"),
@@ -154,3 +211,11 @@ class LocalControlPlaneStore:
             else:
                 merged[key] = deepcopy(value)
         return merged
+
+    def _list_yaml_dir(self, path: Path) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        for file_path in sorted(path.glob("*.yaml")):
+            payload = self._read_yaml(file_path)
+            if isinstance(payload, dict):
+                items.append(payload)
+        return items

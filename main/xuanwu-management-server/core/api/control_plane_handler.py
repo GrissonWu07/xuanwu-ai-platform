@@ -46,6 +46,42 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "invalid_json"}, status=400)
         return self._json_response(self.store.save_server_profile(payload))
 
+    async def handle_list_users(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_users()})
+
+    async def handle_create_user(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.create_user(payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_channels(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_channels()})
+
+    async def handle_create_channel(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.create_channel(payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
     async def handle_get_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -117,6 +153,7 @@ class ControlPlaneHandler(BaseHandler):
         return self._json_response(
             {
                 "device": resolved["device"],
+                "binding": resolved.get("binding", {}),
                 "agent": resolved["agent"],
                 "plugins": resolved_config.get("plugins", {}),
                 "context_providers": resolved_config.get("context_providers", []),

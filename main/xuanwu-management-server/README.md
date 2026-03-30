@@ -15,6 +15,18 @@
 - 当前已支持这 3 类资源的透明 CRUD 透传
 - 支持通过环境变量配置 `XuanWu` 访问地址
 
+当前基础控制面范围：
+
+- `users`
+- `channels`
+- `devices`
+- `device_agent_mappings`
+- `runtime/device-config:resolve`
+- `XuanWu` 代理：
+  - `agents`
+  - `model-providers`
+  - `models`
+
 当前默认配置：
 
 - `XUANWU_MANAGEMENT_SERVER_HOST=0.0.0.0`

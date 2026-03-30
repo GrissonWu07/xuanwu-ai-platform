@@ -26,6 +26,30 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.get(
+                "/control-plane/v1/users",
+                control_plane_handler.handle_list_users,
+            ),
+            web.post(
+                "/control-plane/v1/users",
+                control_plane_handler.handle_create_user,
+            ),
+            web.options(
+                "/control-plane/v1/users",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/channels",
+                control_plane_handler.handle_list_channels,
+            ),
+            web.post(
+                "/control-plane/v1/channels",
+                control_plane_handler.handle_create_channel,
+            ),
+            web.options(
+                "/control-plane/v1/channels",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_get_device,
             ),

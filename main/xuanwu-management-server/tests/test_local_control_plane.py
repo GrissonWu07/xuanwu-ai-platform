@@ -81,6 +81,55 @@ def test_resolve_device_config_merges_agent_and_device_overrides():
         }
 
 
+def test_resolve_device_config_prefers_active_device_agent_mapping():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        _write_yaml(
+            root,
+            "server.yaml",
+            {"server": {"runtime_secret": "runtime-secret"}},
+        )
+        _write_yaml(
+            root,
+            "agents/agent-frontdesk.yaml",
+            {
+                "agent_id": "agent-frontdesk",
+                "prompt": "mapped agent prompt",
+                "selected_module": {"LLM": "MappedLLM"},
+            },
+        )
+        _write_yaml(
+            root,
+            "devices/esp32-frontdesk.yaml",
+            {
+                "device_id": "esp32-frontdesk",
+                "bind_status": "bound",
+                "runtime_overrides": {"selected_module": {"TTS": "DeskTTS"}},
+            },
+        )
+        _write_yaml(
+            root,
+            "device_agent_mappings/map-device-agent-001.yaml",
+            {
+                "mapping_id": "map-device-agent-001",
+                "device_id": "esp32-frontdesk",
+                "agent_id": "agent-frontdesk",
+                "enabled": True,
+            },
+        )
+        store = LocalControlPlaneStore(root)
+
+        resolved = store.resolve_device_config({}, "esp32-frontdesk", "client-frontdesk")
+
+        assert resolved["device"]["agent_id"] == "agent-frontdesk"
+        assert resolved["binding"]["mapping_id"] == "map-device-agent-001"
+        assert resolved["agent"]["agent_id"] == "agent-frontdesk"
+        assert resolved["resolved_config"]["selected_module"] == {
+            "LLM": "MappedLLM",
+            "TTS": "DeskTTS",
+        }
+
+
 def test_resolve_device_config_raises_bind_exception_for_pending_device():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -218,3 +267,142 @@ def test_control_plane_summary_generation_request_persists_payload():
         summary_request = handler.store.get_summary_request("sess-20260328-001")
         assert summary_request["reason"] == "memory_rollup"
         assert summary_request["requested_by"] == "xuanwu-device-server"
+
+
+def test_control_plane_create_user_and_channel_persists_payloads():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        user_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/users",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        user_request._read_bytes = b'{"user_id":"user-001","name":"Alice"}'
+
+        channel_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/channels",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        channel_request._read_bytes = b'{"channel_id":"channel-home","user_id":"user-001","name":"Home"}'
+
+        user_response = asyncio.run(handler.handle_create_user(user_request))
+        channel_response = asyncio.run(handler.handle_create_channel(channel_request))
+
+        assert user_response.status == 201
+        assert channel_response.status == 201
+        assert handler.store.get_user("user-001")["name"] == "Alice"
+        assert handler.store.get_channel("channel-home")["user_id"] == "user-001"
+
+
+def test_control_plane_rejects_user_and_channel_without_ids():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        user_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/users",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        user_request._read_bytes = b'{"name":"Alice"}'
+
+        channel_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/channels",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        channel_request._read_bytes = b'{"user_id":"user-001","name":"Home"}'
+
+        user_response = asyncio.run(handler.handle_create_user(user_request))
+        channel_response = asyncio.run(handler.handle_create_channel(channel_request))
+
+        assert user_response.status == 400
+        assert yaml.safe_load(user_response.text)["error"] == "user_id_required"
+        assert channel_response.status == 400
+        assert yaml.safe_load(channel_response.text)["error"] == "channel_id_required"
+
+
+def test_control_plane_runtime_resolve_returns_binding_view():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        _write_yaml(
+            root,
+            "agents/agent-frontdesk.yaml",
+            {
+                "agent_id": "agent-frontdesk",
+                "prompt": "mapped agent prompt",
+            },
+        )
+        _write_yaml(
+            root,
+            "devices/dev-001.yaml",
+            {
+                "device_id": "dev-001",
+                "bind_status": "bound",
+            },
+        )
+        _write_yaml(
+            root,
+            "device_agent_mappings/map-device-agent-001.yaml",
+            {
+                "mapping_id": "map-device-agent-001",
+                "device_id": "dev-001",
+                "agent_id": "agent-frontdesk",
+                "enabled": True,
+            },
+        )
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/runtime/device-config:resolve",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = b'{"device_id":"dev-001","client_id":"client-001"}'
+
+        response = asyncio.run(handler.handle_resolve_device_config(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 200
+        assert payload["device"]["agent_id"] == "agent-frontdesk"
+        assert payload["binding"]["mapping_id"] == "map-device-agent-001"
+
+
+def test_store_creates_user_channel_and_device_agent_mappings():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        user = store.create_user({"user_id": "user-001", "name": "Alice"})
+        channel = store.create_channel(
+            {"channel_id": "channel-home", "user_id": "user-001", "name": "Home"}
+        )
+        mapping = store.bind_device_agent(
+            {
+                "mapping_id": "map-device-agent-001",
+                "device_id": "dev-001",
+                "agent_id": "agent-frontdesk",
+            }
+        )
+
+        assert user["user_id"] == "user-001"
+        assert channel["channel_id"] == "channel-home"
+        assert channel["user_id"] == "user-001"
+        assert mapping["agent_id"] == "agent-frontdesk"
+        assert store.get_user("user-001")["name"] == "Alice"
+        assert store.get_channel("channel-home")["name"] == "Home"
+        assert store.get_active_device_agent_mapping("dev-001")["mapping_id"] == "map-device-agent-001"
