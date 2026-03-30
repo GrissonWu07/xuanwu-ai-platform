@@ -48,6 +48,12 @@
   - runtime context exposes `xuanwu_session_key`
   - control-plane hosting is no longer embedded back into the runtime service
   - local Python management path is the default path
+  - non-upstream local test suite is now the active verification baseline
+  - upstream-only `XuanWu` integration tests were removed from the local completion gate
+  - current local-only coverage baseline is:
+    - `config_loader.py`: 88%
+    - `control_plane_handler.py`: 64%
+    - selected local platform surface total: 76%
 
 ## In Progress
 - No additional local-only implementation phase is open.

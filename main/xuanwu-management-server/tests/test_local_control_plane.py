@@ -1377,3 +1377,306 @@ def test_control_plane_gateway_capability_and_ota_endpoints_work_together():
         assert handler.store.list_gateways()[0]["gateway_id"] == "gateway-http-001"
         assert handler.store.list_capabilities()[0]["capability_code"] == "switch.on_off"
         assert handler.store.list_firmwares()[0]["firmware_id"] == "fw-esp32-001"
+
+
+def test_control_plane_resource_item_endpoints_round_trip_real_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.create_user(
+            {"user_id": "user-ops-001", "name": "Ops Team", "status": "active"}
+        )
+        handler.store.save_device(
+            "dev-boiler-001",
+            {
+                "device_id": "dev-boiler-001",
+                "user_id": "user-ops-001",
+                "device_type": "industrial_controller",
+                "protocol_type": "modbus_tcp",
+                "site_id": "plant-a",
+            },
+        )
+        handler.store.save_agent(
+            "agent-factory-ops",
+            {"agent_id": "agent-factory-ops", "name": "Factory Ops"},
+        )
+        handler.store.save_gateway(
+            "gateway-modbus-001",
+            {
+                "gateway_id": "gateway-modbus-001",
+                "protocol_type": "modbus_tcp",
+                "site_id": "plant-a",
+            },
+        )
+        handler.store.save_capability(
+            "cap-temperature",
+            {
+                "capability_id": "cap-temperature",
+                "capability_code": "sensor.temperature",
+            },
+        )
+        handler.store.save_capability_route(
+            "route-temperature-modbus",
+            {
+                "route_id": "route-temperature-modbus",
+                "capability_code": "sensor.temperature",
+                "gateway_id": "gateway-modbus-001",
+            },
+        )
+        handler.store.save_firmware(
+            "fw-industrial-001",
+            {
+                "firmware_id": "fw-industrial-001",
+                "device_type": "industrial_controller",
+                "version": "2.3.7",
+            },
+        )
+        handler.store.save_ota_campaign(
+            "campaign-industrial-001",
+            {
+                "campaign_id": "campaign-industrial-001",
+                "firmware_id": "fw-industrial-001",
+                "status": "scheduled",
+            },
+        )
+
+        put_device_request = make_mocked_request(
+            "PUT",
+            "/control-plane/v1/devices/dev-boiler-001",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-boiler-001"},
+        )
+        put_device_request._read_bytes = (
+            b'{"user_id":"user-ops-001","device_type":"industrial_controller",'
+            b'"protocol_type":"modbus_tcp","site_id":"plant-b","display_name":"Boiler PLC"}'
+        )
+
+        put_agent_request = make_mocked_request(
+            "PUT",
+            "/control-plane/v1/agents/agent-factory-ops",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"agent_id": "agent-factory-ops"},
+        )
+        put_agent_request._read_bytes = (
+            b'{"name":"Factory Operations Agent","status":"active"}'
+        )
+
+        put_device_response = asyncio.run(handler.handle_put_device(put_device_request))
+        put_agent_response = asyncio.run(handler.handle_put_agent(put_agent_request))
+        get_device_response = asyncio.run(
+            handler.handle_get_device(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/devices/dev-boiler-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"device_id": "dev-boiler-001"},
+                )
+            )
+        )
+        get_agent_response = asyncio.run(
+            handler.handle_get_agent(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/agents/agent-factory-ops",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"agent_id": "agent-factory-ops"},
+                )
+            )
+        )
+        list_gateway_response = asyncio.run(
+            handler.handle_list_gateways(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/gateways",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        get_gateway_response = asyncio.run(
+            handler.handle_get_gateway(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/gateways/gateway-modbus-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"gateway_id": "gateway-modbus-001"},
+                )
+            )
+        )
+        list_capability_response = asyncio.run(
+            handler.handle_list_capabilities(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/capabilities",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        list_route_response = asyncio.run(
+            handler.handle_list_capability_routes(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/capability-routes",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        list_firmware_response = asyncio.run(
+            handler.handle_list_firmwares(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/ota/firmwares",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        get_firmware_response = asyncio.run(
+            handler.handle_get_firmware(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/ota/firmwares/fw-industrial-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"firmware_id": "fw-industrial-001"},
+                )
+            )
+        )
+        list_campaign_response = asyncio.run(
+            handler.handle_list_ota_campaigns(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/ota/campaigns",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert put_device_response.status == 200
+        assert put_agent_response.status == 200
+        assert yaml.safe_load(get_device_response.text)["site_id"] == "plant-b"
+        assert yaml.safe_load(get_agent_response.text)["name"] == "Factory Operations Agent"
+        assert yaml.safe_load(list_gateway_response.text)["items"][0]["gateway_id"] == "gateway-modbus-001"
+        assert yaml.safe_load(get_gateway_response.text)["site_id"] == "plant-a"
+        assert yaml.safe_load(list_capability_response.text)["items"][0]["capability_code"] == "sensor.temperature"
+        assert yaml.safe_load(list_route_response.text)["items"][0]["route_id"] == "route-temperature-modbus"
+        assert yaml.safe_load(list_firmware_response.text)["items"][0]["firmware_id"] == "fw-industrial-001"
+        assert yaml.safe_load(get_firmware_response.text)["version"] == "2.3.7"
+        assert yaml.safe_load(list_campaign_response.text)["items"][0]["campaign_id"] == "campaign-industrial-001"
+
+
+def test_control_plane_returns_expected_errors_for_invalid_management_requests():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        login_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/auth/login",
+            headers={"X-Xuanwu-Control-Secret": "wrong-secret"},
+        )
+        login_request._read_bytes = b'{"user_id":"user-ops-001","password":"pw-001"}'
+        bad_gateway_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateways",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"gateway_id": "gateway-invalid"},
+        )
+        bad_gateway_request._read_bytes = b'{"gateway_id":"gateway-invalid"'
+        bad_batch_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices:batch-import",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        bad_batch_request._read_bytes = b'{"source":"ops_console"}'
+
+        login_response = asyncio.run(handler.handle_login(login_request))
+        bad_gateway_response = asyncio.run(handler.handle_upsert_gateway(bad_gateway_request))
+        bad_batch_response = asyncio.run(handler.handle_batch_import_devices(bad_batch_request))
+        missing_user_response = asyncio.run(
+            handler.handle_get_user(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/users/user-missing",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"user_id": "user-missing"},
+                )
+            )
+        )
+        missing_device_response = asyncio.run(
+            handler.handle_get_device(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/devices/dev-missing",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"device_id": "dev-missing"},
+                )
+            )
+        )
+        missing_event_response = asyncio.run(
+            handler.handle_get_event(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/events/evt-missing",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"event_id": "evt-missing"},
+                )
+            )
+        )
+        missing_gateway_response = asyncio.run(
+            handler.handle_get_gateway(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/gateways/gateway-missing",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"gateway_id": "gateway-missing"},
+                )
+            )
+        )
+        missing_firmware_response = asyncio.run(
+            handler.handle_get_firmware(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/ota/firmwares/fw-missing",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"firmware_id": "fw-missing"},
+                )
+            )
+        )
+        missing_alarm_response = asyncio.run(
+            handler.handle_ack_alarm(
+                make_mocked_request(
+                    "POST",
+                    "/control-plane/v1/alarms/alarm-missing:ack",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"alarm_id": "alarm-missing"},
+                )
+            )
+        )
+
+        assert login_response.status == 401
+        assert yaml.safe_load(login_response.text)["error"] == "control_secret_invalid"
+        assert bad_gateway_response.status == 400
+        assert yaml.safe_load(bad_gateway_response.text)["error"] == "invalid_json"
+        assert bad_batch_response.status == 400
+        assert yaml.safe_load(bad_batch_response.text)["error"] == "items_required"
+        assert missing_user_response.status == 404
+        assert yaml.safe_load(missing_user_response.text)["error"] == "user_not_found"
+        assert missing_device_response.status == 404
+        assert yaml.safe_load(missing_device_response.text)["error"] == "device_not_found"
+        assert missing_event_response.status == 404
+        assert yaml.safe_load(missing_event_response.text)["error"] == "event_not_found"
+        assert missing_gateway_response.status == 404
+        assert yaml.safe_load(missing_gateway_response.text)["error"] == "gateway_not_found"
+        assert missing_firmware_response.status == 404
+        assert yaml.safe_load(missing_firmware_response.text)["error"] == "firmware_not_found"
+        assert missing_alarm_response.status == 404
+        assert yaml.safe_load(missing_alarm_response.text)["error"] == "alarm_not_found"
