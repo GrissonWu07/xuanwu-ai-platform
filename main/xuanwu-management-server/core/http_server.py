@@ -174,6 +174,18 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.get(
+                "/control-plane/v1/devices",
+                control_plane_handler.handle_list_devices,
+            ),
+            web.post(
+                "/control-plane/v1/devices",
+                control_plane_handler.handle_create_device,
+            ),
+            web.options(
+                "/control-plane/v1/devices",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_get_device,
             ),

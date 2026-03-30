@@ -301,6 +301,59 @@ def test_control_plane_create_user_and_channel_persists_payloads():
         assert handler.store.get_channel("channel-home")["user_id"] == "user-001"
 
 
+def test_control_plane_create_device_defaults_to_anonymous_user():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"device_id":"dev-anon-001","device_type":"conversation_terminal","protocol_type":"websocket"}'
+        )
+
+        response = asyncio.run(handler.handle_create_device(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 201
+        assert payload["device_id"] == "dev-anon-001"
+        assert payload["user_id"] == "anonymous"
+        assert handler.store.get_device("dev-anon-001")["user_id"] == "anonymous"
+        assert handler.store.get_user("anonymous")["is_anonymous"] is True
+
+
+def test_control_plane_rejects_device_with_unknown_user():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"device_id":"dev-user-404","user_id":"user-404","device_type":"conversation_terminal"}'
+        )
+
+        response = asyncio.run(handler.handle_create_device(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 400
+        assert payload["error"] == "user_not_found"
+
+
 def test_control_plane_rejects_user_and_channel_without_ids():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -331,6 +384,26 @@ def test_control_plane_rejects_user_and_channel_without_ids():
         assert yaml.safe_load(user_response.text)["error"] == "user_id_required"
         assert channel_response.status == 400
         assert yaml.safe_load(channel_response.text)["error"] == "channel_id_required"
+
+
+def test_store_lists_devices_and_defaults_anonymous_user():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        store.save_device(
+            "dev-001",
+            {
+                "device_id": "dev-001",
+                "device_type": "conversation_terminal",
+            },
+        )
+
+        devices = store.list_devices()
+
+        assert len(devices) == 1
+        assert devices[0]["device_id"] == "dev-001"
+        assert devices[0]["user_id"] == "anonymous"
+        assert store.get_user("anonymous")["is_anonymous"] is True
 
 
 def test_control_plane_runtime_resolve_returns_binding_view():

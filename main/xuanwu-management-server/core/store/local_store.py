@@ -49,9 +49,20 @@ class LocalControlPlaneStore:
 
     def save_device(self, device_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         payload = dict(payload)
-        payload.setdefault("device_id", device_id)
-        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", payload)
-        return payload
+        device_id = str(device_id or payload.get("device_id", "")).strip()
+        if not device_id:
+            raise ValueError("device_id_required")
+        user_id = self._normalize_device_user_id(payload.get("user_id"))
+        record = dict(payload)
+        record.setdefault("device_id", device_id)
+        record["user_id"] = user_id
+        record.setdefault("bind_status", "pending")
+        record.setdefault("channel_ids", [])
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        return record
+
+    def list_devices(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "devices")
 
     def get_agent(self, agent_id: str) -> dict[str, Any] | None:
         return self._read_yaml(self.root_dir / "agents" / f"{agent_id}.yaml")
@@ -76,6 +87,19 @@ class LocalControlPlaneStore:
 
     def list_users(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "users")
+
+    def ensure_anonymous_user(self) -> dict[str, Any]:
+        payload = self.get_user("anonymous")
+        if isinstance(payload, dict):
+            return payload
+        payload = {
+            "user_id": "anonymous",
+            "name": "Anonymous",
+            "status": "active",
+            "is_anonymous": True,
+        }
+        self._write_yaml(self.root_dir / "users" / "anonymous.yaml", payload)
+        return payload
 
     def get_channel(self, channel_id: str) -> dict[str, Any] | None:
         return self._read_yaml(self.root_dir / "channels" / f"{channel_id}.yaml")
@@ -345,3 +369,15 @@ class LocalControlPlaneStore:
             if isinstance(payload, dict):
                 items.append(payload)
         return items
+
+    def _normalize_device_user_id(self, user_id: Any) -> str:
+        normalized = str(user_id or "").strip()
+        if not normalized:
+            self.ensure_anonymous_user()
+            return "anonymous"
+        if normalized == "anonymous":
+            self.ensure_anonymous_user()
+            return normalized
+        if self.get_user(normalized) is None:
+            raise ValueError("user_not_found")
+        return normalized

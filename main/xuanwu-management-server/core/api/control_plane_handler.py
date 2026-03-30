@@ -82,6 +82,24 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
 
+    async def handle_list_devices(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_devices()})
+
+    async def handle_create_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_device(payload.get("device_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
     async def handle_get_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -99,7 +117,11 @@ class ControlPlaneHandler(BaseHandler):
             payload = await request.json()
         except Exception:
             return self._json_response({"error": "invalid_json"}, status=400)
-        return self._json_response(self.store.save_device(device_id, payload))
+        try:
+            saved = self.store.save_device(device_id, payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved)
 
     async def handle_get_agent(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
