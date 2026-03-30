@@ -97,7 +97,7 @@ class RuntimeHandler(BaseHandler):
             "runtime_session_id": record.runtime_session_id,
             "device_id": record.device_id,
             "client_id": record.client_id,
-            "atlas_session_key": record.atlas_session_key,
+            "xuanwu_session_key": record.xuanwu_session_key,
             "connected": True,
             "capabilities": self._build_capabilities(conn),
             "state": {

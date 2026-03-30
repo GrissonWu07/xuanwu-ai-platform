@@ -9,7 +9,7 @@
 1. [x] Phase 1: `xuanwu-management-server` 基础控制面
 2. [x] Phase 2: `xuanwu-management-server` 遥测 / 事件 / 网关 / OTA 治理
 3. [x] Phase 3: `xuanwu-gateway` 基础模块与首批协议适配
-4. [ ] Phase 4: `xuanwu-device-server` 边界收口与运行时接入对齐
+4. [x] Phase 4: `xuanwu-device-server` 边界收口与运行时接入对齐
 5. [ ] Phase 5: `XuanWu` 集成联调与契约验证
 
 ## Phase Breakdown
@@ -101,6 +101,18 @@
 - 不承载管理真源
 - 不承载 Agent 真源
 - 保持运行时接入链稳定
+
+阶段结果：
+- 已完成
+- 当前验证：
+  - `python -m pytest main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py -q`
+  - `14 passed`
+- 已落地变更：
+  - `AtlasClaw` 命名收口到 `XuanWu`
+  - `xuanwu_session_key`
+  - `XuanWuDialogueEngine`
+  - `XuanWuStreamBridge`
+  - `core.providers.agent.xuanwu`
 
 ### Phase 5: `XuanWu` 集成联调与契约验证
 目标：

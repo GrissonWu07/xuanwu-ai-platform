@@ -44,9 +44,14 @@
   - adapter registry
   - 统一命令 dispatch API
   - 首批 `http` / `mqtt` / `home_assistant` dry-run adapters
+- `xuanwu-device-server` Phase 4 边界收口已完成：
+  - `AtlasClaw` 运行时命名收口到 `XuanWu`
+  - dialogue engine 模块入口切换到 `core.providers.agent.xuanwu`
+  - runtime context 改为返回 `xuanwu_session_key`
+  - session key / registry / connection 状态字段完成 `xuanwu_*` 收口
 - 当前阶段验证结果：
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py -q`
-  - `29 passed`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py -q`
+  - `43 passed`
 - 当前阶段语法验证结果：
   - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/api/xuanwu_proxy_handler.py main/xuanwu-management-server/core/store/local_store.py`
   - passed
@@ -54,10 +59,9 @@
   - passed
 
 ## In Progress
-- 准备进入 `Phase 4`：
-  - `xuanwu-device-server` 边界复核
-  - runtime resolve 对齐新治理字段
-  - 清理仍可本地收口的旧运行时耦合
+- 准备进入 `Phase 5`：
+  - `XuanWu -> xuanwu-gateway` 南向调用契约联调
+  - 退场 `xuanwu-device-server` 中仍保留的 Home Assistant / IoT 兼容路径
 
 ## Risks / Decisions
 - 决定：所有 Agent 域功能都放到 `XuanWu`。
@@ -66,8 +70,9 @@
 - 决定：设备实际调用由 `XuanWu` 决策，经 `xuanwu-gateway` 执行。
 - 风险：后续 `xuanwu-gateway` 的协议适配若直接耦合管理层模型，可能破坏边界。
 - 风险：必须持续避免把 Agent 真源或管理前端逻辑重新塞回 `xuanwu-device-server`。
+- 决定：`xuanwu-device-server` 中现存的 Home Assistant / IoT 本地工具链暂列兼容路径，只有在 `XuanWu -> xuanwu-gateway` 契约落地后才正式退场。
 
 ## Next Step
-- 进入 `Phase 4`
-- 复核 `xuanwu-device-server` 是否仍残留管理或协议适配耦合
-- 对齐 `xuanwu-management-server` 新增的治理字段消费边界
+- 进入 `Phase 5`
+- 对齐 `XuanWu -> xuanwu-gateway` 标准命令与结果契约
+- 等上游完成后，退场 `xuanwu-device-server` 中的旧 Home Assistant / IoT 兼容调用链

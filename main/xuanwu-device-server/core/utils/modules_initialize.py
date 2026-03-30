@@ -152,6 +152,6 @@ def initialize_voiceprint(asr_instance, config):
 
 
 def initialize_dialogue_engine(config):
-    from core.providers.agent.atlasclaw import AtlasClawDialogueEngine
+    from core.providers.agent.xuanwu import XuanWuDialogueEngine
 
-    return AtlasClawDialogueEngine.from_config(config)
+    return XuanWuDialogueEngine.from_config(config)

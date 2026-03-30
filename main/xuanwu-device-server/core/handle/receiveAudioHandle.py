@@ -84,7 +84,7 @@ async def startToChat(conn: "ConnectionHandler", text):
         if conn.dialogue_engine is not None:
             await conn.dialogue_engine.abort_turn(conn)
 
-    # 主对话由 dialogue_engine 驱动，AtlasClaw 为主引擎。
+    # 主对话由 dialogue_engine 驱动，XuanWu 为主引擎。
     await send_stt_message(conn, actual_text)
     if conn.dialogue_engine is not None:
         await conn.dialogue_engine.run_turn(conn, actual_text)

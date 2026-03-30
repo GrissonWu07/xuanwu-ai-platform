@@ -6,16 +6,16 @@ from typing import TYPE_CHECKING, Any, AsyncIterator
 
 import aiohttp
 
-from core.providers.agent.atlasclaw_stream_bridge import AtlasClawStreamBridge
 from core.providers.agent.local_fallback import LocalFallbackDialogueEngine
 from core.providers.agent.template_fallback import TemplateFallbackDialogueEngine
+from core.providers.agent.xuanwu_stream_bridge import XuanWuStreamBridge
 from core.utils.dialogue import Message
 
 if TYPE_CHECKING:
     from core.connection import ConnectionHandler
 
 
-class AtlasClawDialogueEngine:
+class XuanWuDialogueEngine:
     def __init__(self, config: dict, fallback=None):
         self.config = config
         self.agent_config = self._resolve_agent_config(config)
@@ -40,9 +40,9 @@ class AtlasClawDialogueEngine:
         selected_agent = selected_module.get("Agent")
         if selected_agent and isinstance(agent_configs.get(selected_agent), dict):
             return dict(agent_configs[selected_agent])
-        if isinstance(agent_configs.get("AtlasClaw"), dict):
-            return dict(agent_configs["AtlasClaw"])
-        server_agent = config.get("server", {}).get("atlasclaw", {})
+        if isinstance(agent_configs.get("XuanWu"), dict):
+            return dict(agent_configs["XuanWu"])
+        server_agent = config.get("server", {}).get("xuanwu", {})
         if isinstance(server_agent, dict):
             return dict(server_agent)
         return {}
@@ -62,20 +62,20 @@ class AtlasClawDialogueEngine:
         reply_text = (
             fallback_config.get("message")
             or config.get("system_error_response")
-            or "AtlasClaw is unavailable right now."
+            or "XuanWu is unavailable right now."
         )
         return TemplateFallbackDialogueEngine(reply_text)
 
     async def run_turn(self, conn: "ConnectionHandler", user_text: str) -> None:
         conn.client_abort = False
         await self.abort_turn(conn)
-        conn.atlas_stream_task = asyncio.create_task(
+        conn.xuanwu_stream_task = asyncio.create_task(
             self._run_turn(conn, user_text),
-            name=f"atlas-turn-{conn.runtime_session_id}",
+            name=f"xuanwu-turn-{conn.runtime_session_id}",
         )
 
     async def abort_turn(self, conn: "ConnectionHandler") -> None:
-        run_id = getattr(conn, "atlas_run_id", None)
+        run_id = getattr(conn, "xuanwu_run_id", None)
         if run_id:
             try:
                 session = await self._get_session()
@@ -87,10 +87,10 @@ class AtlasClawDialogueEngine:
                     pass
             except Exception:
                 conn.logger.bind(tag=__name__).warning(
-                    f"Failed to abort AtlasClaw run: {run_id}",
+                    f"Failed to abort XuanWu run: {run_id}",
                 )
 
-        task = getattr(conn, "atlas_stream_task", None)
+        task = getattr(conn, "xuanwu_stream_task", None)
         if task is not None and not task.done() and task is not asyncio.current_task():
             task.cancel()
             try:
@@ -100,36 +100,36 @@ class AtlasClawDialogueEngine:
             except Exception:
                 pass
 
-        conn.atlas_run_id = None
-        conn.atlas_stream_task = None
+        conn.xuanwu_run_id = None
+        conn.xuanwu_stream_task = None
 
     async def _run_turn(self, conn: "ConnectionHandler", user_text: str) -> None:
-        bridge = AtlasClawStreamBridge(conn)
+        bridge = XuanWuStreamBridge(conn)
         conn.dialogue.put(Message(role="user", content=user_text))
 
         try:
             run_id = await self._start_run(conn, user_text)
-            conn.atlas_run_id = run_id
+            conn.xuanwu_run_id = run_id
             await self._consume_stream(conn, run_id, bridge)
             if not conn.client_abort:
                 bridge.finish(empty_reply="Sorry, I do not have a spoken reply yet.")
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            conn.logger.bind(tag=__name__).error(f"AtlasClaw turn failed: {exc}")
+            conn.logger.bind(tag=__name__).error(f"XuanWu turn failed: {exc}")
             if bridge.has_output:
                 bridge.finish()
             else:
                 await self.fallback.run_turn(conn, user_text)
         finally:
-            conn.atlas_run_id = None
+            conn.xuanwu_run_id = None
             current_task = asyncio.current_task()
-            if getattr(conn, "atlas_stream_task", None) is current_task:
-                conn.atlas_stream_task = None
+            if getattr(conn, "xuanwu_stream_task", None) is current_task:
+                conn.xuanwu_stream_task = None
 
     async def _start_run(self, conn: "ConnectionHandler", user_text: str) -> str:
         payload = {
-            "session_key": conn.atlas_session_key,
+            "session_key": conn.xuanwu_session_key,
             "message": user_text,
             "timeout_seconds": self.timeout_seconds,
             "context": self._build_context(conn),
@@ -145,14 +145,14 @@ class AtlasClawDialogueEngine:
             data = await response.json()
             run_id = str(data.get("run_id", "")).strip()
             if not run_id:
-                raise RuntimeError("AtlasClaw did not return a run_id")
+                raise RuntimeError("XuanWu did not return a run_id")
             return run_id
 
     async def _consume_stream(
         self,
         conn: "ConnectionHandler",
         run_id: str,
-        bridge: AtlasClawStreamBridge,
+        bridge: XuanWuStreamBridge,
     ) -> None:
         session = await self._get_session()
         async with session.get(
@@ -168,11 +168,9 @@ class AtlasClawDialogueEngine:
                     bridge.feed_text(str(payload.get("text", "")))
                 elif event_type == "tool":
                     conn.logger.bind(tag=__name__).info(
-                        f"AtlasClaw tool event: {payload}",
+                        f"XuanWu tool event: {payload}",
                     )
-                elif event_type == "thinking":
-                    continue
-                elif event_type == "heartbeat":
+                elif event_type in {"thinking", "heartbeat"}:
                     continue
                 elif event_type == "error":
                     bridge.fail(payload.get("message") or payload.get("error"))
@@ -207,17 +205,23 @@ class AtlasClawDialogueEngine:
             "runtime_session_id": conn.runtime_session_id,
             "channel": "xuanwu",
             "bind_status": self._bind_status(conn),
-            "locale": str(self.agent_config.get("locale") or conn.config.get("locale") or "zh-CN"),
+            "locale": str(
+                self.agent_config.get("locale")
+                or conn.config.get("locale")
+                or "zh-CN"
+            ),
             "audio_format": getattr(conn, "audio_format", "opus"),
             "capabilities": {
                 "speaker": conn.tts is not None,
                 "camera": self._has_tool(conn, "self_camera_take_photo"),
-                "mcp": bool(getattr(conn, "features", None)) or hasattr(conn, "mcp_endpoint_client"),
+                "mcp": bool(getattr(conn, "features", None))
+                or hasattr(conn, "mcp_endpoint_client"),
                 "iot": bool(getattr(conn, "iot_descriptors", {})),
             },
             "device_metadata": {
                 "sample_rate": getattr(conn, "sample_rate", None),
-                "firmware_version": headers.get("x-firmware-version") or headers.get("firmware-version"),
+                "firmware_version": headers.get("x-firmware-version")
+                or headers.get("firmware-version"),
             },
         }
 

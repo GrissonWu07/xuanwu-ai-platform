@@ -263,7 +263,7 @@ class XuanwuManagementConfigTests(unittest.TestCase):
         asyncio.run(scenario())
 
     def test_template_fallback_speaks_and_records_reply(self):
-        engine = TemplateFallbackDialogueEngine("AtlasClaw is unavailable right now.")
+        engine = TemplateFallbackDialogueEngine("XuanWu is unavailable right now.")
 
         class DummyTTS:
             def __init__(self):
@@ -289,10 +289,10 @@ class XuanwuManagementConfigTests(unittest.TestCase):
         __import__("asyncio").run(engine.run_turn(conn, "hello"))
 
         self.assertEqual(1, len(conn.tts.calls))
-        self.assertEqual("AtlasClaw is unavailable right now.", conn.tts.calls[0][1])
+        self.assertEqual("XuanWu is unavailable right now.", conn.tts.calls[0][1])
         self.assertEqual(1, len(conn.dialogue.messages))
         self.assertEqual(
-            "AtlasClaw is unavailable right now.",
+            "XuanWu is unavailable right now.",
             conn.dialogue.messages[0].content,
         )
 

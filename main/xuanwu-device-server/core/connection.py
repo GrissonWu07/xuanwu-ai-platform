@@ -45,7 +45,7 @@ from core.utils.prompt_manager import PromptManager
 from core.utils.voiceprint_provider import VoiceprintProvider
 from core.utils.util import get_system_error_response
 from core.utils import textUtils
-from core.runtime.session_key import build_atlas_session_key
+from core.runtime.session_key import build_xuanwu_session_key
 from core.runtime.session_registry import runtime_session_registry
 
 
@@ -106,7 +106,7 @@ class ConnectionHandler:
         self.config = copy.deepcopy(config)
         self.session_id = str(uuid.uuid4())
         self.runtime_session_id = str(uuid.uuid4())
-        self.atlas_session_key = ""
+        self.xuanwu_session_key = ""
         self.logger = setup_logging()
         self.server = server  # 保存server实例的引用
 
@@ -162,8 +162,8 @@ class ConnectionHandler:
         self.memory = _memory
         self.intent = _intent
         self.dialogue_engine = dialogue_engine
-        self.atlas_run_id = None
-        self.atlas_stream_task = None
+        self.xuanwu_run_id = None
+        self.xuanwu_stream_task = None
 
         # 为每个连接单独管理声纹识别
         self.voiceprint_provider = None
@@ -243,12 +243,12 @@ class ConnectionHandler:
 
             self.device_id = self.headers.get("device-id", None)
             client_id = self.headers.get("client-id")
-            self.atlas_session_key = build_atlas_session_key(self.device_id, client_id)
+            self.xuanwu_session_key = build_xuanwu_session_key(self.device_id, client_id)
             runtime_session_registry.register(
                 self.runtime_session_id,
                 device_id=self.device_id or "unknown-device",
                 client_id=client_id,
-                atlas_session_key=self.atlas_session_key,
+                xuanwu_session_key=self.xuanwu_session_key,
                 conn=self,
             )
 
@@ -1289,13 +1289,13 @@ class ConnectionHandler:
         try:
             runtime_session_registry.unregister(self.runtime_session_id)
             if self.dialogue_engine is not None and (
-                self.atlas_run_id is not None or self.atlas_stream_task is not None
+                self.xuanwu_run_id is not None or self.xuanwu_stream_task is not None
             ):
                 try:
                     await self.dialogue_engine.abort_turn(self)
                 except Exception as abort_error:
                     self.logger.bind(tag=TAG).warning(
-                        f"Abort AtlasClaw turn during close failed: {abort_error}"
+                        f"Abort XuanWu turn during close failed: {abort_error}"
                     )
             # 清理 VAD 连接资源
             if (

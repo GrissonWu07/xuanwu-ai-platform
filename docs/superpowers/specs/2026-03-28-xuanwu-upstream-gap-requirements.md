@@ -59,3 +59,41 @@ The following capabilities are intentionally handled locally in `xuanwu-manageme
 - `/control-plane/v1/chat-summaries/{summary_id}:generate`
 
 If `XuanWu` later needs to own those resources, a follow-up migration can move storage ownership without changing the current `xuanwu-device-server` runtime boundary.
+
+## Required Gateway Invocation Contract
+
+To complete the southbound refactor, `XuanWu` must call `xuanwu-gateway` with a standard command contract instead of routing IoT and Home Assistant capability execution through `xuanwu-device-server`.
+
+Required upstream contract shape:
+
+- `POST /gateway/v1/commands:dispatch`
+
+Required request fields:
+
+- `request_id`
+- `gateway_id`
+- `adapter_type`
+- `device_id`
+- `capability_code`
+- `command_name`
+- `arguments`
+
+Expected response fields:
+
+- `request_id`
+- `gateway_id`
+- `adapter_type`
+- `status`
+- `result`
+- `events`
+- `telemetry`
+
+## Local Compatibility Paths Pending Upstream Adoption
+
+The following code still exists in `xuanwu-device-server` as temporary compatibility behavior until `XuanWu -> xuanwu-gateway` is adopted:
+
+- Home Assistant prompt injection in `core/providers/intent/intent_llm/intent_llm.py`
+- Home Assistant tool initialization in `core/providers/tools/unified_tool_handler.py`
+- Local Home Assistant function handlers in `plugins_func/functions/hass_*.py`
+
+These paths should be retired after `XuanWu` switches to the standard gateway command contract.

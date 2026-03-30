@@ -8,7 +8,7 @@ def _normalize(value: str | None, fallback: str) -> str:
     return normalized or fallback
 
 
-def build_atlas_session_key(
+def build_xuanwu_session_key(
     device_id: str | None,
     client_id: str | None = None,
     *,

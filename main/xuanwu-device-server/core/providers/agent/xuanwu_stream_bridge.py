@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from core.connection import ConnectionHandler
 
 
-class AtlasClawStreamBridge:
-    HARD_BOUNDARIES = set("。！？!?.;；;\n")
+class XuanWuStreamBridge:
+    HARD_BOUNDARIES = set("。！？!?.;；\n")
     SOFT_BOUNDARIES = set("，,")
 
     def __init__(self, conn: "ConnectionHandler") -> None:
