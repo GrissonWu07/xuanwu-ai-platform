@@ -18,6 +18,9 @@ class LocalControlPlaneStore:
         (self.root_dir / "users").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channels").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "device_agent_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "events").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "telemetry").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "alarms").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
 
@@ -105,6 +108,58 @@ class LocalControlPlaneStore:
                 continue
             return payload
         return None
+
+    def append_event(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        event_id = str(payload.get("event_id", "")).strip()
+        if not event_id:
+            raise ValueError("event_id_required")
+        self._write_yaml(self.root_dir / "events" / f"{event_id}.yaml", payload)
+
+        alarm_id = str(payload.get("alarm_id", "")).strip()
+        if payload.get("event_type") == "alarm.triggered" and alarm_id:
+            self._write_yaml(
+                self.root_dir / "alarms" / f"{alarm_id}.yaml",
+                {
+                    "alarm_id": alarm_id,
+                    "device_id": payload.get("device_id"),
+                    "message": payload.get("message"),
+                    "status": "active",
+                    "last_event_id": event_id,
+                },
+            )
+        elif payload.get("event_type") == "alarm.cleared" and alarm_id:
+            alarm = self._read_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml", default={}) or {}
+            alarm["alarm_id"] = alarm_id
+            alarm["status"] = "cleared"
+            alarm["last_event_id"] = event_id
+            self._write_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml", alarm)
+        return payload
+
+    def list_events(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "events")
+
+    def append_telemetry(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        telemetry_id = str(payload.get("telemetry_id", "")).strip()
+        if not telemetry_id:
+            raise ValueError("telemetry_id_required")
+        self._write_yaml(self.root_dir / "telemetry" / f"{telemetry_id}.yaml", payload)
+        return payload
+
+    def list_telemetry(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "telemetry")
+
+    def list_alarms(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "alarms")
+
+    def acknowledge_alarm(self, alarm_id: str) -> dict[str, Any] | None:
+        payload = self._read_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml")
+        if not isinstance(payload, dict):
+            return None
+        payload["status"] = "acked"
+        self._write_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml", payload)
+        return payload
 
     def load_chat_history(self, session_id: str) -> list[dict[str, Any]]:
         records = self._read_yaml(

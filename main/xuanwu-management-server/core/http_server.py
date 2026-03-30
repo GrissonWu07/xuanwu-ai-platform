@@ -50,6 +50,46 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.get(
+                "/control-plane/v1/events",
+                control_plane_handler.handle_list_events,
+            ),
+            web.post(
+                "/control-plane/v1/events",
+                control_plane_handler.handle_post_event,
+            ),
+            web.options(
+                "/control-plane/v1/events",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/telemetry",
+                control_plane_handler.handle_list_telemetry,
+            ),
+            web.post(
+                "/control-plane/v1/telemetry",
+                control_plane_handler.handle_post_telemetry,
+            ),
+            web.options(
+                "/control-plane/v1/telemetry",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/alarms",
+                control_plane_handler.handle_list_alarms,
+            ),
+            web.options(
+                "/control-plane/v1/alarms",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/alarms/{alarm_id}:ack",
+                control_plane_handler.handle_ack_alarm,
+            ),
+            web.options(
+                "/control-plane/v1/alarms/{alarm_id}:ack",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_get_device,
             ),

@@ -40,10 +40,20 @@
 - 当前阶段语法验证结果：
   - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/api/xuanwu_proxy_handler.py main/xuanwu-management-server/core/store/local_store.py`
   - passed
+- `xuanwu-management-server` 第二阶段最小治理切片已完成：
+  - 统一事件入口
+  - 统一遥测入口
+  - 活跃告警目录
+  - 告警确认入口
+- 当前综合验证结果：
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py -q`
+  - `22 passed`
 
 ## In Progress
-- 第一阶段收尾 review
-- 下一阶段准备：遥测 / 事件 / 网关 / OTA 治理
+- 第二阶段继续推进：
+  - 网关目录
+  - 能力目录与能力路由
+  - OTA 治理基础面
 
 ## Risks / Decisions
 - 决定：所有 Agent 域功能都放到 `XuanWu`
@@ -55,8 +65,6 @@
 
 ## Next Step
 - 进入 Phase 2：
-  - 统一事件入口
-  - 统一遥测入口
   - 网关目录
   - 能力目录与能力路由
   - OTA 治理基础面

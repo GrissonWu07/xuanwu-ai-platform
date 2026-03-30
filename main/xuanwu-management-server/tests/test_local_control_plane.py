@@ -406,3 +406,78 @@ def test_store_creates_user_channel_and_device_agent_mappings():
         assert store.get_user("user-001")["name"] == "Alice"
         assert store.get_channel("channel-home")["name"] == "Home"
         assert store.get_active_device_agent_mapping("dev-001")["mapping_id"] == "map-device-agent-001"
+
+
+def test_store_persists_events_telemetry_and_active_alarm_state():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        event = store.append_event(
+            {
+                "event_id": "evt-001",
+                "event_type": "alarm.triggered",
+                "device_id": "dev-001",
+                "alarm_id": "alarm-001",
+                "message": "temperature high",
+            }
+        )
+        telemetry = store.append_telemetry(
+            {
+                "telemetry_id": "tel-001",
+                "device_id": "dev-001",
+                "capability_code": "sensor.temperature",
+                "value": 31.5,
+            }
+        )
+
+        assert event["event_id"] == "evt-001"
+        assert telemetry["telemetry_id"] == "tel-001"
+        assert store.list_events()[0]["event_type"] == "alarm.triggered"
+        assert store.list_telemetry()[0]["capability_code"] == "sensor.temperature"
+        assert store.list_alarms()[0]["alarm_id"] == "alarm-001"
+
+
+def test_control_plane_event_telemetry_and_alarm_endpoints_work_together():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        event_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/events",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        event_request._read_bytes = (
+            b'{"event_id":"evt-001","event_type":"alarm.triggered","device_id":"dev-001","alarm_id":"alarm-001","message":"temperature high"}'
+        )
+
+        telemetry_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/telemetry",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        telemetry_request._read_bytes = (
+            b'{"telemetry_id":"tel-001","device_id":"dev-001","capability_code":"sensor.temperature","value":31.5}'
+        )
+
+        event_response = asyncio.run(handler.handle_post_event(event_request))
+        telemetry_response = asyncio.run(handler.handle_post_telemetry(telemetry_request))
+        alarms_response = asyncio.run(
+            handler.handle_list_alarms(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/alarms",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert event_response.status == 201
+        assert telemetry_response.status == 201
+        assert alarms_response.status == 200
+        assert yaml.safe_load(alarms_response.text)["items"][0]["alarm_id"] == "alarm-001"
