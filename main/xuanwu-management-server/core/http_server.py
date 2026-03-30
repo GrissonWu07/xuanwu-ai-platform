@@ -245,6 +245,38 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_options,
             ),
+            web.post(
+                "/control-plane/v1/devices/{device_id}:claim",
+                control_plane_handler.handle_claim_device,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}:claim",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/devices/{device_id}:bind",
+                control_plane_handler.handle_bind_device,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}:bind",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/devices/{device_id}:suspend",
+                control_plane_handler.handle_suspend_device,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}:suspend",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/devices/{device_id}:retire",
+                control_plane_handler.handle_retire_device,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}:retire",
+                control_plane_handler.handle_options,
+            ),
             web.get(
                 "/control-plane/v1/agents/{agent_id}",
                 control_plane_handler.handle_get_agent,

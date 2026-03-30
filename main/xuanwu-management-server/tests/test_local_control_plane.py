@@ -613,6 +613,76 @@ def test_control_plane_runtime_views_return_binding_and_capability_routes():
         assert capability_payload["command_routes"][0]["capability_code"] == "switch.on_off"
 
 
+def test_control_plane_device_lifecycle_claim_bind_suspend_and_retire():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.create_user({"user_id": "user-001", "name": "Alice"})
+        handler.store.save_device(
+            "dev-001",
+            {
+                "device_id": "dev-001",
+                "device_type": "conversation_terminal",
+                "bind_code": "654321",
+            },
+        )
+
+        claim_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices/dev-001:claim",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-001"},
+        )
+        claim_request._read_bytes = b'{"user_id":"user-001"}'
+
+        bind_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices/dev-001:bind",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-001"},
+        )
+        bind_request._read_bytes = b'{"bind_code":"654321"}'
+
+        suspend_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices/dev-001:suspend",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-001"},
+        )
+        suspend_request._read_bytes = b'{"reason":"maintenance_window"}'
+
+        retire_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices/dev-001:retire",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-001"},
+        )
+        retire_request._read_bytes = b'{"reason":"hardware_replaced"}'
+
+        claim_response = asyncio.run(handler.handle_claim_device(claim_request))
+        bind_response = asyncio.run(handler.handle_bind_device(bind_request))
+        suspend_response = asyncio.run(handler.handle_suspend_device(suspend_request))
+        retire_response = asyncio.run(handler.handle_retire_device(retire_request))
+
+        assert claim_response.status == 200
+        assert bind_response.status == 200
+        assert suspend_response.status == 200
+        assert retire_response.status == 200
+
+        device = handler.store.get_device("dev-001")
+        assert device["user_id"] == "user-001"
+        assert device["lifecycle_status"] == "retired"
+        assert device["bind_status"] == "bound"
+        assert device["suspend_reason"] == "maintenance_window"
+        assert device["retire_reason"] == "hardware_replaced"
+
+
 def test_control_plane_runtime_resolve_returns_binding_view():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)

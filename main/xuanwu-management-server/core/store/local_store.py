@@ -60,13 +60,62 @@ class LocalControlPlaneStore:
         record.setdefault("device_id", device_id)
         record["user_id"] = user_id
         record.setdefault("bind_status", "pending")
+        record.setdefault("lifecycle_status", "created")
         record.setdefault("channel_ids", [])
         self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
-        self._sync_user_device_mapping(user_id, device_id)
+        self._replace_user_device_mappings_for_device(user_id, device_id)
         return record
 
     def list_devices(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "devices")
+
+    def claim_device(self, device_id: str, user_id: str) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        normalized_user_id = self._normalize_owner_user_id(user_id)
+        record = dict(device)
+        record["user_id"] = normalized_user_id
+        record["lifecycle_status"] = "claimed"
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        self._replace_user_device_mappings_for_device(normalized_user_id, device_id)
+        return record
+
+    def bind_device(self, device_id: str, bind_code: str | None = None) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        expected_bind_code = str(device.get("bind_code") or "").strip()
+        provided_bind_code = str(bind_code or "").strip()
+        if expected_bind_code and provided_bind_code and expected_bind_code != provided_bind_code:
+            raise ValueError("bind_code_invalid")
+        record = dict(device)
+        record["bind_status"] = "bound"
+        record["lifecycle_status"] = "bound"
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        return record
+
+    def suspend_device(self, device_id: str, reason: str | None = None) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        record = dict(device)
+        record["lifecycle_status"] = "suspended"
+        if reason:
+            record["suspend_reason"] = reason
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        return record
+
+    def retire_device(self, device_id: str, reason: str | None = None) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        record = dict(device)
+        record["lifecycle_status"] = "retired"
+        if reason:
+            record["retire_reason"] = reason
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        return record
 
     def get_agent(self, agent_id: str) -> dict[str, Any] | None:
         return self._read_yaml(self.root_dir / "agents" / f"{agent_id}.yaml")
@@ -547,6 +596,13 @@ class LocalControlPlaneStore:
                 "enabled": True,
             },
         )
+
+    def _replace_user_device_mappings_for_device(self, user_id: str, device_id: str):
+        for path in (self.root_dir / "user_device_mappings").glob("*.yaml"):
+            payload = self._read_yaml(path)
+            if isinstance(payload, dict) and payload.get("device_id") == device_id:
+                path.unlink(missing_ok=True)
+        self._sync_user_device_mapping(user_id, device_id)
 
     def _sync_user_channel_mapping(self, user_id: str, channel_id: str):
         mapping_id = f"user-channel-{user_id}-{channel_id}"

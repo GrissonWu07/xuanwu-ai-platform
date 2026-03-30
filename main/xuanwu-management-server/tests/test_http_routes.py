@@ -40,6 +40,10 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/config/server" in registered_paths
     assert "/control-plane/v1/devices" in registered_paths
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}:claim" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}:bind" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}:suspend" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}:retire" in registered_paths
     assert "/control-plane/v1/agents/{agent_id}" in registered_paths
     assert "/control-plane/v1/users" in registered_paths
     assert "/control-plane/v1/channels" in registered_paths

@@ -195,6 +195,66 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(saved)
 
+    async def handle_claim_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            claimed = self.store.claim_device(device_id, payload.get("user_id"))
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(claimed)
+
+    async def handle_bind_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            bound = self.store.bind_device(device_id, payload.get("bind_code"))
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(bound)
+
+    async def handle_suspend_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            suspended = self.store.suspend_device(device_id, payload.get("reason"))
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(suspended)
+
+    async def handle_retire_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            retired = self.store.retire_device(device_id, payload.get("reason"))
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(retired)
+
     async def handle_get_agent(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
