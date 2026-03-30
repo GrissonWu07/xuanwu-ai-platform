@@ -21,6 +21,10 @@ class LocalControlPlaneStore:
         (self.root_dir / "user_channel_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channel_device_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "device_agent_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "agent_model_provider_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "agent_model_config_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "agent_knowledge_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "agent_workflow_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "events").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "telemetry").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "alarms").mkdir(parents=True, exist_ok=True)
@@ -29,6 +33,8 @@ class LocalControlPlaneStore:
         (self.root_dir / "capability_routes").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "ota_firmwares").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "ota_campaigns").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "auth_sessions").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "command_results").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
 
@@ -151,6 +157,26 @@ class LocalControlPlaneStore:
 
     def delete_user(self, user_id: str) -> bool:
         path = self.root_dir / "users" / f"{user_id}.yaml"
+        if not path.exists():
+            return False
+        path.unlink()
+        return True
+
+    def create_auth_session(self, user_id: str, password: str | None) -> dict[str, Any]:
+        user = self.get_user(user_id)
+        if user is None:
+            raise ValueError("user_not_found")
+        expected_password = str(user.get("password") or "").strip()
+        provided_password = str(password or "").strip()
+        if expected_password and expected_password != provided_password:
+            raise ValueError("password_invalid")
+        token = f"session-{user_id}"
+        record = {"session_token": token, "user_id": user_id, "status": "active"}
+        self._write_yaml(self.root_dir / "auth_sessions" / f"{token}.yaml", record)
+        return record
+
+    def delete_auth_session(self, session_token: str) -> bool:
+        path = self.root_dir / "auth_sessions" / f"{session_token}.yaml"
         if not path.exists():
             return False
         path.unlink()
@@ -318,6 +344,51 @@ class LocalControlPlaneStore:
     def list_device_agent_mappings(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "device_agent_mappings")
 
+    def save_agent_model_provider_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = self._save_mapping_record(
+            self.root_dir / "agent_model_provider_mappings",
+            mapping_id,
+            payload,
+            required_key="model_provider_id",
+        )
+        return record
+
+    def list_agent_model_provider_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "agent_model_provider_mappings")
+
+    def save_agent_model_config_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._save_mapping_record(
+            self.root_dir / "agent_model_config_mappings",
+            mapping_id,
+            payload,
+            required_key="model_config_id",
+        )
+
+    def list_agent_model_config_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "agent_model_config_mappings")
+
+    def save_agent_knowledge_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._save_mapping_record(
+            self.root_dir / "agent_knowledge_mappings",
+            mapping_id,
+            payload,
+            required_key="knowledge_id",
+        )
+
+    def list_agent_knowledge_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "agent_knowledge_mappings")
+
+    def save_agent_workflow_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._save_mapping_record(
+            self.root_dir / "agent_workflow_mappings",
+            mapping_id,
+            payload,
+            required_key="workflow_id",
+        )
+
+    def list_agent_workflow_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "agent_workflow_mappings")
+
     def batch_import_devices(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         imported: list[dict[str, Any]] = []
         for payload in items:
@@ -364,8 +435,12 @@ class LocalControlPlaneStore:
             self._write_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml", alarm)
         return payload
 
-    def list_events(self) -> list[dict[str, Any]]:
-        return self._list_yaml_dir(self.root_dir / "events")
+    def list_events(self, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        items = self._list_yaml_dir(self.root_dir / "events")
+        return self._filter_records(items, filters)
+
+    def get_event(self, event_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "events" / f"{event_id}.yaml")
 
     def append_telemetry(self, payload: dict[str, Any]) -> dict[str, Any]:
         payload = dict(payload)
@@ -375,8 +450,33 @@ class LocalControlPlaneStore:
         self._write_yaml(self.root_dir / "telemetry" / f"{telemetry_id}.yaml", payload)
         return payload
 
-    def list_telemetry(self) -> list[dict[str, Any]]:
-        return self._list_yaml_dir(self.root_dir / "telemetry")
+    def list_telemetry(self, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        items = self._list_yaml_dir(self.root_dir / "telemetry")
+        return self._filter_records(items, filters)
+
+    def save_command_result(self, payload: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(payload)
+        result_id = str(payload.get("result_id", "")).strip()
+        if not result_id:
+            raise ValueError("result_id_required")
+        self._write_yaml(self.root_dir / "command_results" / f"{result_id}.yaml", payload)
+        self.append_event(
+            {
+                "event_id": f"evt-{result_id}",
+                "trace_id": payload.get("trace_id"),
+                "device_id": payload.get("device_id"),
+                "gateway_id": payload.get("gateway_id"),
+                "event_type": "command.result",
+                "severity": "info",
+                "payload": {
+                    "command_id": payload.get("command_id") or payload.get("request_id"),
+                    "request_id": payload.get("request_id"),
+                    "status": payload.get("status"),
+                    "result": payload.get("result"),
+                },
+            }
+        )
+        return payload
 
     def list_alarms(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "alarms")
@@ -645,6 +745,57 @@ class LocalControlPlaneStore:
             if isinstance(payload, dict) and payload.get("device_id") == device_id:
                 path.unlink(missing_ok=True)
         self._sync_user_device_mapping(user_id, device_id)
+
+    def _save_mapping_record(
+        self,
+        directory: Path,
+        mapping_id: str,
+        payload: dict[str, Any],
+        *,
+        required_key: str,
+    ) -> dict[str, Any]:
+        mapping_id = str(mapping_id or payload.get("mapping_id", "")).strip()
+        if not mapping_id:
+            raise ValueError("mapping_id_required")
+        agent_id = str(payload.get("agent_id", "")).strip()
+        if not agent_id:
+            raise ValueError("agent_id_required")
+        required_value = str(payload.get(required_key, "")).strip()
+        if not required_value:
+            raise ValueError(f"{required_key}_required")
+        record = {
+            "mapping_id": mapping_id,
+            "agent_id": agent_id,
+            required_key: required_value,
+            "enabled": payload.get("enabled", True),
+        }
+        self._write_yaml(directory / f"{mapping_id}.yaml", record)
+        return record
+
+    def _filter_records(
+        self, items: list[dict[str, Any]], filters: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        if not filters:
+            return items
+        normalized_filters = {
+            key: str(value).strip()
+            for key, value in filters.items()
+            if value is not None and str(value).strip()
+        }
+        if not normalized_filters:
+            return items
+
+        def matches(item: dict[str, Any]) -> bool:
+            tags = item.get("tags") if isinstance(item.get("tags"), dict) else {}
+            for key, expected in normalized_filters.items():
+                actual = item.get(key)
+                if actual is None and key in tags:
+                    actual = tags.get(key)
+                if str(actual).strip() != expected:
+                    return False
+            return True
+
+        return [item for item in items if matches(item)]
 
     def _sync_user_channel_mapping(self, user_id: str, channel_id: str):
         mapping_id = f"user-channel-{user_id}-{channel_id}"

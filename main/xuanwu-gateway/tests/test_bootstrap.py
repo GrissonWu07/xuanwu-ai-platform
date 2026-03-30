@@ -33,4 +33,29 @@ def test_create_app_registers_gateway_routes():
     )
 
     assert "/gateway/v1/adapters" in registered_paths
+    assert "/gateway/v1/health" in registered_paths
+    assert "/gateway/v1/config" in registered_paths
+    assert "/gateway/v1/commands" in registered_paths
     assert "/gateway/v1/commands:dispatch" in registered_paths
+    assert "/gateway/v1/devices/{device_id}/state" in registered_paths
+
+
+def test_gateway_device_type_adapter_directories_exist():
+    root = Path(__file__).resolve().parents[3] / "main" / "xuanwu-gateway" / "adapters"
+
+    expected = [
+        root / "conversation" / "websocket",
+        root / "conversation" / "mqtt_gateway",
+        root / "actuator" / "http",
+        root / "actuator" / "mqtt",
+        root / "actuator" / "home_assistant",
+        root / "sensor" / "mqtt",
+        root / "sensor" / "http_push",
+        root / "industrial" / "modbus_tcp",
+        root / "industrial" / "opc_ua",
+        root / "industrial" / "bacnet_ip",
+        root / "industrial" / "can_gateway",
+    ]
+
+    for path in expected:
+        assert path.is_dir()

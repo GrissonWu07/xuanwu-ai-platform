@@ -56,3 +56,43 @@ def test_dispatch_returns_404_for_unknown_adapter():
     assert response.status == 404
     payload = handler._loads_json(response.text)
     assert payload["error"] == "adapter_not_found"
+
+
+def test_health_and_config_endpoints_return_status_and_config():
+    handler = _load_handler_module().GatewayHandler({"gateway": {"site": "lab-a"}})
+
+    health_response = asyncio.run(
+        handler.handle_health(make_mocked_request("GET", "/gateway/v1/health"))
+    )
+    config_response = asyncio.run(
+        handler.handle_get_config(make_mocked_request("GET", "/gateway/v1/config"))
+    )
+
+    assert health_response.status == 200
+    assert config_response.status == 200
+    assert handler._loads_json(health_response.text)["status"] == "ok"
+    assert handler._loads_json(config_response.text)["gateway"]["site"] == "lab-a"
+
+
+def test_commands_alias_and_device_state_work():
+    handler = _load_handler_module().GatewayHandler({})
+    dispatch_request = make_mocked_request("POST", "/gateway/v1/commands")
+    dispatch_request._read_bytes = (
+        b'{"request_id":"req-003","gateway_id":"gateway-http-001","adapter_type":"http",'
+        b'"device_id":"device-003","capability_code":"switch.on_off","command_name":"turn_on","arguments":{"state":true}}'
+    )
+
+    dispatch_response = asyncio.run(handler.handle_command_collection(dispatch_request))
+    state_response = asyncio.run(
+        handler.handle_get_device_state(
+            make_mocked_request(
+                "GET",
+                "/gateway/v1/devices/device-003/state",
+                match_info={"device_id": "device-003"},
+            )
+        )
+    )
+
+    assert dispatch_response.status == 200
+    assert state_response.status == 200
+    assert handler._loads_json(state_response.text)["device_id"] == "device-003"

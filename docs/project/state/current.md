@@ -1,78 +1,68 @@
 # Current State
 
 ## Objective
-- 基于现有平台蓝图，把 `ai-assist-device` 推进到新的四层架构：
+- Implement the local platform side of the four-layer architecture:
   - `xuanwu-device-server`
   - `xuanwu-management-server`
-  - `XuanWu`
   - `xuanwu-gateway`
-- 所有 Agent 域功能统一进入 `XuanWu` 需求和实现范围。
-- 本项目只基于 `XuanWu` API 契约实现设备治理、控制面、网关与运行时接入。
+  - `XuanWu` integration by contract only
+- Keep all Agent-domain truth in `XuanWu`.
+- Finish every locally completable spec item in this repository without reintroducing legacy Java management paths.
 
 ## Completed
-- 平台级 spec 体系已补齐：
-  - 总蓝图
-  - 目标架构
-  - 管理面关系映射模型
-  - 统一设备能力模型
-  - `xuanwu-gateway` 合同规范
-  - 遥测与事件模型
-  - 生命周期与注册开通
-  - 分布式部署与扩展
-- `XuanWu` Agent 域 API 合同 spec 已完成。
-- 本项目侧三块蓝图已完成：
-  - `xuanwu-management-server` API 蓝图
-  - `xuanwu-gateway` 模块蓝图
-  - `xuanwu-device-server` 边界蓝图
-- `xuanwu-management-server` Phase 1 已完成：
-  - 用户真源
-  - 频道真源
-  - 设备到 Agent 映射真源
-  - 用户与频道管理 API
-  - runtime resolve `binding` 视图
-  - `XuanWu` 代理契约回归验证
-- `xuanwu-management-server` Phase 2 已完成：
-  - 统一事件入口
-  - 统一遥测入口
-  - 活跃告警目录
-  - 告警确认入口
-  - 网关目录真源与 API
-  - 能力目录与能力路由真源与 API
-  - OTA firmware / campaign 真源与 API
-- `xuanwu-gateway` Phase 3 基础模块已完成：
-  - 独立 Python 服务骨架
+- Platform blueprint and active spec index are in place under `docs/superpowers/specs/`.
+- `xuanwu-management-server` now provides:
+  - server config APIs
+  - auth login/logout
+  - user, channel, and device CRUD
+  - device lifecycle actions: `claim`, `bind`, `suspend`, `retire`
+  - batch device import
+  - mapping APIs for:
+    - `user -> device`
+    - `user -> channel`
+    - `channel -> device`
+    - `device -> agent`
+    - `agent -> model provider`
+    - `agent -> model config`
+    - `agent -> knowledge`
+    - `agent -> workflow`
+  - capability, capability route, gateway, OTA firmware, OTA campaign APIs
+  - runtime resolve, binding view, and capability routing view
+  - chat history report and summary request persistence
+  - unified event, telemetry, alarm, and gateway ingress APIs
+  - query-dimension filtering for event and telemetry listing
+  - command-result persistence plus mirrored `command.result` event creation
+  - `XuanWu` proxy surfaces for agents, model providers, and models
+- `xuanwu-gateway` now provides:
+  - standalone service bootstrap
   - adapter registry
-  - 统一命令 dispatch API
-  - 首批 `http` / `mqtt` / `home_assistant` dry-run adapters
-- `xuanwu-device-server` Phase 4 边界收口已完成：
-  - `AtlasClaw` 运行时命名收口到 `XuanWu`
-  - dialogue engine 模块入口切换到 `core.providers.agent.xuanwu`
-  - runtime context 改为返回 `xuanwu_session_key`
-  - session key / registry / connection 状态字段完成 `xuanwu_*` 收口
-- 当前阶段验证结果：
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py -q`
-  - `43 passed`
-- 当前阶段语法验证结果：
-  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/api/xuanwu_proxy_handler.py main/xuanwu-management-server/core/store/local_store.py`
-  - passed
-  - `python -m py_compile main/xuanwu-gateway/app.py main/xuanwu-gateway/core/http_server.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/registry/adapter_registry.py main/xuanwu-gateway/core/contracts/models.py main/xuanwu-gateway/core/adapters/base.py main/xuanwu-gateway/core/adapters/http_adapter.py main/xuanwu-gateway/core/adapters/mqtt_adapter.py main/xuanwu-gateway/core/adapters/home_assistant_adapter.py`
-  - passed
+  - adapter directory skeleton by device/protocol class
+  - `/gateway/v1/adapters`
+  - `/gateway/v1/commands`
+  - `/gateway/v1/commands:dispatch`
+  - `/gateway/v1/health`
+  - `/gateway/v1/config`
+  - `/gateway/v1/devices/{device_id}/state`
+- `xuanwu-device-server` boundary work is complete for the local phase:
+  - `XuanWu` runtime naming is aligned
+  - runtime context exposes `xuanwu_session_key`
+  - control-plane hosting is no longer embedded back into the runtime service
+  - local Python management path is the default path
 
 ## In Progress
-- 准备进入 `Phase 5`：
-  - `XuanWu -> xuanwu-gateway` 南向调用契约联调
-  - 退场 `xuanwu-device-server` 中仍保留的 Home Assistant / IoT 兼容路径
+- No additional local-only implementation phase is open.
+- Remaining work is upstream contract integration with `XuanWu`.
 
 ## Risks / Decisions
-- 决定：所有 Agent 域功能都放到 `XuanWu`。
-- 决定：设备主归属是 `user -> device`。
-- 决定：`channel` 是用户控制入口，不是设备主归属。
-- 决定：设备实际调用由 `XuanWu` 决策，经 `xuanwu-gateway` 执行。
-- 风险：后续 `xuanwu-gateway` 的协议适配若直接耦合管理层模型，可能破坏边界。
-- 风险：必须持续避免把 Agent 真源或管理前端逻辑重新塞回 `xuanwu-device-server`。
-- 决定：`xuanwu-device-server` 中现存的 Home Assistant / IoT 本地工具链暂列兼容路径，只有在 `XuanWu -> xuanwu-gateway` 契约落地后才正式退场。
+- Decision: all Agent-domain truth remains in `XuanWu`.
+- Decision: `user -> device` is the primary ownership line.
+- Decision: `channel` is a user control surface, not a device owner.
+- Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-gateway`.
+- Risk: `xuanwu-device-server` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-gateway` contract is live.
+- Risk: industrial adapters are still framework skeletons and dry-run surfaces, not full protocol implementations.
 
 ## Next Step
-- 进入 `Phase 5`
-- 对齐 `XuanWu -> xuanwu-gateway` 标准命令与结果契约
-- 等上游完成后，退场 `xuanwu-device-server` 中的旧 Home Assistant / IoT 兼容调用链
+- Continue with upstream `XuanWu` contract alignment:
+  - northbound command contract from `XuanWu` to `xuanwu-gateway`
+  - management-side contract verification against `XuanWu`
+  - retirement of remaining local IoT compatibility paths in `xuanwu-device-server` after upstream readiness

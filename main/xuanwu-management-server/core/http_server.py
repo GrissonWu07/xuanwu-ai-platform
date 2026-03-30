@@ -25,6 +25,22 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/config/server",
                 control_plane_handler.handle_options,
             ),
+            web.post(
+                "/control-plane/v1/auth/login",
+                control_plane_handler.handle_login,
+            ),
+            web.post(
+                "/control-plane/v1/auth/logout",
+                control_plane_handler.handle_logout,
+            ),
+            web.options(
+                "/control-plane/v1/auth/login",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/auth/logout",
+                control_plane_handler.handle_options,
+            ),
             web.get(
                 "/control-plane/v1/users",
                 control_plane_handler.handle_list_users,
@@ -89,8 +105,16 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/events",
                 control_plane_handler.handle_post_event,
             ),
+            web.get(
+                "/control-plane/v1/events/{event_id}",
+                control_plane_handler.handle_get_event,
+            ),
             web.options(
                 "/control-plane/v1/events",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/events/{event_id}",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -191,6 +215,54 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/mappings/device-agents",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/agent-model-providers",
+                control_plane_handler.handle_list_agent_model_provider_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/agent-model-providers",
+                control_plane_handler.handle_create_agent_model_provider_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/agent-model-providers",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/agent-model-configs",
+                control_plane_handler.handle_list_agent_model_config_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/agent-model-configs",
+                control_plane_handler.handle_create_agent_model_config_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/agent-model-configs",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/agent-knowledge",
+                control_plane_handler.handle_list_agent_knowledge_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/agent-knowledge",
+                control_plane_handler.handle_create_agent_knowledge_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/agent-knowledge",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/agent-workflows",
+                control_plane_handler.handle_list_agent_workflow_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/agent-workflows",
+                control_plane_handler.handle_create_agent_workflow_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/agent-workflows",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -367,6 +439,30 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/chat-summaries/{summary_id}:generate",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/gateway/events",
+                control_plane_handler.handle_gateway_event,
+            ),
+            web.post(
+                "/control-plane/v1/gateway/telemetry",
+                control_plane_handler.handle_gateway_telemetry,
+            ),
+            web.post(
+                "/control-plane/v1/gateway/command-results",
+                control_plane_handler.handle_gateway_command_result,
+            ),
+            web.options(
+                "/control-plane/v1/gateway/events",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/gateway/telemetry",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/gateway/command-results",
                 control_plane_handler.handle_options,
             ),
             web.get(

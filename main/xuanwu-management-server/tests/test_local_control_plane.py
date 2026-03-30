@@ -183,6 +183,41 @@ def test_control_plane_get_server_config_requires_secret_and_returns_payload():
         assert payload["prompt"] == "control-plane prompt"
 
 
+def test_control_plane_auth_login_and_logout_issue_session():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.create_user({"user_id": "user-001", "name": "Alice", "password": "pw-001"})
+
+        login_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/auth/login",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        login_request._read_bytes = b'{"user_id":"user-001","password":"pw-001"}'
+        login_response = asyncio.run(handler.handle_login(login_request))
+        login_payload = yaml.safe_load(login_response.text)
+
+        logout_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/auth/logout",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        logout_request._read_bytes = (
+            ('{"session_token":"' + login_payload["session_token"] + '"}').encode("utf-8")
+        )
+        logout_response = asyncio.run(handler.handle_logout(logout_request))
+
+        assert login_response.status == 200
+        assert login_payload["user_id"] == "user-001"
+        assert logout_response.status == 204
+
+
 def test_import_control_plane_bundle_writes_server_agents_and_devices():
     with tempfile.TemporaryDirectory() as temp_dir:
         store = LocalControlPlaneStore(Path(temp_dir))
@@ -607,6 +642,141 @@ def test_control_plane_mapping_endpoints_persist_and_list_records():
         assert yaml.safe_load(device_agents_response.text)["items"][0]["agent_id"] == "agent-frontdesk"
 
 
+def test_control_plane_agent_side_mapping_list_endpoints_return_items():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.save_agent_model_provider_mapping(
+            "map-agent-provider-001",
+            {"mapping_id": "map-agent-provider-001", "agent_id": "agent-frontdesk", "model_provider_id": "provider-openai-01"},
+        )
+        handler.store.save_agent_model_config_mapping(
+            "map-agent-model-001",
+            {"mapping_id": "map-agent-model-001", "agent_id": "agent-frontdesk", "model_config_id": "model-realtime-01"},
+        )
+        handler.store.save_agent_knowledge_mapping(
+            "map-agent-knowledge-001",
+            {"mapping_id": "map-agent-knowledge-001", "agent_id": "agent-frontdesk", "knowledge_id": "kb-home-ops"},
+        )
+        handler.store.save_agent_workflow_mapping(
+            "map-agent-workflow-001",
+            {"mapping_id": "map-agent-workflow-001", "agent_id": "agent-frontdesk", "workflow_id": "wf-device-escalation"},
+        )
+
+        provider_response = asyncio.run(
+            handler.handle_list_agent_model_provider_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/agent-model-providers",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        model_response = asyncio.run(
+            handler.handle_list_agent_model_config_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/agent-model-configs",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        knowledge_response = asyncio.run(
+            handler.handle_list_agent_knowledge_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/agent-knowledge",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        workflow_response = asyncio.run(
+            handler.handle_list_agent_workflow_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/agent-workflows",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert yaml.safe_load(provider_response.text)["items"][0]["model_provider_id"] == "provider-openai-01"
+        assert yaml.safe_load(model_response.text)["items"][0]["model_config_id"] == "model-realtime-01"
+        assert yaml.safe_load(knowledge_response.text)["items"][0]["knowledge_id"] == "kb-home-ops"
+        assert yaml.safe_load(workflow_response.text)["items"][0]["workflow_id"] == "wf-device-escalation"
+
+
+def test_control_plane_agent_side_mapping_create_endpoints_persist_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        provider_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/agent-model-providers",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        provider_request._read_bytes = (
+            b'{"mapping_id":"map-agent-provider-001","agent_id":"agent-frontdesk","model_provider_id":"provider-openai-01"}'
+        )
+        model_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/agent-model-configs",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        model_request._read_bytes = (
+            b'{"mapping_id":"map-agent-model-001","agent_id":"agent-frontdesk","model_config_id":"model-realtime-01"}'
+        )
+        knowledge_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/agent-knowledge",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        knowledge_request._read_bytes = (
+            b'{"mapping_id":"map-agent-knowledge-001","agent_id":"agent-frontdesk","knowledge_id":"kb-home-ops"}'
+        )
+        workflow_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/agent-workflows",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        workflow_request._read_bytes = (
+            b'{"mapping_id":"map-agent-workflow-001","agent_id":"agent-frontdesk","workflow_id":"wf-device-escalation"}'
+        )
+
+        provider_response = asyncio.run(
+            handler.handle_create_agent_model_provider_mapping(provider_request)
+        )
+        model_response = asyncio.run(
+            handler.handle_create_agent_model_config_mapping(model_request)
+        )
+        knowledge_response = asyncio.run(
+            handler.handle_create_agent_knowledge_mapping(knowledge_request)
+        )
+        workflow_response = asyncio.run(
+            handler.handle_create_agent_workflow_mapping(workflow_request)
+        )
+
+        assert provider_response.status == 201
+        assert model_response.status == 201
+        assert knowledge_response.status == 201
+        assert workflow_response.status == 201
+        assert handler.store.list_agent_model_provider_mappings()[0]["model_provider_id"] == "provider-openai-01"
+        assert handler.store.list_agent_model_config_mappings()[0]["model_config_id"] == "model-realtime-01"
+        assert handler.store.list_agent_knowledge_mappings()[0]["knowledge_id"] == "kb-home-ops"
+        assert handler.store.list_agent_workflow_mappings()[0]["workflow_id"] == "wf-device-escalation"
+
+
 def test_control_plane_runtime_views_return_binding_and_capability_routes():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -956,6 +1126,144 @@ def test_control_plane_event_telemetry_and_alarm_endpoints_work_together():
         assert telemetry_response.status == 201
         assert alarms_response.status == 200
         assert yaml.safe_load(alarms_response.text)["items"][0]["alarm_id"] == "alarm-001"
+
+
+def test_control_plane_event_item_and_gateway_ingest_endpoints_work():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        gateway_event_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateway/events",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        gateway_event_request._read_bytes = (
+            b'{"event_id":"evt-002","event_type":"device.online","device_id":"dev-001"}'
+        )
+        gateway_telemetry_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateway/telemetry",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        gateway_telemetry_request._read_bytes = (
+            b'{"telemetry_id":"tel-002","device_id":"dev-001","capability_code":"sensor.humidity","value":62.5}'
+        )
+        gateway_result_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateway/command-results",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        gateway_result_request._read_bytes = (
+            b'{"result_id":"cmdr-001","device_id":"dev-001","request_id":"req-001","status":"accepted"}'
+        )
+
+        event_response = asyncio.run(handler.handle_gateway_event(gateway_event_request))
+        telemetry_response = asyncio.run(handler.handle_gateway_telemetry(gateway_telemetry_request))
+        command_result_response = asyncio.run(
+            handler.handle_gateway_command_result(gateway_result_request)
+        )
+        get_event_response = asyncio.run(
+            handler.handle_get_event(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/events/evt-002",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"event_id": "evt-002"},
+                )
+            )
+        )
+
+        assert event_response.status == 201
+        assert telemetry_response.status == 201
+        assert command_result_response.status == 201
+        assert get_event_response.status == 200
+        assert yaml.safe_load(get_event_response.text)["event_id"] == "evt-002"
+
+
+def test_store_filters_events_and_telemetry_by_query_dimensions():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        store.append_event(
+            {
+                "event_id": "evt-001",
+                "event_type": "device.online",
+                "device_id": "dev-001",
+                "gateway_id": "gateway-001",
+                "site_id": "site-a",
+                "severity": "info",
+            }
+        )
+        store.append_event(
+            {
+                "event_id": "evt-002",
+                "event_type": "alarm.triggered",
+                "device_id": "dev-002",
+                "gateway_id": "gateway-002",
+                "site_id": "site-b",
+                "severity": "critical",
+            }
+        )
+        store.append_telemetry(
+            {
+                "telemetry_id": "tel-001",
+                "device_id": "dev-001",
+                "gateway_id": "gateway-001",
+                "metric_code": "sensor.temperature",
+                "value": 24.8,
+                "timestamp": "2026-03-30T12:00:00Z",
+                "tags": {"site_id": "site-a"},
+            }
+        )
+        store.append_telemetry(
+            {
+                "telemetry_id": "tel-002",
+                "device_id": "dev-002",
+                "gateway_id": "gateway-002",
+                "metric_code": "sensor.temperature",
+                "value": 30.1,
+                "timestamp": "2026-03-30T12:10:00Z",
+                "tags": {"site_id": "site-b"},
+            }
+        )
+
+        filtered_events = store.list_events({"device_id": "dev-002", "severity": "critical"})
+        filtered_telemetry = store.list_telemetry({"device_id": "dev-001", "site_id": "site-a"})
+
+        assert [item["event_id"] for item in filtered_events] == ["evt-002"]
+        assert [item["telemetry_id"] for item in filtered_telemetry] == ["tel-001"]
+
+
+def test_control_plane_gateway_command_result_creates_command_result_event():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateway/command-results",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"result_id":"cmdr-001","device_id":"dev-001","gateway_id":"gateway-001","request_id":"req-001","status":"succeeded","trace_id":"trace-001"}'
+        )
+
+        response = asyncio.run(handler.handle_gateway_command_result(request))
+
+        assert response.status == 201
+        command_event = handler.store.get_event("evt-cmdr-001")
+        assert command_event["event_type"] == "command.result"
+        assert command_event["payload"]["status"] == "succeeded"
 
 
 def test_store_persists_gateway_capability_route_and_ota_records():

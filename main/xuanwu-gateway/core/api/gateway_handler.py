@@ -11,6 +11,7 @@ class GatewayHandler:
     def __init__(self, config: dict):
         self.config = config
         self.registry = create_builtin_registry()
+        self.device_state: dict[str, dict] = {}
 
     def _json_response(self, payload: dict, *, status: int = 200) -> web.Response:
         return web.Response(
@@ -38,5 +39,27 @@ class GatewayHandler:
         adapter = self.registry.get(adapter_type)
         if adapter is None:
             return self._json_response({"error": "adapter_not_found"}, status=404)
-        return self._json_response(adapter.dispatch(payload))
+        result = adapter.dispatch(payload)
+        device_id = str(payload.get("device_id", "")).strip()
+        if device_id:
+            self.device_state[device_id] = {
+                "device_id": device_id,
+                "last_request_id": payload.get("request_id"),
+                "last_command_name": payload.get("command_name"),
+                "status": result.get("status", "accepted"),
+            }
+        return self._json_response(result)
 
+    async def handle_command_collection(self, request: web.Request) -> web.Response:
+        return await self.handle_dispatch_command(request)
+
+    async def handle_health(self, request: web.Request) -> web.Response:
+        return self._json_response({"status": "ok", "adapter_count": len(self.registry.describe())})
+
+    async def handle_get_config(self, request: web.Request) -> web.Response:
+        return self._json_response(self.config)
+
+    async def handle_get_device_state(self, request: web.Request) -> web.Response:
+        device_id = str(request.match_info["device_id"]).strip()
+        payload = self.device_state.get(device_id, {"device_id": device_id, "status": "unknown"})
+        return self._json_response(payload)

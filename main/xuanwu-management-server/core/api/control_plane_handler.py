@@ -32,6 +32,36 @@ class ControlPlaneHandler(BaseHandler):
         self._add_cors_headers(response)
         return response
 
+    async def handle_login(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            session = self.store.create_auth_session(payload.get("user_id"), payload.get("password"))
+        except ValueError as exc:
+            status = 404 if str(exc) == "user_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(session)
+
+    async def handle_logout(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        session_token = str(payload.get("session_token", "")).strip()
+        if not session_token:
+            return self._json_response({"error": "session_token_required"}, status=400)
+        if not self.store.delete_auth_session(session_token):
+            return self._json_response({"error": "session_not_found"}, status=404)
+        response = web.Response(status=204)
+        self._add_cors_headers(response)
+        return response
+
     async def handle_get_server_config(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -218,6 +248,78 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
 
+    async def handle_list_agent_model_provider_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_agent_model_provider_mappings()})
+
+    async def handle_create_agent_model_provider_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_agent_model_provider_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_agent_model_config_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_agent_model_config_mappings()})
+
+    async def handle_create_agent_model_config_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_agent_model_config_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_agent_knowledge_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_agent_knowledge_mappings()})
+
+    async def handle_create_agent_knowledge_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_agent_knowledge_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_agent_workflow_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_agent_workflow_mappings()})
+
+    async def handle_create_agent_workflow_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_agent_workflow_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
     async def handle_list_devices(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -370,7 +472,16 @@ class ControlPlaneHandler(BaseHandler):
     async def handle_list_events(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
-        return self._json_response({"items": self.store.list_events()})
+        return self._json_response({"items": self.store.list_events(dict(request.query))})
+
+    async def handle_get_event(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        event_id = str(request.match_info["event_id"]).strip()
+        payload = self.store.get_event(event_id)
+        if payload is None:
+            return self._json_response({"error": "event_not_found"}, status=404)
+        return self._json_response(payload)
 
     async def handle_post_telemetry(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
@@ -385,10 +496,29 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
 
+    async def handle_gateway_event(self, request: web.Request) -> web.Response:
+        return await self.handle_post_event(request)
+
+    async def handle_gateway_telemetry(self, request: web.Request) -> web.Response:
+        return await self.handle_post_telemetry(request)
+
+    async def handle_gateway_command_result(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            result = self.store.save_command_result(payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(result, status=201)
+
     async def handle_list_telemetry(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
-        return self._json_response({"items": self.store.list_telemetry()})
+        return self._json_response({"items": self.store.list_telemetry(dict(request.query))})
 
     async def handle_list_alarms(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):

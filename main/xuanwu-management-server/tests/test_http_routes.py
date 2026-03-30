@@ -38,6 +38,8 @@ def test_create_app_registers_control_plane_routes():
     )
 
     assert "/control-plane/v1/config/server" in registered_paths
+    assert "/control-plane/v1/auth/login" in registered_paths
+    assert "/control-plane/v1/auth/logout" in registered_paths
     assert "/control-plane/v1/devices" in registered_paths
     assert "/control-plane/v1/devices:batch-import" in registered_paths
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
@@ -51,6 +53,7 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/channels" in registered_paths
     assert "/control-plane/v1/channels/{channel_id}" in registered_paths
     assert "/control-plane/v1/events" in registered_paths
+    assert "/control-plane/v1/events/{event_id}" in registered_paths
     assert "/control-plane/v1/telemetry" in registered_paths
     assert "/control-plane/v1/alarms" in registered_paths
     assert "/control-plane/v1/alarms/{alarm_id}:ack" in registered_paths
@@ -60,6 +63,10 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/mappings/user-channels" in registered_paths
     assert "/control-plane/v1/mappings/channel-devices" in registered_paths
     assert "/control-plane/v1/mappings/device-agents" in registered_paths
+    assert "/control-plane/v1/mappings/agent-model-providers" in registered_paths
+    assert "/control-plane/v1/mappings/agent-model-configs" in registered_paths
+    assert "/control-plane/v1/mappings/agent-knowledge" in registered_paths
+    assert "/control-plane/v1/mappings/agent-workflows" in registered_paths
     assert "/control-plane/v1/capabilities" in registered_paths
     assert "/control-plane/v1/capability-routes" in registered_paths
     assert "/control-plane/v1/ota/firmwares" in registered_paths
@@ -70,3 +77,6 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/runtime/devices/{device_id}/capability-routing-view" in registered_paths
     assert "/control-plane/v1/chat-history/report" in registered_paths
     assert "/control-plane/v1/chat-summaries/{summary_id}:generate" in registered_paths
+    assert "/control-plane/v1/gateway/events" in registered_paths
+    assert "/control-plane/v1/gateway/telemetry" in registered_paths
+    assert "/control-plane/v1/gateway/command-results" in registered_paths
