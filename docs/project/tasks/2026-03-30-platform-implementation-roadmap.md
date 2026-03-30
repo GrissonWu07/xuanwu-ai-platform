@@ -8,7 +8,7 @@
 ## Steps
 1. [x] Phase 1: `xuanwu-management-server` 基础控制面
 2. [x] Phase 2: `xuanwu-management-server` 遥测 / 事件 / 网关 / OTA 治理
-3. [ ] Phase 3: `xuanwu-gateway` 基础模块与首批协议适配
+3. [x] Phase 3: `xuanwu-gateway` 基础模块与首批协议适配
 4. [ ] Phase 4: `xuanwu-device-server` 边界收口与运行时接入对齐
 5. [ ] Phase 5: `XuanWu` 集成联调与契约验证
 
@@ -80,6 +80,12 @@
 - 能接收标准能力命令
 - 能输出标准结果 / 事件 / 遥测
 - 能按 adapter registry 路由到具体协议实现
+
+阶段结果：
+- 已完成
+- 当前验证：
+  - `python -m pytest main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py -q`
+  - `5 passed`
 
 ### Phase 4: `xuanwu-device-server` 边界收口与运行时接入对齐
 目标：
