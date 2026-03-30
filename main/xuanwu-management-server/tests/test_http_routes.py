@@ -49,11 +49,17 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/alarms/{alarm_id}:ack" in registered_paths
     assert "/control-plane/v1/gateways" in registered_paths
     assert "/control-plane/v1/gateways/{gateway_id}" in registered_paths
+    assert "/control-plane/v1/mappings/user-devices" in registered_paths
+    assert "/control-plane/v1/mappings/user-channels" in registered_paths
+    assert "/control-plane/v1/mappings/channel-devices" in registered_paths
+    assert "/control-plane/v1/mappings/device-agents" in registered_paths
     assert "/control-plane/v1/capabilities" in registered_paths
     assert "/control-plane/v1/capability-routes" in registered_paths
     assert "/control-plane/v1/ota/firmwares" in registered_paths
     assert "/control-plane/v1/ota/firmwares/{firmware_id}" in registered_paths
     assert "/control-plane/v1/ota/campaigns" in registered_paths
     assert "/control-plane/v1/runtime/device-config:resolve" in registered_paths
+    assert "/control-plane/v1/runtime/devices/{device_id}/binding-view" in registered_paths
+    assert "/control-plane/v1/runtime/devices/{device_id}/capability-routing-view" in registered_paths
     assert "/control-plane/v1/chat-history/report" in registered_paths
     assert "/control-plane/v1/chat-summaries/{summary_id}:generate" in registered_paths

@@ -82,6 +82,78 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
 
+    async def handle_list_user_device_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_user_device_mappings()})
+
+    async def handle_create_user_device_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_user_device_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_user_channel_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_user_channel_mappings()})
+
+    async def handle_create_user_channel_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_user_channel_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_channel_device_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_channel_device_mappings()})
+
+    async def handle_create_channel_device_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_channel_device_mapping(payload.get("mapping_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_list_device_agent_mappings(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_device_agent_mappings()})
+
+    async def handle_create_device_agent_mapping(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.bind_device_agent(payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
     async def handle_list_devices(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -346,6 +418,30 @@ class ControlPlaneHandler(BaseHandler):
                 "resolved_config": resolved_config,
             }
         )
+
+    async def handle_get_runtime_binding_view(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        if not device_id:
+            return self._json_response({"error": "device_id_required"}, status=400)
+        try:
+            payload = self.store.build_runtime_binding_view(device_id)
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_get_runtime_capability_routing_view(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        if not device_id:
+            return self._json_response({"error": "device_id_required"}, status=400)
+        try:
+            payload = self.store.build_runtime_capability_routing_view(device_id)
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(payload)
 
     async def handle_report_chat_history(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):

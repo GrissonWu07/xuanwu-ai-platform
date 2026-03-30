@@ -114,6 +114,54 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.get(
+                "/control-plane/v1/mappings/user-devices",
+                control_plane_handler.handle_list_user_device_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/user-devices",
+                control_plane_handler.handle_create_user_device_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/user-devices",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/user-channels",
+                control_plane_handler.handle_list_user_channel_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/user-channels",
+                control_plane_handler.handle_create_user_channel_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/user-channels",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/channel-devices",
+                control_plane_handler.handle_list_channel_device_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/channel-devices",
+                control_plane_handler.handle_create_channel_device_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/channel-devices",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/mappings/device-agents",
+                control_plane_handler.handle_list_device_agent_mappings,
+            ),
+            web.post(
+                "/control-plane/v1/mappings/device-agents",
+                control_plane_handler.handle_create_device_agent_mapping,
+            ),
+            web.options(
+                "/control-plane/v1/mappings/device-agents",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
                 "/control-plane/v1/capabilities",
                 control_plane_handler.handle_list_capabilities,
             ),
@@ -215,6 +263,22 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/runtime/device-config:resolve",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/runtime/devices/{device_id}/binding-view",
+                control_plane_handler.handle_get_runtime_binding_view,
+            ),
+            web.options(
+                "/control-plane/v1/runtime/devices/{device_id}/binding-view",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/runtime/devices/{device_id}/capability-routing-view",
+                control_plane_handler.handle_get_runtime_capability_routing_view,
+            ),
+            web.options(
+                "/control-plane/v1/runtime/devices/{device_id}/capability-routing-view",
                 control_plane_handler.handle_options,
             ),
             web.post(

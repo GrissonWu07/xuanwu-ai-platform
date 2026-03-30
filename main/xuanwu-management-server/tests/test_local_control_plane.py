@@ -386,6 +386,31 @@ def test_control_plane_rejects_user_and_channel_without_ids():
         assert yaml.safe_load(channel_response.text)["error"] == "channel_id_required"
 
 
+def test_control_plane_create_channel_defaults_to_anonymous_user():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/channels",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = b'{"channel_id":"channel-anon-001","name":"Anonymous Room"}'
+
+        response = asyncio.run(handler.handle_create_channel(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 201
+        assert payload["user_id"] == "anonymous"
+        assert handler.store.get_channel("channel-anon-001")["user_id"] == "anonymous"
+        assert handler.store.get_user("anonymous")["is_anonymous"] is True
+
+
 def test_store_lists_devices_and_defaults_anonymous_user():
     with tempfile.TemporaryDirectory() as temp_dir:
         store = LocalControlPlaneStore(Path(temp_dir))
@@ -404,6 +429,188 @@ def test_store_lists_devices_and_defaults_anonymous_user():
         assert devices[0]["device_id"] == "dev-001"
         assert devices[0]["user_id"] == "anonymous"
         assert store.get_user("anonymous")["is_anonymous"] is True
+
+
+def test_control_plane_mapping_endpoints_persist_and_list_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.create_user({"user_id": "user-001", "name": "Alice"})
+        handler.store.create_channel(
+            {"channel_id": "channel-home", "user_id": "user-001", "name": "Home"}
+        )
+        handler.store.save_device(
+            "dev-001",
+            {
+                "device_id": "dev-001",
+                "user_id": "user-001",
+                "device_type": "conversation_terminal",
+            },
+        )
+
+        channel_device_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/channel-devices",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        channel_device_request._read_bytes = (
+            b'{"mapping_id":"map-channel-device-001","channel_id":"channel-home","device_id":"dev-001"}'
+        )
+
+        device_agent_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/mappings/device-agents",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        device_agent_request._read_bytes = (
+            b'{"mapping_id":"map-device-agent-001","device_id":"dev-001","agent_id":"agent-frontdesk"}'
+        )
+
+        channel_device_response = asyncio.run(
+            handler.handle_create_channel_device_mapping(channel_device_request)
+        )
+        device_agent_response = asyncio.run(
+            handler.handle_create_device_agent_mapping(device_agent_request)
+        )
+
+        user_devices_response = asyncio.run(
+            handler.handle_list_user_device_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/user-devices",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        user_channels_response = asyncio.run(
+            handler.handle_list_user_channel_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/user-channels",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        channel_devices_response = asyncio.run(
+            handler.handle_list_channel_device_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/channel-devices",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        device_agents_response = asyncio.run(
+            handler.handle_list_device_agent_mappings(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/mappings/device-agents",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert channel_device_response.status == 201
+        assert device_agent_response.status == 201
+        assert yaml.safe_load(user_devices_response.text)["items"][0]["device_id"] == "dev-001"
+        assert yaml.safe_load(user_channels_response.text)["items"][0]["channel_id"] == "channel-home"
+        assert yaml.safe_load(channel_devices_response.text)["items"][0]["mapping_id"] == "map-channel-device-001"
+        assert yaml.safe_load(device_agents_response.text)["items"][0]["agent_id"] == "agent-frontdesk"
+
+
+def test_control_plane_runtime_views_return_binding_and_capability_routes():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.create_user({"user_id": "user-001", "name": "Alice"})
+        handler.store.create_channel(
+            {"channel_id": "channel-home", "user_id": "user-001", "name": "Home"}
+        )
+        handler.store.save_device(
+            "dev-001",
+            {
+                "device_id": "dev-001",
+                "user_id": "user-001",
+                "device_type": "conversation_terminal",
+                "gateway_id": "gateway-http-001",
+                "capability_refs": ["switch.on_off"],
+            },
+        )
+        handler.store.save_channel_device_mapping(
+            "map-channel-device-001",
+            {
+                "mapping_id": "map-channel-device-001",
+                "channel_id": "channel-home",
+                "device_id": "dev-001",
+            },
+        )
+        handler.store.bind_device_agent(
+            {
+                "mapping_id": "map-device-agent-001",
+                "device_id": "dev-001",
+                "agent_id": "agent-frontdesk",
+            }
+        )
+        handler.store.save_gateway(
+            "gateway-http-001",
+            {
+                "gateway_id": "gateway-http-001",
+                "protocol_type": "http",
+            },
+        )
+        handler.store.save_capability_route(
+            "route-switch-http-001",
+            {
+                "route_id": "route-switch-http-001",
+                "capability_code": "switch.on_off",
+                "gateway_id": "gateway-http-001",
+                "protocol_type": "http",
+            },
+        )
+
+        binding_response = asyncio.run(
+            handler.handle_get_runtime_binding_view(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/runtime/devices/dev-001/binding-view",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"device_id": "dev-001"},
+                )
+            )
+        )
+        capability_routing_response = asyncio.run(
+            handler.handle_get_runtime_capability_routing_view(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/runtime/devices/dev-001/capability-routing-view",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"device_id": "dev-001"},
+                )
+            )
+        )
+
+        assert binding_response.status == 200
+        assert capability_routing_response.status == 200
+        binding_payload = yaml.safe_load(binding_response.text)
+        capability_payload = yaml.safe_load(capability_routing_response.text)
+        assert binding_payload["device_id"] == "dev-001"
+        assert binding_payload["channel_id"] == "channel-home"
+        assert binding_payload["agent_id"] == "agent-frontdesk"
+        assert capability_payload["device_id"] == "dev-001"
+        assert capability_payload["command_routes"][0]["gateway_id"] == "gateway-http-001"
+        assert capability_payload["command_routes"][0]["capability_code"] == "switch.on_off"
 
 
 def test_control_plane_runtime_resolve_returns_binding_view():
@@ -464,6 +671,14 @@ def test_store_creates_user_channel_and_device_agent_mappings():
         channel = store.create_channel(
             {"channel_id": "channel-home", "user_id": "user-001", "name": "Home"}
         )
+        device = store.save_device(
+            "dev-001",
+            {
+                "device_id": "dev-001",
+                "user_id": "user-001",
+                "device_type": "conversation_terminal",
+            },
+        )
         mapping = store.bind_device_agent(
             {
                 "mapping_id": "map-device-agent-001",
@@ -475,6 +690,7 @@ def test_store_creates_user_channel_and_device_agent_mappings():
         assert user["user_id"] == "user-001"
         assert channel["channel_id"] == "channel-home"
         assert channel["user_id"] == "user-001"
+        assert device["user_id"] == "user-001"
         assert mapping["agent_id"] == "agent-frontdesk"
         assert store.get_user("user-001")["name"] == "Alice"
         assert store.get_channel("channel-home")["name"] == "Home"

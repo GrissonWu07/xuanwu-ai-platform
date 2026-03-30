@@ -17,6 +17,9 @@ class LocalControlPlaneStore:
         (self.root_dir / "agents").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "users").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channels").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "user_device_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "user_channel_mappings").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "channel_device_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "device_agent_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "events").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "telemetry").mkdir(parents=True, exist_ok=True)
@@ -52,13 +55,14 @@ class LocalControlPlaneStore:
         device_id = str(device_id or payload.get("device_id", "")).strip()
         if not device_id:
             raise ValueError("device_id_required")
-        user_id = self._normalize_device_user_id(payload.get("user_id"))
+        user_id = self._normalize_owner_user_id(payload.get("user_id"))
         record = dict(payload)
         record.setdefault("device_id", device_id)
         record["user_id"] = user_id
         record.setdefault("bind_status", "pending")
         record.setdefault("channel_ids", [])
         self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
+        self._sync_user_device_mapping(user_id, device_id)
         return record
 
     def list_devices(self) -> list[dict[str, Any]]:
@@ -109,21 +113,125 @@ class LocalControlPlaneStore:
         channel_id = str(payload.get("channel_id", "")).strip()
         if not channel_id:
             raise ValueError("channel_id_required")
-        payload.setdefault("status", "active")
-        self._write_yaml(self.root_dir / "channels" / f"{channel_id}.yaml", payload)
-        return payload
+        user_id = self._normalize_owner_user_id(payload.get("user_id"))
+        record = dict(payload)
+        record["user_id"] = user_id
+        record.setdefault("status", "active")
+        self._write_yaml(self.root_dir / "channels" / f"{channel_id}.yaml", record)
+        self._sync_user_channel_mapping(user_id, channel_id)
+        return record
 
     def list_channels(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "channels")
+
+    def list_user_device_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "user_device_mappings")
+
+    def save_user_device_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        mapping_id = str(mapping_id or payload.get("mapping_id", "")).strip()
+        if not mapping_id:
+            raise ValueError("mapping_id_required")
+        user_id = self._normalize_owner_user_id(payload.get("user_id"))
+        device_id = str(payload.get("device_id", "")).strip()
+        if not device_id:
+            raise ValueError("device_id_required")
+        device = self.get_device(device_id)
+        if device is None:
+            raise ValueError("device_not_found")
+        if str(device.get("user_id") or "") != user_id:
+            raise ValueError("device_user_mismatch")
+        record = {
+            "mapping_id": mapping_id,
+            "user_id": user_id,
+            "device_id": device_id,
+            "role": payload.get("role", "owner"),
+            "enabled": payload.get("enabled", True),
+        }
+        self._write_yaml(self.root_dir / "user_device_mappings" / f"{mapping_id}.yaml", record)
+        return record
+
+    def list_user_channel_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "user_channel_mappings")
+
+    def save_user_channel_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        mapping_id = str(mapping_id or payload.get("mapping_id", "")).strip()
+        if not mapping_id:
+            raise ValueError("mapping_id_required")
+        user_id = self._normalize_owner_user_id(payload.get("user_id"))
+        channel_id = str(payload.get("channel_id", "")).strip()
+        if not channel_id:
+            raise ValueError("channel_id_required")
+        channel = self.get_channel(channel_id)
+        if channel is None:
+            raise ValueError("channel_not_found")
+        if str(channel.get("user_id") or "") != user_id:
+            raise ValueError("channel_user_mismatch")
+        record = {
+            "mapping_id": mapping_id,
+            "user_id": user_id,
+            "channel_id": channel_id,
+            "role": payload.get("role", "owner"),
+            "enabled": payload.get("enabled", True),
+        }
+        self._write_yaml(self.root_dir / "user_channel_mappings" / f"{mapping_id}.yaml", record)
+        return record
+
+    def list_channel_device_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "channel_device_mappings")
+
+    def save_channel_device_mapping(self, mapping_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        mapping_id = str(mapping_id or payload.get("mapping_id", "")).strip()
+        if not mapping_id:
+            raise ValueError("mapping_id_required")
+        channel_id = str(payload.get("channel_id", "")).strip()
+        device_id = str(payload.get("device_id", "")).strip()
+        if not channel_id:
+            raise ValueError("channel_id_required")
+        if not device_id:
+            raise ValueError("device_id_required")
+        channel = self.get_channel(channel_id)
+        if channel is None:
+            raise ValueError("channel_not_found")
+        device = self.get_device(device_id)
+        if device is None:
+            raise ValueError("device_not_found")
+        if str(channel.get("user_id") or "") != str(device.get("user_id") or ""):
+            raise ValueError("channel_device_user_mismatch")
+        record = {
+            "mapping_id": mapping_id,
+            "channel_id": channel_id,
+            "device_id": device_id,
+            "enabled": payload.get("enabled", True),
+            "priority": payload.get("priority", 100),
+        }
+        self._write_yaml(self.root_dir / "channel_device_mappings" / f"{mapping_id}.yaml", record)
+        return record
+
+    def get_primary_channel_device_mapping(self, device_id: str) -> dict[str, Any] | None:
+        for payload in self.list_channel_device_mappings():
+            if payload.get("device_id") != device_id:
+                continue
+            if payload.get("enabled", True) is False:
+                continue
+            return payload
+        return None
 
     def bind_device_agent(self, payload: dict[str, Any]) -> dict[str, Any]:
         payload = dict(payload)
         mapping_id = str(payload.get("mapping_id", "")).strip()
         if not mapping_id:
             raise ValueError("mapping_id_required")
+        device_id = str(payload.get("device_id", "")).strip()
+        if not device_id:
+            raise ValueError("device_id_required")
+        if self.get_device(device_id) is None:
+            raise ValueError("device_not_found")
         payload.setdefault("enabled", True)
         self._write_yaml(self.root_dir / "device_agent_mappings" / f"{mapping_id}.yaml", payload)
         return payload
+
+    def list_device_agent_mappings(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "device_agent_mappings")
 
     def get_active_device_agent_mapping(self, device_id: str) -> dict[str, Any] | None:
         mappings_dir = self.root_dir / "device_agent_mappings"
@@ -335,6 +443,51 @@ class LocalControlPlaneStore:
             "resolved_config": resolved_config,
         }
 
+    def build_runtime_binding_view(self, device_id: str) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        device_agent_mapping = self.get_active_device_agent_mapping(device_id) or {}
+        channel_device_mapping = self.get_primary_channel_device_mapping(device_id) or {}
+        return {
+            "device_id": device_id,
+            "user_id": device.get("user_id"),
+            "channel_id": channel_device_mapping.get("channel_id"),
+            "agent_id": device_agent_mapping.get("agent_id") or device.get("agent_id"),
+            "model_provider_id": None,
+            "model_config_id": None,
+            "knowledge_ids": [],
+            "workflow_ids": [],
+            "gateway_ids": [device.get("gateway_id")] if device.get("gateway_id") else [],
+            "runtime_overrides": deepcopy(device.get("runtime_overrides") or {}),
+        }
+
+    def build_runtime_capability_routing_view(self, device_id: str) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        capability_refs = list(device.get("capability_refs") or [])
+        routes: list[dict[str, Any]] = []
+        for route in self.list_capability_routes():
+            capability_code = route.get("capability_code")
+            if capability_code not in capability_refs:
+                continue
+            routes.append(
+                {
+                    "route_id": route.get("route_id"),
+                    "capability_code": capability_code,
+                    "gateway_id": route.get("gateway_id") or device.get("gateway_id"),
+                    "protocol_type": route.get("protocol_type"),
+                }
+            )
+        return {
+            "device_id": device_id,
+            "device_type": device.get("device_type"),
+            "gateway_id": device.get("gateway_id"),
+            "capability_refs": capability_refs,
+            "command_routes": routes,
+        }
+
     def _read_yaml(self, path: Path, default: dict[str, Any] | None = None) -> dict[str, Any] | None:
         if not path.exists():
             return deepcopy(default) if default is not None else None
@@ -370,7 +523,7 @@ class LocalControlPlaneStore:
                 items.append(payload)
         return items
 
-    def _normalize_device_user_id(self, user_id: Any) -> str:
+    def _normalize_owner_user_id(self, user_id: Any) -> str:
         normalized = str(user_id or "").strip()
         if not normalized:
             self.ensure_anonymous_user()
@@ -381,3 +534,29 @@ class LocalControlPlaneStore:
         if self.get_user(normalized) is None:
             raise ValueError("user_not_found")
         return normalized
+
+    def _sync_user_device_mapping(self, user_id: str, device_id: str):
+        mapping_id = f"user-device-{user_id}-{device_id}"
+        self._write_yaml(
+            self.root_dir / "user_device_mappings" / f"{mapping_id}.yaml",
+            {
+                "mapping_id": mapping_id,
+                "user_id": user_id,
+                "device_id": device_id,
+                "role": "owner",
+                "enabled": True,
+            },
+        )
+
+    def _sync_user_channel_mapping(self, user_id: str, channel_id: str):
+        mapping_id = f"user-channel-{user_id}-{channel_id}"
+        self._write_yaml(
+            self.root_dir / "user_channel_mappings" / f"{mapping_id}.yaml",
+            {
+                "mapping_id": mapping_id,
+                "user_id": user_id,
+                "channel_id": channel_id,
+                "role": "owner",
+                "enabled": True,
+            },
+        )
