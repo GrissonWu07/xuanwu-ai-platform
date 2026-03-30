@@ -1,5 +1,7 @@
 # xuanwu-gateway Foundation Implementation Plan
 
+> Historical execution record: commands below that referenced `test_xuanwu_proxy_contract.py` belonged to an earlier local proxy-validation phase. That test file is no longer part of the active local verification baseline because upstream `XuanWu` integration remains out of repo scope.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 落地独立的 `xuanwu-gateway` 基础模块、统一命令合同、adapter registry 和首批 `http` / `mqtt` / `home_assistant` 适配器。
@@ -204,7 +206,7 @@ Expected: PASS
 
 - [ ] **Step 2: Run broader verification**
 
-Run: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py -q`
+Run: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py tests/test_active_spec_index.py -q`
 Expected: PASS
 
 - [ ] **Step 3: Run syntax validation**

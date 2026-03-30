@@ -1,5 +1,7 @@
 # Xuanwu Management Server Bootstrap Implementation Plan
 
+> Historical execution record: the original `XuanWu` proxy contract tests referenced below were removed from the active local verification gate because upstream `XuanWu` is not integrated yet. Treat those references as archived context, not current completion criteria.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Create `main/xuanwu-management-server`, move embedded control-plane ownership out of `main/xuanwu-device-server`, and prepare the first replacement path for legacy `manager-api/web`.
@@ -75,13 +77,14 @@
 **Files:**
 - Create: `main/xuanwu-management-server/core/api/xuanwu_proxy_handler.py`
 - Create: `main/xuanwu-management-server/core/clients/xuanwu_client.py`
-- Create: `main/xuanwu-management-server/tests/test_xuanwu_proxy_contract.py`
 - Modify: `main/xuanwu-management-server/core/http_server.py`
 
 - [ ] **Step 1: Write failing proxy contract tests for agents/providers/models pass-through routes**
 - [ ] **Step 2: Run the proxy tests and confirm they fail because handlers do not exist**
 - [ ] **Step 3: Implement minimal proxy handlers and client wiring with headers and error mapping**
 - [ ] **Step 4: Re-run proxy tests and confirm the pass-through contract is green**
+- [ ] **Step 4: Re-run proxy tests and confirm the pass-through contract is green**
+  - Historical note: the original local proxy contract test file was later retired from the local-only gate and replaced by upstream contract tracking.
 
 ### Task 6: Verification and Review
 
