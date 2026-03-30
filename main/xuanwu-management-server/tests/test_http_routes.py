@@ -46,6 +46,13 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/telemetry" in registered_paths
     assert "/control-plane/v1/alarms" in registered_paths
     assert "/control-plane/v1/alarms/{alarm_id}:ack" in registered_paths
+    assert "/control-plane/v1/gateways" in registered_paths
+    assert "/control-plane/v1/gateways/{gateway_id}" in registered_paths
+    assert "/control-plane/v1/capabilities" in registered_paths
+    assert "/control-plane/v1/capability-routes" in registered_paths
+    assert "/control-plane/v1/ota/firmwares" in registered_paths
+    assert "/control-plane/v1/ota/firmwares/{firmware_id}" in registered_paths
+    assert "/control-plane/v1/ota/campaigns" in registered_paths
     assert "/control-plane/v1/runtime/device-config:resolve" in registered_paths
     assert "/control-plane/v1/chat-history/report" in registered_paths
     assert "/control-plane/v1/chat-summaries/{summary_id}:generate" in registered_paths

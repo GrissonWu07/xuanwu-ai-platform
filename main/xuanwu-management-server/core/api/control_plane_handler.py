@@ -172,6 +172,116 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "alarm_not_found"}, status=404)
         return self._json_response(payload)
 
+    async def handle_list_gateways(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_gateways()})
+
+    async def handle_get_gateway(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        gateway_id = str(request.match_info["gateway_id"]).strip()
+        payload = self.store.get_gateway(gateway_id)
+        if payload is None:
+            return self._json_response({"error": "gateway_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_upsert_gateway(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        gateway_id = str(request.match_info.get("gateway_id") or "").strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_gateway(gateway_id or payload.get("gateway_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved)
+
+    async def handle_list_capabilities(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_capabilities()})
+
+    async def handle_create_capability(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_capability(payload.get("capability_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved, status=201)
+
+    async def handle_list_capability_routes(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_capability_routes()})
+
+    async def handle_create_capability_route(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_capability_route(payload.get("route_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved, status=201)
+
+    async def handle_list_firmwares(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_firmwares()})
+
+    async def handle_get_firmware(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        firmware_id = str(request.match_info["firmware_id"]).strip()
+        payload = self.store.get_firmware(firmware_id)
+        if payload is None:
+            return self._json_response({"error": "firmware_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_upsert_firmware(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        firmware_id = str(request.match_info.get("firmware_id") or "").strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_firmware(firmware_id or payload.get("firmware_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved)
+
+    async def handle_list_ota_campaigns(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_ota_campaigns()})
+
+    async def handle_create_ota_campaign(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_ota_campaign(payload.get("campaign_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved, status=201)
+
     async def handle_resolve_device_config(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)

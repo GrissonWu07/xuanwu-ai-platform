@@ -481,3 +481,116 @@ def test_control_plane_event_telemetry_and_alarm_endpoints_work_together():
         assert telemetry_response.status == 201
         assert alarms_response.status == 200
         assert yaml.safe_load(alarms_response.text)["items"][0]["alarm_id"] == "alarm-001"
+
+
+def test_store_persists_gateway_capability_route_and_ota_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        gateway = store.save_gateway(
+            "gateway-http-001",
+            {"gateway_id": "gateway-http-001", "protocol_type": "http", "name": "HTTP Gateway"},
+        )
+        capability = store.save_capability(
+            "cap-switch-on-off",
+            {"capability_id": "cap-switch-on-off", "capability_code": "switch.on_off"},
+        )
+        route = store.save_capability_route(
+            "route-switch-http-001",
+            {
+                "route_id": "route-switch-http-001",
+                "capability_code": "switch.on_off",
+                "gateway_id": "gateway-http-001",
+            },
+        )
+        firmware = store.save_firmware(
+            "fw-esp32-001",
+            {"firmware_id": "fw-esp32-001", "device_type": "conversation_terminal", "version": "1.0.0"},
+        )
+        campaign = store.save_ota_campaign(
+            "campaign-001",
+            {"campaign_id": "campaign-001", "firmware_id": "fw-esp32-001", "status": "draft"},
+        )
+
+        assert gateway["gateway_id"] == "gateway-http-001"
+        assert capability["capability_code"] == "switch.on_off"
+        assert route["gateway_id"] == "gateway-http-001"
+        assert firmware["firmware_id"] == "fw-esp32-001"
+        assert campaign["campaign_id"] == "campaign-001"
+        assert store.list_gateways()[0]["protocol_type"] == "http"
+        assert store.list_capabilities()[0]["capability_code"] == "switch.on_off"
+        assert store.list_capability_routes()[0]["route_id"] == "route-switch-http-001"
+        assert store.list_firmwares()[0]["firmware_id"] == "fw-esp32-001"
+        assert store.list_ota_campaigns()[0]["campaign_id"] == "campaign-001"
+
+
+def test_control_plane_gateway_capability_and_ota_endpoints_work_together():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        gateway_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateways",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"gateway_id": "gateway-http-001"},
+        )
+        gateway_request._read_bytes = (
+            b'{"gateway_id":"gateway-http-001","protocol_type":"http","name":"HTTP Gateway"}'
+        )
+
+        capability_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/capabilities",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        capability_request._read_bytes = (
+            b'{"capability_id":"cap-switch-on-off","capability_code":"switch.on_off"}'
+        )
+
+        route_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/capability-routes",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        route_request._read_bytes = (
+            b'{"route_id":"route-switch-http-001","capability_code":"switch.on_off","gateway_id":"gateway-http-001"}'
+        )
+
+        firmware_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/ota/firmwares",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        firmware_request._read_bytes = (
+            b'{"firmware_id":"fw-esp32-001","device_type":"conversation_terminal","version":"1.0.0"}'
+        )
+
+        campaign_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/ota/campaigns",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        campaign_request._read_bytes = (
+            b'{"campaign_id":"campaign-001","firmware_id":"fw-esp32-001","status":"draft"}'
+        )
+
+        gateway_response = asyncio.run(handler.handle_upsert_gateway(gateway_request))
+        capability_response = asyncio.run(handler.handle_create_capability(capability_request))
+        route_response = asyncio.run(handler.handle_create_capability_route(route_request))
+        firmware_response = asyncio.run(handler.handle_upsert_firmware(firmware_request))
+        campaign_response = asyncio.run(handler.handle_create_ota_campaign(campaign_request))
+
+        assert gateway_response.status == 200
+        assert capability_response.status == 201
+        assert route_response.status == 201
+        assert firmware_response.status == 200
+        assert campaign_response.status == 201
+        assert handler.store.list_gateways()[0]["gateway_id"] == "gateway-http-001"
+        assert handler.store.list_capabilities()[0]["capability_code"] == "switch.on_off"
+        assert handler.store.list_firmwares()[0]["firmware_id"] == "fw-esp32-001"

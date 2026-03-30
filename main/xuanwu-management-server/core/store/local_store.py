@@ -21,6 +21,11 @@ class LocalControlPlaneStore:
         (self.root_dir / "events").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "telemetry").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "alarms").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "gateways").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "capabilities").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "capability_routes").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "ota_firmwares").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "ota_campaigns").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
 
@@ -160,6 +165,72 @@ class LocalControlPlaneStore:
         payload["status"] = "acked"
         self._write_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml", payload)
         return payload
+
+    def get_gateway(self, gateway_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "gateways" / f"{gateway_id}.yaml")
+
+    def save_gateway(self, gateway_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        gateway_id = str(gateway_id or payload.get("gateway_id", "")).strip()
+        if not gateway_id:
+            raise ValueError("gateway_id_required")
+        record = dict(payload)
+        record.setdefault("gateway_id", gateway_id)
+        self._write_yaml(self.root_dir / "gateways" / f"{gateway_id}.yaml", record)
+        return record
+
+    def list_gateways(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "gateways")
+
+    def save_capability(self, capability_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        capability_id = str(capability_id or payload.get("capability_id", "")).strip()
+        if not capability_id:
+            raise ValueError("capability_id_required")
+        record = dict(payload)
+        record.setdefault("capability_id", capability_id)
+        self._write_yaml(self.root_dir / "capabilities" / f"{capability_id}.yaml", record)
+        return record
+
+    def list_capabilities(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "capabilities")
+
+    def save_capability_route(self, route_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        route_id = str(route_id or payload.get("route_id", "")).strip()
+        if not route_id:
+            raise ValueError("route_id_required")
+        record = dict(payload)
+        record.setdefault("route_id", route_id)
+        self._write_yaml(self.root_dir / "capability_routes" / f"{route_id}.yaml", record)
+        return record
+
+    def list_capability_routes(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "capability_routes")
+
+    def get_firmware(self, firmware_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "ota_firmwares" / f"{firmware_id}.yaml")
+
+    def save_firmware(self, firmware_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        firmware_id = str(firmware_id or payload.get("firmware_id", "")).strip()
+        if not firmware_id:
+            raise ValueError("firmware_id_required")
+        record = dict(payload)
+        record.setdefault("firmware_id", firmware_id)
+        self._write_yaml(self.root_dir / "ota_firmwares" / f"{firmware_id}.yaml", record)
+        return record
+
+    def list_firmwares(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "ota_firmwares")
+
+    def save_ota_campaign(self, campaign_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        campaign_id = str(campaign_id or payload.get("campaign_id", "")).strip()
+        if not campaign_id:
+            raise ValueError("campaign_id_required")
+        record = dict(payload)
+        record.setdefault("campaign_id", campaign_id)
+        self._write_yaml(self.root_dir / "ota_campaigns" / f"{campaign_id}.yaml", record)
+        return record
+
+    def list_ota_campaigns(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "ota_campaigns")
 
     def load_chat_history(self, session_id: str) -> list[dict[str, Any]]:
         records = self._read_yaml(
