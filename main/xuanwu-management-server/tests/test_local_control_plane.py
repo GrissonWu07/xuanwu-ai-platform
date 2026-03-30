@@ -301,6 +301,89 @@ def test_control_plane_create_user_and_channel_persists_payloads():
         assert handler.store.get_channel("channel-home")["user_id"] == "user-001"
 
 
+def test_control_plane_user_and_channel_item_crud():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.create_user({"user_id": "user-001", "name": "Alice"})
+        handler.store.create_channel(
+            {"channel_id": "channel-home", "user_id": "user-001", "name": "Home"}
+        )
+
+        get_user_response = asyncio.run(
+            handler.handle_get_user(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/users/user-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"user_id": "user-001"},
+                )
+            )
+        )
+        put_user_request = make_mocked_request(
+            "PUT",
+            "/control-plane/v1/users/user-001",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"user_id": "user-001"},
+        )
+        put_user_request._read_bytes = b'{"name":"Alice Updated","status":"inactive"}'
+        put_user_response = asyncio.run(handler.handle_put_user(put_user_request))
+
+        get_channel_response = asyncio.run(
+            handler.handle_get_channel(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/channels/channel-home",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"channel_id": "channel-home"},
+                )
+            )
+        )
+        put_channel_request = make_mocked_request(
+            "PUT",
+            "/control-plane/v1/channels/channel-home",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"channel_id": "channel-home"},
+        )
+        put_channel_request._read_bytes = b'{"name":"Living Room","status":"inactive"}'
+        put_channel_response = asyncio.run(handler.handle_put_channel(put_channel_request))
+
+        delete_channel_response = asyncio.run(
+            handler.handle_delete_channel(
+                make_mocked_request(
+                    "DELETE",
+                    "/control-plane/v1/channels/channel-home",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"channel_id": "channel-home"},
+                )
+            )
+        )
+        delete_user_response = asyncio.run(
+            handler.handle_delete_user(
+                make_mocked_request(
+                    "DELETE",
+                    "/control-plane/v1/users/user-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"user_id": "user-001"},
+                )
+            )
+        )
+
+        assert get_user_response.status == 200
+        assert put_user_response.status == 200
+        assert get_channel_response.status == 200
+        assert put_channel_response.status == 200
+        assert delete_channel_response.status == 204
+        assert delete_user_response.status == 204
+        assert handler.store.get_channel("channel-home") is None
+        assert handler.store.get_user("user-001") is None
+
+
 def test_control_plane_create_device_defaults_to_anonymous_user():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -681,6 +764,39 @@ def test_control_plane_device_lifecycle_claim_bind_suspend_and_retire():
         assert device["bind_status"] == "bound"
         assert device["suspend_reason"] == "maintenance_window"
         assert device["retire_reason"] == "hardware_replaced"
+
+
+def test_control_plane_batch_import_devices_creates_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.create_user({"user_id": "user-001", "name": "Alice"})
+
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices:batch-import",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"items":['
+            b'{"device_id":"dev-001","user_id":"user-001","device_type":"conversation_terminal"},'
+            b'{"device_id":"dev-002","device_type":"sensor"}'
+            b']}'
+        )
+
+        response = asyncio.run(handler.handle_batch_import_devices(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 201
+        assert payload["imported"] == 2
+        assert payload["items"][0]["user_id"] == "user-001"
+        assert payload["items"][1]["user_id"] == "anonymous"
+        assert handler.store.get_device("dev-002")["user_id"] == "anonymous"
 
 
 def test_control_plane_runtime_resolve_returns_binding_view():

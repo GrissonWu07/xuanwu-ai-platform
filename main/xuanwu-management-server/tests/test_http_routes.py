@@ -39,6 +39,7 @@ def test_create_app_registers_control_plane_routes():
 
     assert "/control-plane/v1/config/server" in registered_paths
     assert "/control-plane/v1/devices" in registered_paths
+    assert "/control-plane/v1/devices:batch-import" in registered_paths
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:claim" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:bind" in registered_paths
@@ -46,7 +47,9 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/devices/{device_id}:retire" in registered_paths
     assert "/control-plane/v1/agents/{agent_id}" in registered_paths
     assert "/control-plane/v1/users" in registered_paths
+    assert "/control-plane/v1/users/{user_id}" in registered_paths
     assert "/control-plane/v1/channels" in registered_paths
+    assert "/control-plane/v1/channels/{channel_id}" in registered_paths
     assert "/control-plane/v1/events" in registered_paths
     assert "/control-plane/v1/telemetry" in registered_paths
     assert "/control-plane/v1/alarms" in registered_paths

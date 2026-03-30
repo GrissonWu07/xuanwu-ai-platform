@@ -138,8 +138,23 @@ class LocalControlPlaneStore:
         self._write_yaml(self.root_dir / "users" / f"{user_id}.yaml", payload)
         return payload
 
+    def save_user(self, user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = dict(self.get_user(user_id) or {})
+        record.update(dict(payload))
+        record["user_id"] = user_id
+        record.setdefault("status", "active")
+        self._write_yaml(self.root_dir / "users" / f"{user_id}.yaml", record)
+        return record
+
     def list_users(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "users")
+
+    def delete_user(self, user_id: str) -> bool:
+        path = self.root_dir / "users" / f"{user_id}.yaml"
+        if not path.exists():
+            return False
+        path.unlink()
+        return True
 
     def ensure_anonymous_user(self) -> dict[str, Any]:
         payload = self.get_user("anonymous")
@@ -170,8 +185,29 @@ class LocalControlPlaneStore:
         self._sync_user_channel_mapping(user_id, channel_id)
         return record
 
+    def save_channel(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        existing = self.get_channel(channel_id)
+        if existing is None:
+            raise ValueError("channel_not_found")
+        user_id = self._normalize_owner_user_id(payload.get("user_id", existing.get("user_id")))
+        record = dict(existing)
+        record.update(dict(payload))
+        record["channel_id"] = channel_id
+        record["user_id"] = user_id
+        record.setdefault("status", "active")
+        self._write_yaml(self.root_dir / "channels" / f"{channel_id}.yaml", record)
+        self._sync_user_channel_mapping(user_id, channel_id)
+        return record
+
     def list_channels(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "channels")
+
+    def delete_channel(self, channel_id: str) -> bool:
+        path = self.root_dir / "channels" / f"{channel_id}.yaml"
+        if not path.exists():
+            return False
+        path.unlink()
+        return True
 
     def list_user_device_mappings(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "user_device_mappings")
@@ -281,6 +317,12 @@ class LocalControlPlaneStore:
 
     def list_device_agent_mappings(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "device_agent_mappings")
+
+    def batch_import_devices(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        imported: list[dict[str, Any]] = []
+        for payload in items:
+            imported.append(self.save_device(payload.get("device_id"), payload))
+        return imported
 
     def get_active_device_agent_mapping(self, device_id: str) -> dict[str, Any] | None:
         mappings_dir = self.root_dir / "device_agent_mappings"

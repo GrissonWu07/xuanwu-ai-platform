@@ -64,6 +64,36 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
 
+    async def handle_get_user(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        user_id = request.match_info["user_id"]
+        payload = self.store.get_user(user_id)
+        if payload is None:
+            return self._json_response({"error": "user_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_put_user(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        user_id = request.match_info["user_id"]
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        saved = self.store.save_user(user_id, payload)
+        return self._json_response(saved)
+
+    async def handle_delete_user(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        user_id = request.match_info["user_id"]
+        if not self.store.delete_user(user_id):
+            return self._json_response({"error": "user_not_found"}, status=404)
+        response = web.Response(status=204)
+        self._add_cors_headers(response)
+        return response
+
     async def handle_list_channels(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -81,6 +111,40 @@ class ControlPlaneHandler(BaseHandler):
         except ValueError as exc:
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
+
+    async def handle_get_channel(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        channel_id = request.match_info["channel_id"]
+        payload = self.store.get_channel(channel_id)
+        if payload is None:
+            return self._json_response({"error": "channel_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_put_channel(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        channel_id = request.match_info["channel_id"]
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_channel(channel_id, payload)
+        except ValueError as exc:
+            status = 404 if str(exc) == "channel_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(saved)
+
+    async def handle_delete_channel(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        channel_id = request.match_info["channel_id"]
+        if not self.store.delete_channel(channel_id):
+            return self._json_response({"error": "channel_not_found"}, status=404)
+        response = web.Response(status=204)
+        self._add_cors_headers(response)
+        return response
 
     async def handle_list_user_device_mappings(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
@@ -171,6 +235,22 @@ class ControlPlaneHandler(BaseHandler):
         except ValueError as exc:
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(created, status=201)
+
+    async def handle_batch_import_devices(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        items = payload.get("items")
+        if not isinstance(items, list):
+            return self._json_response({"error": "items_required"}, status=400)
+        try:
+            imported = self.store.batch_import_devices(items)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response({"imported": len(imported), "items": imported}, status=201)
 
     async def handle_get_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):

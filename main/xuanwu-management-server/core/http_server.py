@@ -38,6 +38,22 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.get(
+                "/control-plane/v1/users/{user_id}",
+                control_plane_handler.handle_get_user,
+            ),
+            web.put(
+                "/control-plane/v1/users/{user_id}",
+                control_plane_handler.handle_put_user,
+            ),
+            web.delete(
+                "/control-plane/v1/users/{user_id}",
+                control_plane_handler.handle_delete_user,
+            ),
+            web.options(
+                "/control-plane/v1/users/{user_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
                 "/control-plane/v1/channels",
                 control_plane_handler.handle_list_channels,
             ),
@@ -47,6 +63,22 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/channels",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/channels/{channel_id}",
+                control_plane_handler.handle_get_channel,
+            ),
+            web.put(
+                "/control-plane/v1/channels/{channel_id}",
+                control_plane_handler.handle_put_channel,
+            ),
+            web.delete(
+                "/control-plane/v1/channels/{channel_id}",
+                control_plane_handler.handle_delete_channel,
+            ),
+            web.options(
+                "/control-plane/v1/channels/{channel_id}",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -231,6 +263,14 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/devices",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/devices:batch-import",
+                control_plane_handler.handle_batch_import_devices,
+            ),
+            web.options(
+                "/control-plane/v1/devices:batch-import",
                 control_plane_handler.handle_options,
             ),
             web.get(
