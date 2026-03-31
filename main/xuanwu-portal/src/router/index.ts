@@ -1,11 +1,15 @@
 import { defineComponent, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import AgentsPage from '@/pages/AgentsPage.vue'
+import AIConfigProxyPage from '@/pages/AIConfigProxyPage.vue'
 import AlertsPage from '@/pages/AlertsPage.vue'
+import ChannelsGatewaysPage from '@/pages/ChannelsGatewaysPage.vue'
 import DevicesPage from '@/pages/DevicesPage.vue'
 import JobsPage from '@/pages/JobsPage.vue'
 import OverviewPage from '@/pages/OverviewPage.vue'
 import PhasePage from '@/pages/PhasePage.vue'
+import SettingsPage from '@/pages/SettingsPage.vue'
+import UsersRolesPage from '@/pages/UsersRolesPage.vue'
 
 const makePhaseRoute = (config: any) =>
   defineComponent({
@@ -40,11 +44,11 @@ export const routes = [
   { path: '/agents', component: AgentsPage },
   { path: '/jobs', component: JobsPage },
   { path: '/alerts', component: AlertsPage },
-  { path: '/users-roles', component: placeholder('Users & Roles') },
-  { path: '/channels-gateways', component: placeholder('Channels & Gateways') },
-  { path: '/ai-config-proxy', component: placeholder('AI Config Proxy') },
+  { path: '/users-roles', component: UsersRolesPage },
+  { path: '/channels-gateways', component: ChannelsGatewaysPage },
+  { path: '/ai-config-proxy', component: AIConfigProxyPage },
   { path: '/telemetry-alarms', component: placeholder('Telemetry & Alarms') },
-  { path: '/settings', component: placeholder('Settings') },
+  { path: '/settings', component: SettingsPage },
   { path: '/sign-out', component: placeholder('Sign out') },
 ]
 

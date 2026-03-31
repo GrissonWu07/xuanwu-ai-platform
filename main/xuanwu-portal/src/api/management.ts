@@ -111,6 +111,56 @@ export interface XuanwuListResponse<T> {
   items: T[]
 }
 
+export interface AuthMeResponse {
+  user_id: string
+  display_name: string
+  avatar_url?: string
+  email?: string
+  role_ids: string[]
+  permissions: string[]
+}
+
+export interface RoleItem {
+  role_id: string
+  label: string
+  description?: string
+  permissions?: string[]
+  permission_count?: number
+}
+
+export interface UserItem {
+  user_id: string
+  display_name?: string
+  email?: string
+  status?: string
+  role_ids?: string[]
+}
+
+export interface ChannelItem {
+  channel_id: string
+  display_name?: string
+  owner_user_id?: string
+  status?: string
+  device_count?: number
+}
+
+export interface GatewayItem {
+  gateway_id: string
+  display_name?: string
+  adapter_type?: string
+  status?: string
+  site_id?: string
+}
+
+export interface PortalConfigResponse {
+  brand?: {
+    product_name?: string
+    support_email?: string
+  }
+  features?: Record<string, boolean>
+  endpoints?: Record<string, string>
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
@@ -131,6 +181,30 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getDashboardOverview() {
   return requestJson<DashboardOverview>('/control-plane/v1/dashboard/overview')
+}
+
+export function getAuthMe() {
+  return requestJson<AuthMeResponse>('/control-plane/v1/auth/me')
+}
+
+export function listRoles() {
+  return requestJson<{ items: RoleItem[] }>('/control-plane/v1/roles')
+}
+
+export function listUsers() {
+  return requestJson<{ items: UserItem[] }>('/control-plane/v1/users')
+}
+
+export function listChannels() {
+  return requestJson<{ items: ChannelItem[] }>('/control-plane/v1/channels')
+}
+
+export function listGateways() {
+  return requestJson<{ items: GatewayItem[] }>('/control-plane/v1/gateways')
+}
+
+export function getPortalConfig() {
+  return requestJson<PortalConfigResponse>('/control-plane/v1/portal/config')
 }
 
 export function getDevices() {

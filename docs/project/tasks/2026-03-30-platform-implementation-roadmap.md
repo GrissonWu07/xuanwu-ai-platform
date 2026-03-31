@@ -11,7 +11,8 @@
 3. [x] Phase 3: `xuanwu-gateway` foundation and adapter skeletons
 4. [x] Phase 4: `xuanwu-device-server` boundary cleanup
 5. [x] Phase 5: `xuanwu-jobs` foundation and direct local dispatch
-6. [ ] Phase 6: upstream `XuanWu` integration and contract validation
+6. [x] Phase 6: `xuanwu-portal` Phase 1 and Phase 2 shell delivery
+7. [ ] Phase 7: upstream `XuanWu` integration and contract validation
 
 ## Completed Locally
 
@@ -69,7 +70,20 @@
     - `xuanwu-device-server`
   - Docker Compose service for `xuanwu-jobs`
 
-### Phase 6: upstream `XuanWu` integration
+### Phase 6: `xuanwu-portal` shell delivery
+- Implemented:
+  - new Vue 3 portal in `main/xuanwu-portal`
+  - unified shell with `Overview / Devices / Agents / Jobs / Alerts`
+  - Phase 1 primary work pages
+  - Phase 2 profile-menu destinations:
+    - `Users & Roles`
+    - `Channels & Gateways`
+    - `AI Config Proxy`
+    - `Settings`
+  - portal-facing management read models
+- Verified with portal unit tests and `vite` production build.
+
+### Phase 7: upstream `XuanWu` integration
 - Required from upstream:
   - stable `XuanWu` management APIs by contract
   - stable northbound command contract from `XuanWu` to `xuanwu-gateway`
@@ -85,6 +99,17 @@
   - local platform work stays green
 - actual:
   - local verification command updated to the single-service `xuanwu-jobs` stack
+
+- command:
+  - `npm test`
+  - `npm run build`
+  - cwd: `main/xuanwu-portal`
+- expected:
+  - portal shell and current profile-menu destinations stay green
+  - production bundle builds successfully
+- actual:
+  - portal unit tests green
+  - `vite` production build green
 
 - command:
   - `python -m coverage run --source=main/xuanwu-management-server,main/xuanwu-gateway,main/xuanwu-device-server,main/xuanwu-jobs -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
@@ -108,4 +133,5 @@
 
 ## Handoff Notes
 - Local implementation work is effectively complete for the current spec set, including the lightweight single-service `xuanwu-jobs` path.
-- The only remaining major phase depends on upstream `XuanWu` contract delivery.
+- The only remaining major implementation phase depends on upstream `XuanWu` contract delivery.
+- Portal work can continue locally for deeper pages, but the current shell and management-backed destinations are complete.

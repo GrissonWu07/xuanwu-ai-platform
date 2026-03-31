@@ -11,6 +11,31 @@
 
 ## Completed
 - Platform blueprint and active spec index are in place under `docs/superpowers/specs/`.
+- `xuanwu-portal` now exists as the unified Vue 3 frontend entrypoint in `main/xuanwu-portal`.
+- `xuanwu-portal` Phase 1 is complete with:
+  - shared shell
+  - `Overview`
+  - `Devices`
+  - `Agents`
+  - `Jobs`
+  - `Alerts`
+- `xuanwu-portal` Phase 2 is complete with profile-menu destinations for:
+  - `Users & Roles`
+  - `Channels & Gateways`
+  - `AI Config Proxy`
+  - `Settings`
+- `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
+  - `/control-plane/v1/auth/me`
+  - `/control-plane/v1/roles`
+  - `/control-plane/v1/dashboard/overview`
+  - `/control-plane/v1/portal/config`
+  - `/control-plane/v1/jobs/overview`
+  - `/control-plane/v1/alerts/overview`
+  - `/control-plane/v1/gateway/overview`
+  - `/control-plane/v1/devices/{device_id}/detail`
+  - `/control-plane/v1/alarms/{alarm_id}`
+  - `/control-plane/v1/jobs/schedules/{schedule_id}`
+  - `/control-plane/v1/jobs/runs/{job_run_id}`
 - `xuanwu-management-server` now provides:
   - server config APIs
   - auth login/logout
@@ -67,7 +92,10 @@
 
 ## In Progress
 - Remaining upstream work is now concentrated in contract integration with `XuanWu`.
-- Local platform work can move next into richer scheduling semantics without changing the service boundaries.
+- Local platform work can move next into:
+  - richer portal destinations such as `Telemetry & Alarms`
+  - unified portal packaging and deployment
+  - richer scheduling semantics without changing the service boundaries
 
 ## Risks / Decisions
 - Decision: all Agent-domain truth remains in `XuanWu`.
