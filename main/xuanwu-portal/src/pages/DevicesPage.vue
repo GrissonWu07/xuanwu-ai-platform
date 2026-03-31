@@ -5,13 +5,27 @@ import { useRoute, useRouter } from 'vue-router'
 import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { getDeviceDetail, getDevices, type DeviceDetailResponse, type DevicesCollectionResponse } from '@/api/management'
+import {
+  bindDevice,
+  claimDevice,
+  getAuthMe,
+  getDeviceDetail,
+  getDevices,
+  retireDevice,
+  suspendDevice,
+  type AuthMeResponse,
+  type DeviceDetailResponse,
+  type DevicesCollectionResponse,
+} from '@/api/management'
 
 const devices = ref<DevicesCollectionResponse['items']>([])
 const selectedDeviceId = ref('')
 const detail = ref<DeviceDetailResponse | null>(null)
 const search = ref('')
 const loadError = ref('')
+const actionError = ref('')
+const actionBusy = ref(false)
+const me = ref<AuthMeResponse | null>(null)
 const route = useRoute()
 const router = useRouter()
 
@@ -71,8 +85,9 @@ async function loadDevices() {
   loadError.value = ''
 
   try {
-    const response = await getDevices()
+    const [response, mePayload] = await Promise.all([getDevices(), getAuthMe().catch(() => null)])
     devices.value = response.items
+    me.value = mePayload
 
     const requestedDeviceId = typeof route.query.deviceId === 'string' ? route.query.deviceId : ''
     const nextDeviceId =
@@ -88,6 +103,45 @@ async function loadDevices() {
 
 function handleRowSelect(row: Record<string, string>) {
   void selectDevice(row.id)
+}
+
+async function refreshSelectedDevice() {
+  if (!selectedDeviceId.value) {
+    return
+  }
+
+  const response = await getDevices()
+  devices.value = response.items
+  await loadDeviceDetail(selectedDeviceId.value)
+}
+
+async function runLifecycleAction(action: 'claim' | 'bind' | 'suspend' | 'retire') {
+  if (!detail.value?.device.device_id || actionBusy.value) {
+    return
+  }
+
+  actionBusy.value = true
+  actionError.value = ''
+
+  try {
+    const deviceId = detail.value.device.device_id
+    if (action === 'claim') {
+      const userId = me.value?.user_id || 'anonymous'
+      await claimDevice(deviceId, userId)
+    } else if (action === 'bind') {
+      await bindDevice(deviceId)
+    } else if (action === 'suspend') {
+      await suspendDevice(deviceId, 'portal_suspend')
+    } else {
+      await retireDevice(deviceId, 'portal_retire')
+    }
+
+    await refreshSelectedDevice()
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Lifecycle action failed'
+  } finally {
+    actionBusy.value = false
+  }
 }
 
 watch(
@@ -159,6 +213,18 @@ onMounted(() => {
 
         <div class="detail-grid">
           <div class="detail-card">
+            <span>Lifecycle</span>
+            <strong>{{ detail.device.lifecycle_status }}</strong>
+          </div>
+          <div class="detail-card">
+            <span>Binding</span>
+            <strong>{{ detail.device.bind_status }}</strong>
+          </div>
+          <div class="detail-card">
+            <span>Owner</span>
+            <strong>{{ detail.device.owner_user_id }}</strong>
+          </div>
+          <div class="detail-card">
             <span>Agent</span>
             <strong>{{ detail.binding?.agent_id || 'Unassigned' }}</strong>
           </div>
@@ -175,6 +241,28 @@ onMounted(() => {
             <strong>{{ detail.runtime?.capability_route_count ?? 0 }}</strong>
           </div>
         </div>
+
+        <section class="detail-section">
+          <div class="detail-section__head">
+            <h3>Lifecycle actions</h3>
+            <span v-if="me">Acting as {{ me.display_name || me.user_id }}</span>
+          </div>
+          <div class="action-row">
+            <button type="button" class="action-button" :disabled="actionBusy" @click="runLifecycleAction('claim')">
+              Claim to me
+            </button>
+            <button type="button" class="action-button" :disabled="actionBusy" @click="runLifecycleAction('bind')">
+              Bind device
+            </button>
+            <button type="button" class="action-button" :disabled="actionBusy" @click="runLifecycleAction('suspend')">
+              Suspend device
+            </button>
+            <button type="button" class="action-button action-button--danger" :disabled="actionBusy" @click="runLifecycleAction('retire')">
+              Retire device
+            </button>
+          </div>
+          <p v-if="actionError" class="detail-error">{{ actionError }}</p>
+        </section>
 
         <section class="detail-section">
           <h3>Recent telemetry</h3>
@@ -305,9 +393,52 @@ onMounted(() => {
   gap: 0.8rem;
 }
 
+.detail-section__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.detail-section__head span {
+  color: var(--soft);
+  font-size: 0.9rem;
+}
+
 .detail-section h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.action-button {
+  min-height: 2.6rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 109, 145, 0.14);
+  background: rgba(255, 255, 255, 0.84);
+  font-weight: 700;
+  box-shadow: var(--shadow-soft);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+}
+
+.action-button--danger {
+  background: rgba(255, 108, 122, 0.12);
+  color: #a23049;
+}
+
+.detail-error {
+  margin: 0;
+  color: #a23049;
+  font-size: 0.92rem;
 }
 
 .metric-line {

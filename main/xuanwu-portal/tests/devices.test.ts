@@ -222,4 +222,170 @@ describe('DevicesPage', () => {
     const detailPanel = await screen.findByTestId('device-detail-panel')
     expect(await within(detailPanel).findByText('agent_line_supervisor')).toBeVisible()
   })
+
+  it('executes lifecycle actions against management APIs and refreshes device detail', async () => {
+    const panelDetail = structuredClone(secondDetail)
+    const panelDevice = structuredClone(devicesPayload.items[1])
+
+    const fetchMock = vi.fn((input: string, init?: RequestInit) => {
+      if (input === '/control-plane/v1/auth/me') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            user_id: 'user_gangwu',
+            display_name: 'Gang Wu',
+            role_ids: ['platform_owner'],
+            permissions: ['devices.read', 'devices.write'],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/dashboard/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            hero: {
+              title: 'Overview',
+              subtitle: 'Dashboard',
+              primaryAction: 'Inspect devices',
+              secondaryAction: 'Review alerts',
+            },
+            statusPills: [],
+            quickStats: [
+              { id: 'devices', label: 'Devices online', value: '2', delta: '+0' },
+              { id: 'jobs', label: 'Jobs healthy', value: '2/2', delta: 'steady' },
+              { id: 'proxy', label: 'Proxy sync', value: 'Live', delta: 'stable' },
+            ],
+            todaySummary: [],
+            liveActivity: [],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            items: [devicesPayload.items[0], panelDevice],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            ...panelDetail,
+            device: panelDevice,
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07:claim' && init?.method === 'POST') {
+        const payload = JSON.parse(String(init.body))
+        panelDevice.owner_user_id = payload.user_id
+        panelDevice.lifecycle_status = 'claimed'
+        panelDetail.device.owner_user_id = payload.user_id
+        panelDetail.device.lifecycle_status = 'claimed'
+        return Promise.resolve({
+          ok: true,
+          json: async () => panelDetail.device,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07:bind' && init?.method === 'POST') {
+        panelDevice.bind_status = 'bound'
+        panelDevice.lifecycle_status = 'bound'
+        panelDetail.device.bind_status = 'bound'
+        panelDetail.device.lifecycle_status = 'bound'
+        return Promise.resolve({
+          ok: true,
+          json: async () => panelDetail.device,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07:suspend' && init?.method === 'POST') {
+        panelDevice.lifecycle_status = 'suspended'
+        panelDetail.device.lifecycle_status = 'suspended'
+        return Promise.resolve({
+          ok: true,
+          json: async () => panelDetail.device,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07:retire' && init?.method === 'POST') {
+        panelDevice.lifecycle_status = 'retired'
+        panelDetail.device.lifecycle_status = 'retired'
+        return Promise.resolve({
+          ok: true,
+          json: async () => panelDetail.device,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/edge-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => firstDetail,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/devices?deviceId=panel-07', fetchMock)
+
+    expect(within(await screen.findByTestId('device-detail-panel')).getByText('user_factory_ops')).toBeVisible()
+
+    const getActionButton = async (name: string) => {
+      const panel = await screen.findByTestId('device-detail-panel')
+      return within(panel).getByRole('button', { name })
+    }
+
+    const expectDetailCardValue = async (label: string, value: string) => {
+      const panel = await screen.findByTestId('device-detail-panel')
+      const cardLabel = within(panel).getByText(label)
+      const card = cardLabel.closest('.detail-card')
+      expect(card).not.toBeNull()
+      expect(within(card as HTMLElement).getByText(value)).toBeVisible()
+    }
+
+    await fireEvent.click(await getActionButton('Claim to me'))
+    expect(await within(await screen.findByTestId('device-detail-panel')).findByText('user_gangwu')).toBeVisible()
+    await waitFor(async () => {
+      expect(await getActionButton('Bind device')).not.toBeDisabled()
+    })
+
+    await fireEvent.click(await getActionButton('Bind device'))
+    await expectDetailCardValue('Binding', 'bound')
+    await expectDetailCardValue('Lifecycle', 'bound')
+    await waitFor(async () => {
+      expect(await getActionButton('Suspend device')).not.toBeDisabled()
+    })
+
+    await fireEvent.click(await getActionButton('Suspend device'))
+    await expectDetailCardValue('Lifecycle', 'suspended')
+    await waitFor(async () => {
+      expect(await getActionButton('Retire device')).not.toBeDisabled()
+    })
+
+    await fireEvent.click(await getActionButton('Retire device'))
+    await expectDetailCardValue('Lifecycle', 'retired')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/devices/panel-07:claim',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/devices/panel-07:bind',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/devices/panel-07:suspend',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/devices/panel-07:retire',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
 })

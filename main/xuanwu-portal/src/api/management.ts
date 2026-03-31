@@ -313,6 +313,54 @@ export function getDeviceDetail(deviceId: string) {
   return requestJson<DeviceDetailResponse>(`/control-plane/v1/devices/${deviceId}/detail`)
 }
 
+export function claimDevice(deviceId: string, userId: string) {
+  return requestJson(`/control-plane/v1/devices/${deviceId}:claim`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: userId,
+    }),
+  })
+}
+
+export function bindDevice(deviceId: string, bindCode?: string) {
+  return requestJson(`/control-plane/v1/devices/${deviceId}:bind`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      bind_code: bindCode,
+    }),
+  })
+}
+
+export function suspendDevice(deviceId: string, reason: string) {
+  return requestJson(`/control-plane/v1/devices/${deviceId}:suspend`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reason,
+    }),
+  })
+}
+
+export function retireDevice(deviceId: string, reason: string) {
+  return requestJson(`/control-plane/v1/devices/${deviceId}:retire`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reason,
+    }),
+  })
+}
+
 export function getJobsOverview() {
   return requestJson<JobsOverviewResponse>('/control-plane/v1/jobs/overview')
 }
