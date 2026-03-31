@@ -21,6 +21,8 @@ services:
     volumes:
       - ./data:/opt/xuanwu-device-server/data
       - ./models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-server/models/SenseVoiceSmall/model.pt
+    depends_on:
+      - xuanwu-management-server
 
   xuanwu-management-server:
     image: python:3.11-slim
@@ -42,6 +44,60 @@ services:
       - XUANWU_CONTROL_PLANE_SECRET=xuanwu-management-to-xuanwu
     volumes:
       - ../xuanwu-management-server:/opt/xuanwu-management-server
+
+  redis:
+    image: redis:7-alpine
+    container_name: xuanwu-jobs-redis
+    restart: always
+    networks:
+      - default
+    ports:
+      - "6379:6379"
+
+  xuanwu-jobs-scheduler:
+    image: python:3.11-slim
+    container_name: xuanwu-jobs-scheduler
+    restart: always
+    networks:
+      - default
+    ports:
+      - "18083:18083"
+    working_dir: /opt/xuanwu-jobs
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx arq redis && python -m core.scheduler"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_JOBS_HOST=0.0.0.0
+      - XUANWU_JOBS_PORT=18083
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_JOBS_REDIS_URL=redis://redis:6379/0
+      - XUANWU_JOBS_BATCH_SIZE=100
+      - XUANWU_JOBS_POLL_INTERVAL_SECONDS=2
+    volumes:
+      - ../xuanwu-jobs:/opt/xuanwu-jobs
+    depends_on:
+      - redis
+      - xuanwu-management-server
+
+  xuanwu-jobs-platform-worker:
+    image: python:3.11-slim
+    restart: always
+    networks:
+      - default
+    working_dir: /opt/xuanwu-jobs
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx arq redis && arq core.platform_worker.WorkerSettings"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_JOBS_REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../xuanwu-jobs:/opt/xuanwu-jobs
+    depends_on:
+      - redis
+      - xuanwu-management-server
 
 networks:
   default:

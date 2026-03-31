@@ -13,7 +13,7 @@ download_if_missing() {
     filepath=$1
     url=$2
     if [ -f "$filepath" ]; then
-        echo "$filepath 已存在，跳过下载"
+        echo "$filepath already exists, skipping download"
         return
     fi
     curl -fL --progress-bar "$url" -o "$filepath"
@@ -23,7 +23,7 @@ ensure_docker() {
     if command -v docker >/dev/null 2>&1; then
         return
     fi
-    echo "未检测到 Docker，请先安装 Docker 后重新执行本脚本。"
+    echo "Docker was not detected. Please install Docker first."
     exit 1
 }
 
@@ -31,12 +31,12 @@ ensure_curl() {
     if command -v curl >/dev/null 2>&1; then
         return
     fi
-    echo "未检测到 curl，请先安装 curl 后重新执行本脚本。"
+    echo "curl was not detected. Please install curl first."
     exit 1
 }
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "请使用 root 权限运行本脚本。"
+    echo "Please run this script with root privileges."
     exit 1
 fi
 
@@ -63,12 +63,16 @@ LOCAL_IP=$(hostname -I | awk '{print $1}')
 
 cat <<EOF
 
-玄武AI Python 管理路径已启动：
+XuanWu AI Python stack is up:
 
-- 管理宿主 xuanwu-management-server: http://$LOCAL_IP:18082
-- OTA 地址: http://$LOCAL_IP:8003/xuanwu/ota/
-- 视觉分析接口: http://$LOCAL_IP:8003/mcp/vision/explain
-- WebSocket 地址: ws://$LOCAL_IP:8000/xuanwu/v1/
+- management host xuanwu-management-server: http://$LOCAL_IP:18082
+- jobs scheduler xuanwu-jobs-scheduler: http://$LOCAL_IP:18083/jobs/v1/health
+- Redis queue: redis://$LOCAL_IP:6379/0
+- OTA endpoint: http://$LOCAL_IP:8003/xuanwu/ota/
+- vision endpoint: http://$LOCAL_IP:8003/mcp/vision/explain
+- WebSocket endpoint: ws://$LOCAL_IP:8000/xuanwu/v1/
 
-请确认外部 XuanWu 服务可通过 docker-compose 中的 XUANWU_BASE_URL 访问。
+Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL.
+To increase platform job throughput, scale worker replicas with:
+  docker compose -f "$COMPOSE_PATH" up -d --scale xuanwu-jobs-platform-worker=3
 EOF
