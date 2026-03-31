@@ -73,6 +73,8 @@
 ### Phase 6: `xuanwu-portal` shell delivery
 - Implemented:
   - new Vue 3 portal in `main/xuanwu-portal`
+  - dedicated Docker image and compose service for `xuanwu-portal`
+  - Nginx reverse-proxy entrypoint for management, gateway, runtime, and jobs APIs
   - unified shell with `Overview / Devices / Agents / Jobs / Alerts`
   - Phase 1 primary work pages
   - Phase 2 profile-menu destinations:

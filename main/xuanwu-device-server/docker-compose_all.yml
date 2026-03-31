@@ -2,6 +2,22 @@
 
 version: "3"
 services:
+  xuanwu-portal:
+    build:
+      context: ../..
+      dockerfile: main/xuanwu-portal/Dockerfile
+    container_name: xuanwu-portal
+    restart: always
+    networks:
+      - default
+    ports:
+      - "18081:80"
+    depends_on:
+      - xuanwu-management-server
+      - xuanwu-gateway
+      - xuanwu-jobs
+      - xuanwu-device-server
+
   xuanwu-device-server:
     image: ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
     container_name: xuanwu-device-server

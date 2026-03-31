@@ -178,8 +178,10 @@ export interface TelemetryItem {
   reported_at?: string
 }
 
+const API_BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       Accept: 'application/json',
       ...(init?.headers ?? {}),

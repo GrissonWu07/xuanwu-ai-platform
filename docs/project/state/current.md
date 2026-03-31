@@ -26,6 +26,11 @@
   - `Settings`
   - `Sign out`
 - `xuanwu-portal` has also completed `Telemetry & Alarms` as a live profile-menu workspace backed by existing management read APIs.
+- `xuanwu-portal` now has a dedicated Docker delivery path and Nginx reverse-proxy entrypoint for:
+  - `/control-plane`
+  - `/gateway`
+  - `/runtime`
+  - `/jobs`
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`
@@ -95,8 +100,7 @@
 ## In Progress
 - Remaining upstream work is now concentrated in contract integration with `XuanWu`.
 - Local platform work can move next into:
-  - richer portal destinations such as `Telemetry & Alarms`
-  - unified portal packaging and deployment
+  - deeper portal destinations beyond the current shell
   - richer scheduling semantics without changing the service boundaries
 
 ## Risks / Decisions

@@ -65,6 +65,7 @@ cat <<EOF
 
 XuanWu AI Python stack is up:
 
+- unified portal xuanwu-portal: http://$LOCAL_IP:18081
 - management host xuanwu-management-server: http://$LOCAL_IP:18082
 - gateway host xuanwu-gateway: http://$LOCAL_IP:18084/gateway/v1/health
 - jobs scheduler-dispatcher xuanwu-jobs: http://$LOCAL_IP:18083/jobs/v1/health
