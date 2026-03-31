@@ -80,14 +80,15 @@ services:
       - redis
       - xuanwu-management-server
 
-  xuanwu-jobs-platform-worker:
+  xuanwu-management-worker:
     image: python:3.11-slim
+    container_name: xuanwu-management-worker
     restart: always
     networks:
       - default
     working_dir: /opt/xuanwu-jobs
     command: >
-      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx arq redis && arq core.platform_worker.WorkerSettings"
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx arq redis && arq core.management_worker.WorkerSettings"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
@@ -95,6 +96,46 @@ services:
       - XUANWU_JOBS_REDIS_URL=redis://redis:6379/0
     volumes:
       - ../xuanwu-jobs:/opt/xuanwu-jobs
+    depends_on:
+      - redis
+      - xuanwu-management-server
+
+  xuanwu-gateway-worker:
+    image: python:3.11-slim
+    container_name: xuanwu-gateway-worker
+    restart: always
+    networks:
+      - default
+    working_dir: /opt/xuanwu-gateway
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp httpx arq redis && arq core.worker.GatewayWorkerSettings"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_JOBS_REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../xuanwu-gateway:/opt/xuanwu-gateway
+    depends_on:
+      - redis
+      - xuanwu-management-server
+
+  xuanwu-device-worker:
+    image: python:3.11-slim
+    container_name: xuanwu-device-worker
+    restart: always
+    networks:
+      - default
+    working_dir: /opt/xuanwu-device-server
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx arq redis && arq core.worker.DeviceWorkerSettings"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_JOBS_REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../xuanwu-device-server:/opt/xuanwu-device-server
     depends_on:
       - redis
       - xuanwu-management-server

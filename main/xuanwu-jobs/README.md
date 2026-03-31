@@ -18,12 +18,14 @@ Default Docker wiring runs:
 
 - `redis`
 - `xuanwu-jobs-scheduler`
-- `xuanwu-jobs-platform-worker`
+- `xuanwu-management-worker`
+- `xuanwu-gateway-worker`
+- `xuanwu-device-worker`
 
-Increase platform throughput by scaling worker replicas:
+Increase management-job throughput by scaling worker replicas:
 
 ```bash
-docker compose up -d --scale xuanwu-jobs-platform-worker=3
+docker compose up -d --scale xuanwu-management-worker=3
 ```
 
-This keeps one scheduler instance while allowing multiple `xuanwu-jobs-platform-worker` replicas to consume more platform jobs from Redis.
+This keeps one scheduler instance while allowing multiple `xuanwu-management-worker` replicas to consume more management jobs from Redis.

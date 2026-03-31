@@ -43,6 +43,7 @@
   - `/gateway/v1/health`
   - `/gateway/v1/config`
   - `/gateway/v1/devices/{device_id}/state`
+  - `xuanwu-gateway-worker` foundation for southbound job execution
 - `xuanwu-device-server` boundary work is complete for the local phase:
   - `XuanWu` runtime naming is aligned
   - runtime context exposes `xuanwu_session_key`
@@ -50,6 +51,12 @@
   - local Python management path is the default path
   - non-upstream local test suite is now the active verification baseline
   - upstream-only `XuanWu` integration tests were removed from the local completion gate
+  - `xuanwu-device-worker` foundation now supports runtime config refresh and session-unregister jobs
+- `xuanwu-jobs` now provides:
+  - `xuanwu-jobs-scheduler`
+  - `xuanwu-management-worker`
+  - queue routing for `management`, `gateway`, and `device` job executors
+  - Docker-first scale-out path for management, gateway, and device workers
   - current local-only coverage baseline is:
     - `config_loader.py`: 88%
     - `control_plane_handler.py`: 62%
@@ -69,6 +76,11 @@
 - Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-gateway`.
 - Decision: schedule truth stays in `xuanwu-management-server`.
 - Decision: `xuanwu-jobs` owns due-schedule triggering and local platform worker execution.
+- Decision: local worker topology is now:
+  - `xuanwu-management-worker` in `xuanwu-jobs`
+  - `xuanwu-gateway-worker` in `xuanwu-gateway`
+  - `xuanwu-device-worker` in `xuanwu-device-server`
+  - Agent workers remain upstream in `XuanWu`
 - Decision: this phase is Docker-first and Redis-backed; Kubernetes is deferred.
 - Risk: `xuanwu-device-server` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-gateway` contract is live.
 - Risk: industrial adapters are still framework skeletons and dry-run surfaces, not full protocol implementations.

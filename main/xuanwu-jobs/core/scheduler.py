@@ -36,12 +36,19 @@ class JobScheduler:
                 scheduled_for=schedule.get("next_run_at", now_iso),
             )
             queue_name = get_queue_name(self.config, claimed["executor_type"])
-            function_name = (
-                "run_platform_job"
-                if claimed["executor_type"] == "platform"
-                else "run_external_job"
-            )
+            function_name = self._resolve_function_name(claimed["executor_type"])
             await enqueue_message(self.redis_queue, function_name, queue_name, claimed)
+
+    @staticmethod
+    def _resolve_function_name(executor_type: str) -> str:
+        normalized = str(executor_type or "").strip().lower()
+        if normalized in {"platform", "management"}:
+            return "run_management_job"
+        if normalized == "gateway":
+            return "run_gateway_job"
+        if normalized == "device":
+            return "run_device_job"
+        return "run_external_job"
 
 
 async def run_scheduler_forever():

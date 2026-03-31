@@ -11,7 +11,9 @@ def test_docker_compose_includes_xuanwu_jobs_and_redis():
 
     assert "redis:" in compose_text
     assert "xuanwu-jobs-scheduler:" in compose_text
-    assert "xuanwu-jobs-platform-worker:" in compose_text
+    assert "xuanwu-management-worker:" in compose_text
+    assert "xuanwu-gateway-worker:" in compose_text
+    assert "xuanwu-device-worker:" in compose_text
     assert "XUANWU_JOBS_REDIS_URL=redis://redis:6379/0" in compose_text
     assert "XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082" in compose_text
 
@@ -30,7 +32,9 @@ def test_jobs_docs_explain_worker_scaling_in_docker():
     )
     main_readme_text = (ROOT / "main" / "README_en.md").read_text(encoding="utf-8")
 
-    assert "xuanwu-jobs-platform-worker" in jobs_readme_text
-    assert "docker compose up -d --scale xuanwu-jobs-platform-worker=3" in jobs_readme_text
+    assert "xuanwu-management-worker" in jobs_readme_text
+    assert "xuanwu-gateway-worker" in jobs_readme_text
+    assert "xuanwu-device-worker" in jobs_readme_text
+    assert "docker compose up -d --scale xuanwu-management-worker=3" in jobs_readme_text
     assert "xuanwu-jobs" in main_readme_text
     assert "worker replicas" in main_readme_text

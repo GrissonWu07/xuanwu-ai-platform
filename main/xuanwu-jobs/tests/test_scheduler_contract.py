@@ -83,7 +83,7 @@ def test_scheduler_claims_due_schedule_and_enqueues_platform_job():
     ]
     assert scheduler.redis_queue.calls == [
         (
-            "run_platform_job",
+            "run_management_job",
             "platform",
             {
                 "job_run_id": "run-sched-telemetry-001-20260331T100000Z",

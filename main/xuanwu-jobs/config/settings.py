@@ -27,9 +27,11 @@ def load_runtime_config() -> dict:
             "schedule_batch_size": batch_size,
             "poll_interval_seconds": poll_interval,
             "queue_names": {
-                "platform": "platform",
+                "platform": "management",
+                "management": "management",
                 "agent": "agent",
                 "gateway": "gateway",
+                "device": "device",
             },
         },
     }

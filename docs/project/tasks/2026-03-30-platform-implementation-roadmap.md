@@ -63,7 +63,11 @@
   - `main/xuanwu-jobs`
   - local due-schedule and job-run APIs in `xuanwu-management-server`
   - Redis-backed scheduler and platform worker
-  - Docker Compose services for `redis`, `xuanwu-jobs-scheduler`, and `xuanwu-jobs-platform-worker`
+  - local worker classes for:
+    - `xuanwu-management-worker`
+    - `xuanwu-gateway-worker`
+    - `xuanwu-device-worker`
+  - Docker Compose services for `redis`, `xuanwu-jobs-scheduler`, `xuanwu-management-worker`, `xuanwu-gateway-worker`, and `xuanwu-device-worker`
   - worker-scale increase by replica count in Docker workflows
 
 ### Phase 6: upstream `XuanWu` integration
@@ -81,7 +85,7 @@
 - expected:
   - local platform work stays green
 - actual:
-  - `74 passed`
+  - `81 passed`
 
 - command:
   - `python -m coverage run --source=main/xuanwu-management-server,main/xuanwu-gateway,main/xuanwu-device-server,main/xuanwu-jobs -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_platform_worker.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`

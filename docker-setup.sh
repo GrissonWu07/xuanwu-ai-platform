@@ -74,5 +74,5 @@ XuanWu AI Python stack is up:
 
 Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL.
 To increase platform job throughput, scale worker replicas with:
-  docker compose -f "$COMPOSE_PATH" up -d --scale xuanwu-jobs-platform-worker=3
+  docker compose -f "$COMPOSE_PATH" up -d --scale xuanwu-management-worker=3
 EOF
