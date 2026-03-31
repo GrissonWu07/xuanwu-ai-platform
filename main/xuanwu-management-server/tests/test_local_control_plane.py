@@ -1379,6 +1379,123 @@ def test_control_plane_gateway_capability_and_ota_endpoints_work_together():
         assert handler.store.list_firmwares()[0]["firmware_id"] == "fw-esp32-001"
 
 
+def test_store_lists_due_schedules_and_records_job_run_lifecycle():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        store.save_schedule(
+            "sched-telemetry-001",
+            {
+                "schedule_id": "sched-telemetry-001",
+                "enabled": True,
+                "job_type": "telemetry_rollup",
+                "executor_type": "platform",
+                "interval_seconds": 300,
+                "next_run_at": "2026-03-31T10:00:00Z",
+                "payload": {"site_id": "site-a"},
+            },
+        )
+        store.save_schedule(
+            "sched-agent-001",
+            {
+                "schedule_id": "sched-agent-001",
+                "enabled": False,
+                "job_type": "agent_run",
+                "executor_type": "agent",
+                "next_run_at": "2026-03-31T10:00:00Z",
+                "payload": {"agent_id": "agent-001"},
+            },
+        )
+
+        due_items = store.list_due_schedules("2026-03-31T10:00:00Z", limit=10)
+        claimed = store.claim_schedule("sched-telemetry-001", "2026-03-31T10:00:00Z")
+        completed = store.complete_job_run(
+            claimed["job_run_id"],
+            {
+                "status": "completed",
+                "result": {"site_id": "site-a", "status": "completed"},
+            },
+        )
+
+        assert [item["schedule_id"] for item in due_items] == ["sched-telemetry-001"]
+        assert claimed["job_type"] == "telemetry_rollup"
+        assert claimed["executor_type"] == "platform"
+        assert claimed["payload"]["site_id"] == "site-a"
+        assert store.get_schedule("sched-telemetry-001")["next_run_at"] == "2026-03-31T10:05:00Z"
+        assert completed["status"] == "completed"
+        assert store.get_job_run(claimed["job_run_id"])["status"] == "completed"
+
+
+def test_control_plane_job_schedule_and_run_endpoints_work_together():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        create_schedule_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        create_schedule_request._read_bytes = (
+            b'{"schedule_id":"sched-telemetry-001","enabled":true,"job_type":"telemetry_rollup",'
+            b'"executor_type":"platform","interval_seconds":300,'
+            b'"next_run_at":"2026-03-31T10:00:00Z","payload":{"site_id":"site-a"}}'
+        )
+
+        create_schedule_response = asyncio.run(
+            handler.handle_create_job_schedule(create_schedule_request)
+        )
+        due_response = asyncio.run(
+            handler.handle_list_due_job_schedules(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/schedules:due?now=2026-03-31T10:00:00Z&limit=20",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        claim_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules/sched-telemetry-001:claim",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"schedule_id": "sched-telemetry-001"},
+        )
+        claim_request._read_bytes = b'{"scheduled_for":"2026-03-31T10:00:00Z"}'
+        claim_response = asyncio.run(handler.handle_claim_job_schedule(claim_request))
+
+        job_run_id = yaml.safe_load(claim_response.text)["job_run_id"]
+        complete_request = make_mocked_request(
+            "POST",
+            f"/control-plane/v1/jobs/runs/{job_run_id}:complete",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"job_run_id": job_run_id},
+        )
+        complete_request._read_bytes = (
+            b'{"status":"completed","result":{"site_id":"site-a","status":"completed"}}'
+        )
+        complete_response = asyncio.run(handler.handle_complete_job_run(complete_request))
+        list_runs_response = asyncio.run(
+            handler.handle_list_job_runs(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/runs",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert create_schedule_response.status == 201
+        assert due_response.status == 200
+        assert claim_response.status == 201
+        assert complete_response.status == 200
+        assert yaml.safe_load(list_runs_response.text)["items"][0]["status"] == "completed"
+
+
 def test_control_plane_resource_item_endpoints_round_trip_real_records():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)

@@ -5,6 +5,8 @@
 > This repository now includes the Python management host `xuanwu-management-server`, which is the default primary management host; legacy `manager-api` / `manager-web` are retained only for compatibility during migration.
 >
 > The current `XuanWu` AI endpoint is fixed to `http://xuanwu-ai:8000`, and management-domain requests are proxied through `xuanwu-management-server`.
+>
+> The local job stack now uses a lightweight `xuanwu-jobs` scheduler-dispatcher that calls local execution APIs directly.
 
 **Table of Contents:**
 

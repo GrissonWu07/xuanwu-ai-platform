@@ -80,3 +80,10 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/gateway/events" in registered_paths
     assert "/control-plane/v1/gateway/telemetry" in registered_paths
     assert "/control-plane/v1/gateway/command-results" in registered_paths
+    assert "/control-plane/v1/jobs/schedules" in registered_paths
+    assert "/control-plane/v1/jobs/schedules:due" in registered_paths
+    assert "/control-plane/v1/jobs/schedules/{schedule_id}:claim" in registered_paths
+    assert "/control-plane/v1/jobs:execute" in registered_paths
+    assert "/control-plane/v1/jobs/runs" in registered_paths
+    assert "/control-plane/v1/jobs/runs/{job_run_id}:complete" in registered_paths
+    assert "/control-plane/v1/jobs/runs/{job_run_id}:fail" in registered_paths

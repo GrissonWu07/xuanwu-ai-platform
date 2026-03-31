@@ -14,6 +14,7 @@ def test_runtime_http_server_no_longer_hosts_control_plane_routes():
     content = http_server_path.read_text(encoding="utf-8")
 
     assert "/control-plane/v1/" not in content
+    assert "/runtime/v1/jobs:execute" in content
 
 
 def _load_module(module_path: Path, module_name: str):

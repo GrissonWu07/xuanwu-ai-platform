@@ -43,6 +43,7 @@
   - `/gateway/v1/health`
   - `/gateway/v1/config`
   - `/gateway/v1/devices/{device_id}/state`
+  - `/gateway/v1/jobs:execute`
 - `xuanwu-device-server` boundary work is complete for the local phase:
   - `XuanWu` runtime naming is aligned
   - runtime context exposes `xuanwu_session_key`
@@ -50,25 +51,36 @@
   - local Python management path is the default path
   - non-upstream local test suite is now the active verification baseline
   - upstream-only `XuanWu` integration tests were removed from the local completion gate
+  - `/runtime/v1/jobs:execute` now exposes local runtime job execution
+- `xuanwu-jobs` now provides:
+  - a single lightweight scheduler-dispatcher service
+  - due-schedule polling and claim against `xuanwu-management-server`
+  - direct API dispatch for `platform`, `gateway`, and `device` executors
+  - no Redis dependency in the local execution path
   - current local-only coverage baseline is:
     - `config_loader.py`: 88%
-    - `control_plane_handler.py`: 64%
-    - selected local platform surface total: 76%
+    - `control_plane_handler.py`: 62%
+    - `xuanwu-jobs/core/scheduler.py`: active scheduler coverage is tracked in the local suite
+    - `xuanwu-jobs/core/dispatcher.py`: active dispatcher coverage is tracked in the local suite
+    - `xuanwu-jobs/core/clients/management_client.py`: 91%
+    - current full local platform suite total: 62%
 
 ## In Progress
-- No additional local-only implementation phase is open.
-- Remaining work is upstream contract integration with `XuanWu`.
+- Remaining upstream work is now concentrated in contract integration with `XuanWu`.
+- Local platform work can move next into richer scheduling semantics without changing the service boundaries.
 
 ## Risks / Decisions
 - Decision: all Agent-domain truth remains in `XuanWu`.
 - Decision: `user -> device` is the primary ownership line.
 - Decision: `channel` is a user control surface, not a device owner.
 - Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-gateway`.
+- Decision: schedule truth stays in `xuanwu-management-server`.
+- Decision: `xuanwu-jobs` owns due-schedule triggering and direct execution dispatch.
+- Decision: this phase is Docker-first; Kubernetes is deferred.
 - Risk: `xuanwu-device-server` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-gateway` contract is live.
 - Risk: industrial adapters are still framework skeletons and dry-run surfaces, not full protocol implementations.
 
 ## Next Step
-- Continue with upstream `XuanWu` contract alignment:
-  - northbound command contract from `XuanWu` to `xuanwu-gateway`
-  - management-side contract verification against `XuanWu`
-  - retirement of remaining local IoT compatibility paths in `xuanwu-device-server` after upstream readiness
+- Expand schedule semantics and execution classes:
+  - add richer schedule expressions beyond the local interval baseline
+  - validate final upstream contracts before retiring the remaining local compatibility paths

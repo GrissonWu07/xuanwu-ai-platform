@@ -4,6 +4,7 @@ from core.api.control_plane_handler import ControlPlaneHandler
 from core.api.xuanwu_proxy_handler import XuanWuProxyHandler
 
 CONFIG_KEY = web.AppKey("config", dict)
+CONTROL_PLANE_HANDLER_KEY = web.AppKey("control_plane_handler", ControlPlaneHandler)
 
 
 def create_http_app(config: dict) -> web.Application:
@@ -11,6 +12,7 @@ def create_http_app(config: dict) -> web.Application:
     app[CONFIG_KEY] = config
     control_plane_handler = ControlPlaneHandler(config)
     xuanwu_proxy_handler = XuanWuProxyHandler(config)
+    app[CONTROL_PLANE_HANDLER_KEY] = control_plane_handler
     app.add_routes(
         [
             web.get(
@@ -323,6 +325,66 @@ def create_http_app(config: dict) -> web.Application:
             ),
             web.options(
                 "/control-plane/v1/ota/campaigns",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/jobs/schedules",
+                control_plane_handler.handle_list_job_schedules,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/schedules",
+                control_plane_handler.handle_create_job_schedule,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/jobs/schedules:due",
+                control_plane_handler.handle_list_due_job_schedules,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules:due",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:claim",
+                control_plane_handler.handle_claim_job_schedule,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:claim",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs:execute",
+                control_plane_handler.handle_execute_job,
+            ),
+            web.options(
+                "/control-plane/v1/jobs:execute",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/jobs/runs",
+                control_plane_handler.handle_list_job_runs,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/runs/{job_run_id}:complete",
+                control_plane_handler.handle_complete_job_run,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs/{job_run_id}:complete",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/runs/{job_run_id}:fail",
+                control_plane_handler.handle_fail_job_run,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs/{job_run_id}:fail",
                 control_plane_handler.handle_options,
             ),
             web.get(

@@ -646,6 +646,128 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(saved, status=201)
 
+    async def handle_list_job_schedules(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_schedules()})
+
+    async def handle_create_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            saved = self.store.save_schedule(payload.get("schedule_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(saved, status=201)
+
+    async def handle_list_due_job_schedules(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        now_iso = str(request.query.get("now", "")).strip()
+        if not now_iso:
+            return self._json_response({"error": "now_required"}, status=400)
+        limit = int(str(request.query.get("limit", "100")).strip() or "100")
+        return self._json_response(
+            {"items": self.store.list_due_schedules(now_iso, limit=limit)}
+        )
+
+    async def handle_claim_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        schedule_id = str(request.match_info["schedule_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        scheduled_for = str(payload.get("scheduled_for", "")).strip()
+        if not scheduled_for:
+            return self._json_response({"error": "scheduled_for_required"}, status=400)
+        try:
+            claimed = self.store.claim_schedule(schedule_id, scheduled_for)
+        except ValueError as exc:
+            status = 404 if str(exc) == "schedule_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(claimed, status=201)
+
+    async def handle_list_job_runs(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_job_runs()})
+
+    async def handle_execute_job(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+
+        job_run_id = str(payload.get("job_run_id", "")).strip()
+        job_type = str(payload.get("job_type", "")).strip()
+        if not job_run_id:
+            return self._json_response({"error": "job_run_id_required"}, status=400)
+        if not job_type:
+            return self._json_response({"error": "job_type_required"}, status=400)
+
+        result_payload = {"job_type": job_type}
+        if job_type == "telemetry_rollup":
+            result_payload["aggregated_records"] = len(self.store.list_telemetry())
+        elif job_type == "alarm_escalation":
+            result_payload["open_alarm_count"] = len(self.store.list_alarms())
+        elif job_type == "ota_campaign_tick":
+            result_payload["campaign_count"] = len(self.store.list_ota_campaigns())
+
+        try:
+            completed = self.store.complete_job_run(
+                job_run_id,
+                {
+                    "status": "completed",
+                    "result": {
+                        "status": "completed",
+                        "executor_type": "platform",
+                        "details": result_payload,
+                    },
+                },
+            )
+        except ValueError as exc:
+            status = 404 if str(exc) == "job_run_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(completed)
+
+    async def handle_complete_job_run(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        job_run_id = str(request.match_info["job_run_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            completed = self.store.complete_job_run(job_run_id, payload)
+        except ValueError as exc:
+            status = 404 if str(exc) == "job_run_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(completed)
+
+    async def handle_fail_job_run(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        job_run_id = str(request.match_info["job_run_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            failed = self.store.fail_job_run(job_run_id, payload)
+        except ValueError as exc:
+            status = 404 if str(exc) == "job_run_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(failed)
+
     async def handle_resolve_device_config(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)

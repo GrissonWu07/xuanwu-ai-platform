@@ -7,6 +7,8 @@ def test_active_spec_index_points_to_xuanwu_platform_blueprint():
 
     assert "XuanWu Platform Blueprint" in content
     assert "2026-03-30-xuanwu-platform-blueprint.md" in content
+    assert "2026-03-31-xuanwu-jobs-foundation-design.md" in content
+    assert "2026-03-31-xuanwu-agent-worker-requirements-spec.md" in content
 
 
 def test_python_first_readme_marks_legacy_docs_as_archived():

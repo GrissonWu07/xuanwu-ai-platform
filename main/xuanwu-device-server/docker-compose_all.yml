@@ -21,6 +21,8 @@ services:
     volumes:
       - ./data:/opt/xuanwu-device-server/data
       - ./models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-server/models/SenseVoiceSmall/model.pt
+    depends_on:
+      - xuanwu-management-server
 
   xuanwu-management-server:
     image: python:3.11-slim
@@ -42,6 +44,58 @@ services:
       - XUANWU_CONTROL_PLANE_SECRET=xuanwu-management-to-xuanwu
     volumes:
       - ../xuanwu-management-server:/opt/xuanwu-management-server
+
+  xuanwu-gateway:
+    image: python:3.11-slim
+    container_name: xuanwu-gateway
+    restart: always
+    networks:
+      - default
+    ports:
+      - "18084:18084"
+    working_dir: /opt/xuanwu-gateway
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp httpx && python app.py"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_GATEWAY_HOST=0.0.0.0
+      - XUANWU_GATEWAY_PORT=18084
+    volumes:
+      - ../xuanwu-gateway:/opt/xuanwu-gateway
+    depends_on:
+      - xuanwu-management-server
+
+  xuanwu-jobs:
+    image: python:3.11-slim
+    container_name: xuanwu-jobs
+    restart: always
+    networks:
+      - default
+    ports:
+      - "18083:18083"
+    working_dir: /opt/xuanwu-jobs
+    command: >
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx && python app.py"
+    environment:
+      - TZ=Asia/Shanghai
+      - XUANWU_JOBS_HOST=0.0.0.0
+      - XUANWU_JOBS_PORT=18083
+      - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
+      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_GATEWAY_URL=http://xuanwu-gateway:18084
+      - XUANWU_GATEWAY_SECRET=xuanwu-management-local-secret
+      - XUANWU_DEVICE_RUNTIME_URL=http://xuanwu-device-server:8003
+      - XUANWU_DEVICE_RUNTIME_SECRET=xuanwu-management-local-secret
+      - XUANWU_JOBS_BATCH_SIZE=100
+      - XUANWU_JOBS_POLL_INTERVAL_SECONDS=2
+    volumes:
+      - ../xuanwu-jobs:/opt/xuanwu-jobs
+    depends_on:
+      - xuanwu-management-server
+      - xuanwu-gateway
+      - xuanwu-device-server
 
 networks:
   default:

@@ -239,3 +239,24 @@ def test_runtime_handler_interrupt_and_gone_session_paths():
     assert interrupt_response.status == 200
     assert aborted["called"] is True
     assert gone_response.status == 410
+
+
+def test_runtime_handler_executes_device_job_with_real_payload_shape():
+    module = _load_runtime_module()
+    handler = module.RuntimeHandler({"server": {"auth_key": "runtime-secret"}})
+
+    execute_request = make_mocked_request(
+        "POST",
+        "/runtime/v1/jobs:execute",
+        headers={"X-Xuanwu-Runtime-Secret": "runtime-secret"},
+    )
+    execute_request._read_bytes = (
+        b'{"job_run_id":"run-device-001","job_type":"runtime_config_refresh","executor_type":"device",'
+        b'"payload":{"device_id":"dev-001","reason":"scheduled-refresh"}}'
+    )
+
+    response = asyncio.run(handler.handle_execute_job(execute_request))
+
+    assert response.status == 200
+    assert '"job_run_id":"run-device-001"' in response.text
+    assert '"job_type":"runtime_config_refresh"' in response.text

@@ -96,3 +96,21 @@ def test_commands_alias_and_device_state_work():
     assert dispatch_response.status == 200
     assert state_response.status == 200
     assert handler._loads_json(state_response.text)["device_id"] == "device-003"
+
+
+def test_job_execution_dispatches_real_gateway_command_payload():
+    handler = _load_handler_module().GatewayHandler({})
+    request = make_mocked_request("POST", "/gateway/v1/jobs:execute")
+    request._read_bytes = (
+        b'{"job_run_id":"run-gateway-001","job_type":"device_command","executor_type":"gateway",'
+        b'"payload":{"request_id":"req-004","gateway_id":"gateway-http-001","adapter_type":"http",'
+        b'"device_id":"device-004","capability_code":"switch.on_off","command_name":"turn_off","arguments":{"state":false}}}'
+    )
+
+    response = asyncio.run(handler.handle_execute_job(request))
+
+    assert response.status == 200
+    payload = handler._loads_json(response.text)
+    assert payload["status"] == "completed"
+    assert payload["job_run_id"] == "run-gateway-001"
+    assert payload["result"]["result"]["command_name"] == "turn_off"

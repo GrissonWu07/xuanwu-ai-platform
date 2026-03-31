@@ -1,58 +1,40 @@
-# Spec 索引
+# Spec Index
 
 Active entry: [XuanWu Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
 
-本目录存放平台级设计 spec。
+This directory holds the active platform architecture and implementation specs.
 
-如果你只想先看一份总文档，请从这里开始：
+If you only want one document to start from, read:
 
-- [玄武AI中心化 Agent 物联网平台蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
+- [XuanWu Central Agent IoT Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
 
-## 推荐阅读顺序
+## Recommended Reading Order
 
-1. [玄武AI中心化 Agent 物联网平台蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
-2. [玄武AI中心化 Agent 物联网平台目标架构 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-target-design.md)
-3. [玄武管理面关系映射模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-mapping-model-spec.md)
-4. [统一设备能力模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-unified-device-capability-model-spec.md)
-5. [XuanWu Agent 域 API 合同 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
-6. [xuanwu-management-server API 蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
-7. [xuanwu-device-server 边界蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
-8. [xuanwu-gateway 合同规范 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-contract-spec.md)
-9. [xuanwu-gateway 模块蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-module-blueprint.md)
-10. [遥测与事件模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-telemetry-and-event-model-spec.md)
-11. [设备生命周期与注册开通 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-device-lifecycle-and-provisioning-spec.md)
-12. [分布式部署与扩展 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
-13. [玄武AI中心化 Agent 物联网平台评估](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
+1. [XuanWu Central Agent IoT Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
+2. [XuanWu Central Agent IoT Platform Target Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-target-design.md)
+3. [XuanWu Management Mapping Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-mapping-model-spec.md)
+4. [Unified Device Capability Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-unified-device-capability-model-spec.md)
+5. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
+6. [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
+7. [xuanwu-device-server Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
+8. [xuanwu-gateway Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-contract-spec.md)
+9. [xuanwu-gateway Module Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-module-blueprint.md)
+10. [Telemetry and Event Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-telemetry-and-event-model-spec.md)
+11. [Device Lifecycle and Provisioning Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-device-lifecycle-and-provisioning-spec.md)
+12. [Distributed Deployment and Scaling Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
+13. [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
+14. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+15. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
 
-## 当前专题列表
+## Current Implementation Blueprints
 
-### 平台蓝图
+- [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
+- [xuanwu-device-server Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
+- [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
+- [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
 
-- [玄武AI中心化 Agent 物联网平台蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
-- [玄武AI中心化 Agent 物联网平台评估](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
-- [玄武AI中心化 Agent 物联网平台目标架构 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-target-design.md)
+## Notes
 
-### 关系与模型
-
-- [玄武管理面关系映射模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-mapping-model-spec.md)
-- [统一设备能力模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-unified-device-capability-model-spec.md)
-- [XuanWu Agent 域 API 合同 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
-
-### 网关与运行治理
-
-- [xuanwu-gateway 合同规范 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-contract-spec.md)
-- [xuanwu-gateway 模块蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-module-blueprint.md)
-- [遥测与事件模型 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-telemetry-and-event-model-spec.md)
-- [设备生命周期与注册开通 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-device-lifecycle-and-provisioning-spec.md)
-- [分布式部署与扩展 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
-
-### 本项目实现蓝图
-
-- [xuanwu-management-server API 蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
-- [xuanwu-device-server 边界蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
-
-## 说明
-
-- 蓝图是总入口
-- 各子 spec 是专题细化
-- 后续新增专题时，应先把链接补到蓝图和本索引页
+- The blueprint is the main entrypoint.
+- Child specs deepen one focused area each.
+- New implementation topics should be linked here after they become active.

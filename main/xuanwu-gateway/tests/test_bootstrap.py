@@ -37,6 +37,7 @@ def test_create_app_registers_gateway_routes():
     assert "/gateway/v1/config" in registered_paths
     assert "/gateway/v1/commands" in registered_paths
     assert "/gateway/v1/commands:dispatch" in registered_paths
+    assert "/gateway/v1/jobs:execute" in registered_paths
     assert "/gateway/v1/devices/{device_id}/state" in registered_paths
 
 

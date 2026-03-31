@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,8 @@ class LocalControlPlaneStore:
         (self.root_dir / "command_results").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_history").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "chat_summaries").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "job_schedules").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "job_runs").mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def from_config(cls, config: dict[str, Any], *, project_dir: str | Path | None = None):
@@ -579,6 +582,100 @@ class LocalControlPlaneStore:
         self._write_yaml(self.root_dir / "chat_summaries" / f"{summary_id}.yaml", record)
         return record
 
+    def get_schedule(self, schedule_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml")
+
+    def save_schedule(self, schedule_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = dict(payload)
+        schedule_id = str(schedule_id or record.get("schedule_id", "")).strip()
+        if not schedule_id:
+            raise ValueError("schedule_id_required")
+        record["schedule_id"] = schedule_id
+        record.setdefault("enabled", True)
+        record.setdefault("timezone", "UTC")
+        record.setdefault("payload", {})
+        record.setdefault("executor_type", "platform")
+        self._write_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml", record)
+        return record
+
+    def list_schedules(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "job_schedules")
+
+    def list_due_schedules(self, now_iso: str, *, limit: int = 100) -> list[dict[str, Any]]:
+        now = self._parse_timestamp(now_iso)
+        due_items: list[dict[str, Any]] = []
+        for item in self.list_schedules():
+            if not item.get("enabled", True):
+                continue
+            next_run_at = str(item.get("next_run_at") or "").strip()
+            if not next_run_at:
+                continue
+            if self._parse_timestamp(next_run_at) <= now:
+                due_items.append(item)
+        due_items.sort(key=lambda item: str(item.get("next_run_at", "")))
+        return due_items[:limit]
+
+    def get_job_run(self, job_run_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml")
+
+    def list_job_runs(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "job_runs")
+
+    def claim_schedule(self, schedule_id: str, scheduled_for: str) -> dict[str, Any]:
+        schedule = self.get_schedule(schedule_id)
+        if schedule is None:
+            raise ValueError("schedule_not_found")
+        if not schedule.get("enabled", True):
+            raise ValueError("schedule_disabled")
+        current_next_run = str(schedule.get("next_run_at") or "").strip()
+        if not current_next_run:
+            raise ValueError("next_run_at_required")
+        if self._parse_timestamp(current_next_run) > self._parse_timestamp(scheduled_for):
+            raise ValueError("schedule_not_due")
+
+        job_run_id = self._build_job_run_id(schedule_id, scheduled_for)
+        run_record = {
+            "job_run_id": job_run_id,
+            "schedule_id": schedule_id,
+            "job_type": schedule.get("job_type"),
+            "executor_type": schedule.get("executor_type"),
+            "scheduled_for": scheduled_for,
+            "status": "queued",
+            "payload": deepcopy(schedule.get("payload") or {}),
+        }
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", run_record)
+
+        updated_schedule = dict(schedule)
+        updated_schedule["last_run_at"] = scheduled_for
+        updated_schedule["next_run_at"] = self._calculate_next_run_at(updated_schedule, scheduled_for)
+        self._write_yaml(
+            self.root_dir / "job_schedules" / f"{schedule_id}.yaml",
+            updated_schedule,
+        )
+        return run_record
+
+    def complete_job_run(self, job_run_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        existing = self.get_job_run(job_run_id)
+        if existing is None:
+            raise ValueError("job_run_not_found")
+        record = dict(existing)
+        record.update(dict(payload))
+        record["job_run_id"] = job_run_id
+        record["status"] = str(payload.get("status") or "completed")
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", record)
+        return record
+
+    def fail_job_run(self, job_run_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        existing = self.get_job_run(job_run_id)
+        if existing is None:
+            raise ValueError("job_run_not_found")
+        record = dict(existing)
+        record.update(dict(payload))
+        record["job_run_id"] = job_run_id
+        record["status"] = str(payload.get("status") or "failed")
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", record)
+        return record
+
     def build_server_config(self, base_config: dict[str, Any]) -> dict[str, Any]:
         server_profile = self.load_server_profile()
         return self._deep_merge(base_config, server_profile)
@@ -809,3 +906,31 @@ class LocalControlPlaneStore:
                 "enabled": True,
             },
         )
+
+    def _parse_timestamp(self, value: str) -> datetime:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
+
+    def _format_timestamp(self, value: datetime) -> str:
+        return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace(
+            "+00:00", "Z"
+        )
+
+    def _calculate_next_run_at(self, schedule: dict[str, Any], scheduled_for: str) -> str | None:
+        interval_seconds = schedule.get("interval_seconds")
+        if interval_seconds:
+            next_time = self._parse_timestamp(scheduled_for) + timedelta(
+                seconds=int(interval_seconds)
+            )
+            return self._format_timestamp(next_time)
+        return None
+
+    def _build_job_run_id(self, schedule_id: str, scheduled_for: str) -> str:
+        clean_timestamp = (
+            scheduled_for.replace("-", "")
+            .replace(":", "")
+            .replace("T", "T")
+            .replace("Z", "Z")
+        )
+        return f"run-{schedule_id}-{clean_timestamp}"
