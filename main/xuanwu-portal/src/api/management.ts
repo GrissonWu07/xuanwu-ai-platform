@@ -178,10 +178,21 @@ export interface TelemetryItem {
   reported_at?: string
 }
 
-const API_BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+declare global {
+  interface Window {
+    __XUANWU_PORTAL_API_BASE_URL__?: string
+  }
+}
+
+function getApiBaseUrl() {
+  const runtimeBaseUrl =
+    typeof window !== 'undefined' ? window.__XUANWU_PORTAL_API_BASE_URL__?.replace(/\/$/, '') : undefined
+  const buildTimeBaseUrl = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
+  return runtimeBaseUrl ?? buildTimeBaseUrl ?? ''
+}
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     headers: {
       Accept: 'application/json',
       ...(init?.headers ?? {}),
