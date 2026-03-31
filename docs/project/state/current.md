@@ -33,6 +33,11 @@
   - `/jobs`
 - `xuanwu-portal` now includes a module-local README and build/runtime guidance for the Docker delivery path.
 - `xuanwu-portal` shell now hydrates the profile menu and top status cluster from `auth/me` and `dashboard/overview`, while keeping safe local fallbacks.
+- `xuanwu-portal` `Jobs` and `Alerts` pages now consume item-detail read models instead of relying only on overview payloads:
+  - `/control-plane/v1/jobs/schedules/{schedule_id}`
+  - `/control-plane/v1/jobs/runs/{job_run_id}`
+  - `/control-plane/v1/alarms/{alarm_id}`
+- `xuanwu-portal` `Overview` quick cards now route directly into the primary workspaces instead of acting as static summary tiles.
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`
@@ -104,6 +109,7 @@
 - Local platform work can move next into:
   - deeper portal destinations beyond the current shell
   - richer scheduling semantics without changing the service boundaries
+  - cross-page navigation and drilldown flows inside `xuanwu-portal`
 
 ## Risks / Decisions
 - Decision: all Agent-domain truth remains in `XuanWu`.

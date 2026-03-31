@@ -1,18 +1,27 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 defineProps<{
   title: string
   value: string
   detail: string
   tone?: 'accent' | 'blue' | 'green' | 'amber'
+  to?: string
 }>()
 </script>
 
 <template>
-  <article class="summary-card" :data-tone="tone ?? 'accent'">
+  <component
+    :is="to ? RouterLink : 'article'"
+    class="summary-card"
+    :class="{ 'summary-card--interactive': Boolean(to) }"
+    :data-tone="tone ?? 'accent'"
+    :to="to"
+  >
     <p class="summary-title">{{ title }}</p>
     <div class="summary-value">{{ value }}</div>
     <p class="summary-detail">{{ detail }}</p>
-  </article>
+  </component>
 </template>
 
 <style scoped>
@@ -24,6 +33,21 @@ defineProps<{
   background: var(--surface-strong);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
+}
+
+.summary-card--interactive {
+  display: block;
+  color: inherit;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.summary-card--interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(124, 108, 255, 0.24);
 }
 
 .summary-card::before {

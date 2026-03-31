@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent } from '@testing-library/vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import App from '@/App.vue'
@@ -45,6 +46,49 @@ const dashboardPayload = {
   ],
 }
 
+const devicesPayload = {
+  items: [
+    {
+      device_id: 'dev-lobby-01',
+      display_name: 'Lobby panel',
+      owner_user_id: 'user-gangwu',
+      lifecycle_status: 'active',
+      bind_status: 'bound',
+      device_type: 'conversation',
+      protocol_type: 'websocket',
+      last_seen_at: '2026-03-31T11:08:00+08:00',
+    },
+  ],
+}
+
+const deviceDetailPayload = {
+  device: devicesPayload.items[0],
+  binding: {
+    agent_id: 'agent-frontdesk',
+    channel_id: 'channel-lobby',
+    model_config_id: 'model-gpt-main',
+  },
+  runtime: {
+    session_status: 'connected',
+    capability_route_count: 4,
+  },
+  recent_events: [
+    {
+      id: 'evt-lobby-01',
+      title: 'Lobby panel checked in',
+      detail: 'Runtime heartbeat is healthy.',
+      at: '2026-03-31T11:07:00+08:00',
+    },
+  ],
+  recent_telemetry: [
+    {
+      metric: 'battery',
+      value: '92%',
+      at: '2026-03-31T11:06:00+08:00',
+    },
+  ],
+}
+
 describe('OverviewPage', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -82,6 +126,57 @@ describe('OverviewPage', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('Portal overview is loading.')).not.toBeInTheDocument()
+    })
+  })
+
+  it('routes into the devices workspace from the devices quick card', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/dashboard/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => dashboardPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => devicesPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/dev-lobby-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => deviceDetailPayload,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    })
+    router.push('/overview')
+    await router.isReady()
+
+    render(App, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const deviceCard = await screen.findByTestId('quick-card-devices')
+    await fireEvent.click(deviceCard)
+
+    expect(await screen.findByRole('heading', { name: 'Devices' })).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/devices', expect.any(Object))
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/devices/dev-lobby-01/detail', expect.any(Object))
     })
   })
 })

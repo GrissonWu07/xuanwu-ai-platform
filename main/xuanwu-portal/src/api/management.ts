@@ -68,6 +68,36 @@ export interface JobsOverviewResponse {
   }>
 }
 
+export interface JobScheduleDetailResponse {
+  schedule_id: string
+  name?: string
+  executor_type: string
+  schedule?: string
+  cron?: string
+  timezone?: string
+  next_run_at?: string
+  status?: string
+  payload?: Record<string, string | number | boolean | null | undefined>
+}
+
+export interface JobRunDetailResponse {
+  job_run_id: string
+  schedule_id: string
+  status: string
+  executor_type: string
+  scheduled_for?: string
+  started_at?: string
+  finished_at?: string
+  result?: {
+    status?: string
+    details?: Record<string, string | number | boolean | null | undefined>
+  }
+  error?: {
+    code?: string
+    message?: string
+  }
+}
+
 export interface AlertsOverviewResponse {
   summary: Array<{ label: string; value: string }>
   alerts: Array<{
@@ -79,6 +109,18 @@ export interface AlertsOverviewResponse {
     created_at?: string
   }>
   activity: Array<{ id: string; title: string; detail: string; at: string }>
+}
+
+export interface AlarmDetailResponse {
+  alarm_id: string
+  title: string
+  severity: string
+  status: string
+  source: string
+  created_at?: string
+  message?: string
+  gateway_id?: string
+  device_id?: string
 }
 
 export interface AgentListItem {
@@ -255,12 +297,24 @@ export function getJobsOverview() {
   return requestJson<JobsOverviewResponse>('/control-plane/v1/jobs/overview')
 }
 
+export function getJobSchedule(scheduleId: string) {
+  return requestJson<JobScheduleDetailResponse>(`/control-plane/v1/jobs/schedules/${scheduleId}`)
+}
+
+export function getJobRun(jobRunId: string) {
+  return requestJson<JobRunDetailResponse>(`/control-plane/v1/jobs/runs/${jobRunId}`)
+}
+
 export function getAlertsOverview() {
   return requestJson<AlertsOverviewResponse>('/control-plane/v1/alerts/overview')
 }
 
 export function listAlarms() {
   return requestJson<{ items: AlertsOverviewResponse['alerts'] }>('/control-plane/v1/alarms')
+}
+
+export function getAlarm(alarmId: string) {
+  return requestJson<AlarmDetailResponse>(`/control-plane/v1/alarms/${alarmId}`)
 }
 
 export function listEvents() {

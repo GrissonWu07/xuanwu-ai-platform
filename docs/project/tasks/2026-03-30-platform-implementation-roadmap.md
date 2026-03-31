@@ -85,6 +85,10 @@
     - `Sign out`
     - `Telemetry & Alarms`
   - portal-facing management read models
+  - detail-backed drilldown on:
+    - `Jobs` via schedule and run detail APIs
+    - `Alerts` via alarm detail API
+  - actionable `Overview` quick cards that route into the corresponding primary workspaces
 - Verified with portal unit tests and `vite` production build.
 
 ### Phase 7: upstream `XuanWu` integration

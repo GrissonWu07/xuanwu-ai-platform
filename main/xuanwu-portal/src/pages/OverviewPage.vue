@@ -22,6 +22,13 @@ const liveActivity = computed(
     })) ?? [],
 )
 
+const quickCardRoutes: Record<string, string> = {
+  devices: '/devices',
+  agents: '/agents',
+  jobs: '/jobs',
+  alerts: '/alerts',
+}
+
 async function loadDashboard() {
   isLoading.value = true
   loadError.value = ''
@@ -67,6 +74,7 @@ onMounted(loadDashboard)
         :title="card.label"
         :value="card.value"
         :detail="card.delta"
+        :to="quickCardRoutes[card.id]"
         :tone="card.id === 'devices' ? 'accent' : card.id === 'agents' ? 'blue' : card.id === 'jobs' ? 'green' : 'amber'"
       />
     </section>

@@ -5,10 +5,19 @@ import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
-import { getJobsOverview, type JobsOverviewResponse } from '@/api/management'
+import {
+  getJobRun,
+  getJobsOverview,
+  getJobSchedule,
+  type JobRunDetailResponse,
+  type JobsOverviewResponse,
+  type JobScheduleDetailResponse,
+} from '@/api/management'
 
 const overview = ref<JobsOverviewResponse | null>(null)
 const selectedScheduleId = ref('')
+const selectedScheduleDetail = ref<JobScheduleDetailResponse | null>(null)
+const selectedRunDetail = ref<JobRunDetailResponse | null>(null)
 const loadError = ref('')
 
 const columns: DataTableColumn[] = [
@@ -45,6 +54,40 @@ const selectedRuns = computed(() =>
     })),
 )
 
+const schedulePayloadEntries = computed(() =>
+  Object.entries(selectedScheduleDetail.value?.payload ?? {}).filter(([, value]) => value !== undefined && value !== null),
+)
+
+const selectedRunSummary = computed(() => {
+  if (selectedRunDetail.value?.error?.message) {
+    return selectedRunDetail.value.error.message
+  }
+
+  const details = selectedRunDetail.value?.result?.details
+  if (details) {
+    const firstEntry = Object.entries(details).find(([, value]) => value !== undefined && value !== null)
+    if (firstEntry) {
+      return `${firstEntry[0]}: ${firstEntry[1]}`
+    }
+  }
+
+  return 'No additional run details'
+})
+
+async function loadScheduleDetail(scheduleId: string) {
+  try {
+    selectedScheduleDetail.value = await getJobSchedule(scheduleId)
+    const latestRun = runs.value.find((item) => item.schedule_id === scheduleId)
+    if (latestRun) {
+      selectedRunDetail.value = await getJobRun(latestRun.job_run_id)
+      return
+    }
+  } catch {
+    selectedScheduleDetail.value = null
+    selectedRunDetail.value = null
+  }
+}
+
 async function loadOverview() {
   loadError.value = ''
 
@@ -52,6 +95,9 @@ async function loadOverview() {
     const response = await getJobsOverview()
     overview.value = response
     selectedScheduleId.value = response.schedules[0]?.schedule_id ?? ''
+    if (selectedScheduleId.value) {
+      await loadScheduleDetail(selectedScheduleId.value)
+    }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Jobs overview is unavailable.'
   }
@@ -59,6 +105,7 @@ async function loadOverview() {
 
 function handleRowSelect(row: Record<string, string>) {
   selectedScheduleId.value = row.id
+  void loadScheduleDetail(row.id)
 }
 
 onMounted(() => {
@@ -122,7 +169,33 @@ onMounted(() => {
               <span>Next run</span>
               <strong>{{ selectedSchedule.next_run_at || 'Pending' }}</strong>
             </div>
+            <div v-if="selectedScheduleDetail?.timezone" class="detail-card">
+              <span>Timezone</span>
+              <strong>{{ selectedScheduleDetail.timezone }}</strong>
+            </div>
+            <div v-if="selectedRunDetail?.scheduled_for" class="detail-card">
+              <span>Scheduled for</span>
+              <strong>{{ selectedRunDetail.scheduled_for }}</strong>
+            </div>
           </div>
+
+          <section v-if="schedulePayloadEntries.length > 0" class="detail-section">
+            <h3>Schedule payload</h3>
+            <div class="payload-grid">
+              <div v-for="[key, value] in schedulePayloadEntries" :key="key" class="detail-card">
+                <span>{{ key }}</span>
+                <strong>{{ value }}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="selectedRunDetail" class="detail-section">
+            <h3>Latest run detail</h3>
+            <div class="detail-card detail-card--wide">
+              <span>{{ selectedRunDetail.job_run_id }}</span>
+              <strong>{{ selectedRunSummary }}</strong>
+            </div>
+          </section>
 
           <section class="detail-section">
             <h3>Recent runs</h3>
@@ -239,8 +312,18 @@ onMounted(() => {
   background: rgba(124, 108, 255, 0.06);
 }
 
+.detail-card--wide {
+  background: rgba(124, 108, 255, 0.08);
+}
+
 .detail-card span {
   color: var(--muted);
+}
+
+.payload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
 .detail-section {
@@ -255,7 +338,8 @@ onMounted(() => {
 
 @media (max-width: 1120px) {
   .metric-grid,
-  .surface-grid {
+  .surface-grid,
+  .payload-grid {
     grid-template-columns: 1fr;
   }
 }

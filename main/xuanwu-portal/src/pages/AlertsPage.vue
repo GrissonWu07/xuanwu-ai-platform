@@ -5,13 +5,14 @@ import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
-import { ackAlarm, getAlertsOverview, listAlarms, type AlertsOverviewResponse } from '@/api/management'
+import { ackAlarm, getAlarm, getAlertsOverview, listAlarms, type AlarmDetailResponse, type AlertsOverviewResponse } from '@/api/management'
 
 type AlarmItem = AlertsOverviewResponse['alerts'][number]
 
 const overview = ref<AlertsOverviewResponse | null>(null)
 const alarms = ref<AlarmItem[]>([])
 const selectedAlarmId = ref('')
+const selectedAlarmDetail = ref<AlarmDetailResponse | null>(null)
 const loadError = ref('')
 const isAcking = ref(false)
 
@@ -46,6 +47,10 @@ const activityItems = computed(
     })) ?? [],
 )
 
+async function loadAlarmDetail(alarmId: string) {
+  selectedAlarmDetail.value = await getAlarm(alarmId)
+}
+
 async function loadAlerts() {
   loadError.value = ''
 
@@ -54,6 +59,9 @@ async function loadAlerts() {
     overview.value = overviewResponse
     alarms.value = alarmsResponse.items
     selectedAlarmId.value = alarmsResponse.items[0]?.alarm_id ?? ''
+    if (selectedAlarmId.value) {
+      await loadAlarmDetail(selectedAlarmId.value)
+    }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Alerts overview is unavailable.'
   }
@@ -61,6 +69,7 @@ async function loadAlerts() {
 
 function handleRowSelect(row: Record<string, string>) {
   selectedAlarmId.value = row.id
+  void loadAlarmDetail(row.id)
 }
 
 async function acknowledgeSelectedAlarm() {
@@ -75,6 +84,9 @@ async function acknowledgeSelectedAlarm() {
     alarms.value = alarms.value.map((item) =>
       item.alarm_id === selectedAlarm.value?.alarm_id ? { ...item, status: 'acknowledged' } : item,
     )
+    if (selectedAlarmDetail.value?.alarm_id === selectedAlarm.value.alarm_id) {
+      selectedAlarmDetail.value = { ...selectedAlarmDetail.value, status: 'acknowledged' }
+    }
   } finally {
     isAcking.value = false
   }
@@ -135,13 +147,29 @@ onMounted(() => {
           <div class="detail-grid">
             <div class="detail-card">
               <span>Status</span>
-              <strong>{{ selectedAlarm.status }}</strong>
+              <strong>{{ selectedAlarmDetail?.status || selectedAlarm.status }}</strong>
             </div>
             <div class="detail-card">
               <span>Created at</span>
-              <strong>{{ selectedAlarm.created_at || 'Unknown' }}</strong>
+              <strong>{{ selectedAlarmDetail?.created_at || selectedAlarm.created_at || 'Unknown' }}</strong>
+            </div>
+            <div v-if="selectedAlarmDetail?.gateway_id" class="detail-card">
+              <span>Gateway</span>
+              <strong>{{ selectedAlarmDetail.gateway_id }}</strong>
+            </div>
+            <div v-if="selectedAlarmDetail?.device_id" class="detail-card">
+              <span>Device</span>
+              <strong>{{ selectedAlarmDetail.device_id }}</strong>
             </div>
           </div>
+
+          <section v-if="selectedAlarmDetail?.message" class="detail-section">
+            <h3>Alarm detail</h3>
+            <div class="detail-card detail-card--wide">
+              <span>Message</span>
+              <strong>{{ selectedAlarmDetail.message }}</strong>
+            </div>
+          </section>
 
           <div class="detail-actions">
             <button
@@ -268,6 +296,10 @@ onMounted(() => {
   padding: 0.95rem 1rem;
   border-radius: 18px;
   background: rgba(209, 77, 87, 0.06);
+}
+
+.detail-card--wide {
+  background: rgba(209, 77, 87, 0.09);
 }
 
 .detail-card span {

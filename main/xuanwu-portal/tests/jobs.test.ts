@@ -47,17 +47,62 @@ const jobsOverviewPayload = {
   ],
 }
 
+const scheduleDetailPayload = {
+  schedule_id: 'sched_alarm_sweep',
+  name: 'Alarm sweep escalation',
+  executor_type: 'management',
+  schedule: '*/10 * * * *',
+  timezone: 'Asia/Shanghai',
+  next_run_at: '2026-03-31T10:40:00+08:00',
+  status: 'queued',
+  payload: {
+    site_id: 'site-sh-01',
+    escalation_policy: 'warehouse-critical',
+  },
+}
+
+const jobRunDetailPayload = {
+  job_run_id: 'run_alarm_1030',
+  schedule_id: 'sched_alarm_sweep',
+  status: 'queued',
+  executor_type: 'management',
+  scheduled_for: '2026-03-31T10:30:00+08:00',
+  started_at: '2026-03-31T10:30:00+08:00',
+  finished_at: '',
+  result: {
+    status: 'pending',
+    details: {
+      site_id: 'site-sh-01',
+      escalated_alarm_count: 0,
+    },
+  },
+}
+
 describe('JobsPage', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  it('renders schedules and run history using the jobs overview payload', async () => {
+  it('renders schedules and job detail using overview plus detail payloads', async () => {
     const fetchMock = vi.fn((input: string) => {
       if (input === '/control-plane/v1/jobs/overview') {
         return Promise.resolve({
           ok: true,
           json: async () => jobsOverviewPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => scheduleDetailPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_1030') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => jobRunDetailPayload,
         })
       }
 
@@ -77,6 +122,11 @@ describe('JobsPage', () => {
     const detail = await screen.findByTestId('job-detail-panel')
     expect(within(detail).getByText('queued')).toBeVisible()
     expect(within(detail).getByText('run_alarm_1030')).toBeVisible()
+    expect(await within(detail).findByText('Asia/Shanghai')).toBeVisible()
+    expect(await within(detail).findByText('site-sh-01')).toBeVisible()
+    expect(await within(detail).findByText('warehouse-critical')).toBeVisible()
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/overview', expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/schedules/sched_alarm_sweep', expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/runs/run_alarm_1030', expect.any(Object))
   })
 })
