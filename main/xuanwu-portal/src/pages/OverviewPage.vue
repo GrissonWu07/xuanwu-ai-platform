@@ -19,6 +19,7 @@ const liveActivity = computed(
     dashboard.value?.liveActivity.map((item) => ({
       title: item.title,
       meta: `${item.at} · ${item.detail}`,
+      to: item.to,
     })) ?? [],
 )
 

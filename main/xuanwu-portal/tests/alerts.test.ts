@@ -111,4 +111,61 @@ describe('AlertsPage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/alarms/alarm_gateway_latency:ack', expect.any(Object))
     expect(await within(detail).findByText('acknowledged')).toBeVisible()
   })
+
+  it('honors the alarmId query parameter for initial selection', async () => {
+    const fetchMock = vi.fn((input: string, init?: RequestInit) => {
+      if (input === '/control-plane/v1/alerts/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => alertsOverviewPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => alarmsListPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms/alarm_gateway_latency') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => alarmDetailPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms/alarm_assembly_panel') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            ...alarmDetailPayload,
+            alarm_id: 'alarm_assembly_panel',
+            title: 'Assembly panel heartbeat lag',
+            severity: 'medium',
+            status: 'acknowledged',
+            source: 'panel-07',
+            gateway_id: 'gw-east-02',
+            device_id: 'panel-07',
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms/alarm_gateway_latency:ack' && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ ok: true }),
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/alerts?alarmId=alarm_assembly_panel', fetchMock)
+
+    const detail = await screen.findByTestId('alert-detail-panel')
+    expect(await within(detail).findByText('Assembly panel heartbeat lag')).toBeVisible()
+    expect(await within(detail).findByText('gw-east-02')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/alarms/alarm_assembly_panel', expect.any(Object))
+  })
 })

@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/vue'
+import { fireEvent, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { renderPortal } from './renderPortal'
@@ -128,5 +128,114 @@ describe('JobsPage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/overview', expect.any(Object))
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/schedules/sched_alarm_sweep', expect.any(Object))
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/runs/run_alarm_1030', expect.any(Object))
+  })
+
+  it('honors the scheduleId query parameter for initial selection', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/jobs/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => jobsOverviewPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => scheduleDetailPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_1030') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => jobRunDetailPayload,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/jobs?scheduleId=sched_alarm_sweep', fetchMock)
+
+    const detail = await screen.findByTestId('job-detail-panel')
+    expect(await within(detail).findByText('Alarm sweep escalation')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/jobs/schedules/sched_alarm_sweep', expect.any(Object))
+  })
+
+  it('updates the route query when a different schedule is selected', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/jobs/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => jobsOverviewPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_telemetry_rollup') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            schedule_id: 'sched_telemetry_rollup',
+            name: 'Telemetry rollup',
+            executor_type: 'management',
+            schedule: '0 * * * *',
+            timezone: 'Asia/Shanghai',
+            next_run_at: '2026-03-31T11:00:00+08:00',
+            status: 'active',
+            payload: {
+              metric_family: 'telemetry',
+            },
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_telemetry_1040') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            job_run_id: 'run_telemetry_1040',
+            schedule_id: 'sched_telemetry_rollup',
+            status: 'success',
+            executor_type: 'management',
+            scheduled_for: '2026-03-31T10:40:00+08:00',
+            started_at: '2026-03-31T10:40:00+08:00',
+            finished_at: '2026-03-31T10:40:12+08:00',
+            result: {
+              status: 'success',
+              details: {
+                metric_family: 'telemetry',
+              },
+            },
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => scheduleDetailPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_1030') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => jobRunDetailPayload,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    const { router } = await renderPortal('/jobs', fetchMock)
+
+    await fireEvent.click(await screen.findByRole('button', { name: /Alarm sweep escalation/i }))
+
+    await waitFor(() => {
+      expect(router.currentRoute.value.query.scheduleId).toBe('sched_alarm_sweep')
+    })
+    const detail = await screen.findByTestId('job-detail-panel')
+    expect(await within(detail).findByText('Alarm sweep escalation')).toBeVisible()
   })
 })

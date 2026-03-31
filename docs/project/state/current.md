@@ -38,6 +38,21 @@
   - `/control-plane/v1/jobs/runs/{job_run_id}`
   - `/control-plane/v1/alarms/{alarm_id}`
 - `xuanwu-portal` `Overview` quick cards now route directly into the primary workspaces instead of acting as static summary tiles.
+- `xuanwu-portal` primary workspaces now preserve selected context in the URL for:
+  - `/devices?deviceId=...`
+  - `/agents?agentId=...`
+  - `/jobs?scheduleId=...`
+  - `/alerts?alarmId=...`
+- `xuanwu-portal` `Overview` live activity items now deep-link into object workspaces instead of staying as passive feed text.
+- `xuanwu-portal` `Channels & Gateways` now consumes the management gateway aggregation read model and surfaces protocol/site distribution alongside the raw inventories.
+- `xuanwu-portal` profile-menu destinations now support query-backed detail selection for:
+  - `Users & Roles` via `?userId=...&roleId=...`
+  - `Channels & Gateways` via `?channelId=...&gatewayId=...`
+  - `AI Config Proxy` via `?agentId=...&providerId=...&modelId=...`
+- `xuanwu-portal` profile-menu destinations now expose detail panels for:
+  - selected user and role
+  - selected channel and gateway
+  - selected proxied agent, provider, and model
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`

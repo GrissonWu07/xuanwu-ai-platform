@@ -904,7 +904,70 @@ class LocalControlPlaneStore:
         gateways = self.list_gateways()
         events = self.list_events()
         recent_events = self._sort_records_by_time(events, "occurred_at", "event_id", reverse=True)[:5]
+        jobs_overview = self.build_jobs_overview()
+        alerts_overview = self.build_alerts_overview()
+        gateway_overview = self.build_gateway_overview()
+        device_summary = self._build_device_summary(devices)
+        active_device_agent_mappings = [
+            item for item in self.list_device_agent_mappings() if item.get("enabled", True) is not False
+        ]
         return {
+            "hero": {
+                "title": "Unified operations for every device surface",
+                "subtitle": "Track ownership, active agents, schedules, and alerts from one calm control center.",
+                "primaryAction": "Review device activity",
+                "secondaryAction": "Inspect job health",
+            },
+            "statusPills": [
+                {"label": "Healthy devices", "value": str(device_summary["lifecycle_counts"].get("bound", 0))},
+                {"label": "Open alerts", "value": str(alerts_overview["ack_pending_count"])},
+                {"label": "Queued jobs", "value": str(jobs_overview["running_count"])},
+            ],
+            "quickStats": [
+                {
+                    "id": "devices",
+                    "label": "Devices",
+                    "value": str(len(devices)),
+                    "delta": f"{device_summary['bind_status_counts'].get('bound', 0)} bound",
+                },
+                {
+                    "id": "agents",
+                    "label": "Agents",
+                    "value": str(len(active_device_agent_mappings)),
+                    "delta": f"{len(active_device_agent_mappings)} active links",
+                },
+                {
+                    "id": "jobs",
+                    "label": "Jobs",
+                    "value": str(len(jobs_overview["schedules"])),
+                    "delta": f"{jobs_overview['running_count']} queued or running",
+                },
+                {
+                    "id": "alerts",
+                    "label": "Alerts",
+                    "value": str(alerts_overview["ack_pending_count"]),
+                    "delta": f"{alerts_overview['severity_counts'].get('critical', 0)} critical",
+                },
+            ],
+            "todaySummary": [
+                {"label": "Users", "value": str(len([item for item in users if item.get("user_id") != "anonymous"]))},
+                {"label": "Channels", "value": str(len(channels))},
+                {"label": "Gateways", "value": str(len(gateways))},
+            ],
+            "liveActivity": [
+                {
+                    "id": item.get("event_id"),
+                    "title": item.get("message") or item.get("event_type") or item.get("event_id"),
+                    "detail": item.get("source")
+                    or item.get("device_id")
+                    or item.get("gateway_id")
+                    or item.get("event_type")
+                    or "Platform event",
+                    "at": item.get("occurred_at") or item.get("created_at") or item.get("timestamp"),
+                    "to": self._build_portal_activity_target(item),
+                }
+                for item in recent_events
+            ],
             "summary": {
                 "user_count": len([item for item in users if item.get("user_id") != "anonymous"]),
                 "device_count": len(devices),
@@ -912,10 +975,10 @@ class LocalControlPlaneStore:
                 "gateway_count": len(gateways),
             },
             "activity": recent_events,
-            "device_summary": self._build_device_summary(devices),
-            "jobs_summary": self.build_jobs_overview(),
-            "alerts_summary": self.build_alerts_overview(),
-            "gateway_summary": self.build_gateway_overview(),
+            "device_summary": device_summary,
+            "jobs_summary": jobs_overview,
+            "alerts_summary": alerts_overview,
+            "gateway_summary": gateway_overview,
         }
 
     def build_portal_config(self, config: dict[str, Any]) -> dict[str, Any]:
@@ -981,7 +1044,44 @@ class LocalControlPlaneStore:
         for item in schedules:
             executor_type = str(item.get("executor_type") or "platform")
             executor_distribution[executor_type] = executor_distribution.get(executor_type, 0) + 1
+        sorted_schedules = self._sort_records_by_time(schedules, "next_run_at", "schedule_id")
+        sorted_runs = self._sort_records_by_time(runs, "scheduled_for", "job_run_id", reverse=True)
         return {
+            "summary": [
+                {
+                    "label": "Healthy schedules",
+                    "value": str(len([item for item in schedules if item.get("enabled", True)])),
+                },
+                {"label": "Queued runs", "value": str(len(overdue_runs))},
+                {
+                    "label": "Success today",
+                    "value": str(
+                        len([item for item in runs if str(item.get("status") or "").lower() == "completed"])
+                    ),
+                },
+            ],
+            "schedules": [
+                {
+                    "schedule_id": item.get("schedule_id"),
+                    "name": item.get("name") or item.get("schedule_id"),
+                    "executor_type": item.get("executor_type"),
+                    "schedule": item.get("cron") or item.get("schedule") or item.get("interval_seconds") or "manual",
+                    "next_run_at": item.get("next_run_at"),
+                    "status": "active" if item.get("enabled", True) else "disabled",
+                }
+                for item in sorted_schedules
+            ],
+            "runs": [
+                {
+                    "job_run_id": item.get("job_run_id"),
+                    "schedule_id": item.get("schedule_id"),
+                    "status": item.get("status"),
+                    "executor_type": item.get("executor_type"),
+                    "started_at": item.get("started_at"),
+                    "finished_at": item.get("finished_at"),
+                }
+                for item in sorted_runs
+            ],
             "scheduler_health": {
                 "status": "ready",
                 "enabled_schedule_count": len([item for item in schedules if item.get("enabled", True)]),
@@ -1033,7 +1133,50 @@ class LocalControlPlaneStore:
             {"source": source, "count": count}
             for source, count in sorted(source_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
         ]
+        sorted_alarms = self._sort_records_by_time(alarms, "created_at", "alarm_id", reverse=True)
+        alert_activity = [
+            item
+            for item in self._sort_records_by_time(self.list_events(), "occurred_at", "event_id", reverse=True)
+            if str(item.get("event_type") or "").startswith("alarm.")
+        ][:5]
         return {
+            "summary": [
+                {"label": "Active alerts", "value": str(len(active_alarms))},
+                {
+                    "label": "Acknowledged",
+                    "value": str(
+                        len([item for item in alarms if str(item.get("status") or "").lower() in {"acked", "acknowledged"}])
+                    ),
+                },
+                {"label": "Critical", "value": str(severity_counts.get("critical", 0))},
+            ],
+            "alerts": [
+                {
+                    "alarm_id": item.get("alarm_id"),
+                    "title": item.get("message") or item.get("source") or item.get("alarm_id"),
+                    "severity": item.get("severity"),
+                    "status": "acknowledged"
+                    if str(item.get("status") or "").lower() == "acked"
+                    else item.get("status"),
+                    "source": item.get("source") or item.get("device_id") or item.get("gateway_id"),
+                    "created_at": item.get("created_at"),
+                }
+                for item in sorted_alarms
+            ],
+            "activity": [
+                {
+                    "id": item.get("event_id"),
+                    "title": item.get("message") or item.get("event_type") or item.get("event_id"),
+                    "detail": item.get("source")
+                    or item.get("device_id")
+                    or item.get("gateway_id")
+                    or item.get("alarm_id")
+                    or "Alarm activity",
+                    "at": item.get("occurred_at") or item.get("created_at") or item.get("timestamp"),
+                    "to": self._build_portal_activity_target(item),
+                }
+                for item in alert_activity
+            ],
             "severity_counts": severity_counts,
             "ack_pending_count": len(active_alarms),
             "escalated_today": escalated_today,
@@ -1255,6 +1398,29 @@ class LocalControlPlaneStore:
             "bind_status_counts": bind_status_counts,
             "lifecycle_counts": lifecycle_counts,
         }
+
+    def _build_portal_activity_target(self, item: dict[str, Any]) -> str:
+        alarm_id = str(item.get("alarm_id") or "").strip()
+        if alarm_id:
+            return f"/alerts?alarmId={alarm_id}"
+
+        job_run_id = str(item.get("job_run_id") or "").strip()
+        if job_run_id:
+            return f"/jobs?jobRunId={job_run_id}"
+
+        schedule_id = str(item.get("schedule_id") or "").strip()
+        if schedule_id:
+            return f"/jobs?scheduleId={schedule_id}"
+
+        device_id = str(item.get("device_id") or "").strip()
+        if device_id:
+            return f"/devices?deviceId={device_id}"
+
+        agent_id = str(item.get("agent_id") or "").strip()
+        if agent_id:
+            return f"/agents?agentId={agent_id}"
+
+        return "/overview"
 
     def _sync_user_channel_mapping(self, user_id: str, channel_id: str):
         mapping_id = f"user-channel-{user_id}-{channel_id}"

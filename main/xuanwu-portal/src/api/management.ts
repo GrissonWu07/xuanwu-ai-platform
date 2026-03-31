@@ -8,7 +8,7 @@ export interface DashboardOverview {
   statusPills: Array<{ label: string; value: string }>
   quickStats: Array<{ id: string; label: string; value: string; delta: string }>
   todaySummary: Array<{ label: string; value: string }>
-  liveActivity: Array<{ id: string; title: string; detail: string; at: string }>
+  liveActivity: Array<{ id: string; title: string; detail: string; at: string; to?: string }>
 }
 
 export interface DevicesCollectionResponse {
@@ -192,6 +192,14 @@ export interface GatewayItem {
   adapter_type?: string
   status?: string
   site_id?: string
+  protocol_type?: string
+}
+
+export interface GatewayOverviewResponse {
+  total_count: number
+  protocol_distribution: Record<string, number>
+  site_distribution: Record<string, number>
+  items: GatewayItem[]
 }
 
 export interface PortalConfigResponse {
@@ -271,8 +279,20 @@ export function listChannels() {
   return requestJson<{ items: ChannelItem[] }>('/control-plane/v1/channels')
 }
 
+export function getChannel(channelId: string) {
+  return requestJson<ChannelItem>(`/control-plane/v1/channels/${channelId}`)
+}
+
 export function listGateways() {
   return requestJson<{ items: GatewayItem[] }>('/control-plane/v1/gateways')
+}
+
+export function getGateway(gatewayId: string) {
+  return requestJson<GatewayItem>(`/control-plane/v1/gateways/${gatewayId}`)
+}
+
+export function getGatewayOverview() {
+  return requestJson<GatewayOverviewResponse>('/control-plane/v1/gateway/overview')
 }
 
 export function getPortalConfig() {

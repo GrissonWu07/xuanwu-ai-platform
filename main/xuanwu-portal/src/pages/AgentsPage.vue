@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -20,6 +21,8 @@ const models = ref<ModelConfigItem[]>([])
 const selectedAgentId = ref('')
 const loadError = ref('')
 const upstreamUnavailable = ref(false)
+const route = useRoute()
+const router = useRouter()
 
 const columns: DataTableColumn[] = [
   { key: 'name', label: 'Agent' },
@@ -59,6 +62,19 @@ const selectedModel = computed(() =>
   selectedAgent.value?.model_id ? modelMap.value.get(selectedAgent.value.model_id) : null,
 )
 
+async function selectAgent(agentId: string) {
+  selectedAgentId.value = agentId
+
+  if (route.query.agentId !== agentId) {
+    await router.replace({
+      query: {
+        ...route.query,
+        agentId,
+      },
+    })
+  }
+}
+
 async function loadProxyData() {
   loadError.value = ''
   upstreamUnavailable.value = false
@@ -88,12 +104,35 @@ async function loadProxyData() {
     upstreamUnavailable.value = true
   }
 
-  selectedAgentId.value = agents.value[0]?.agent_id ?? ''
+  const requestedAgentId = typeof route.query.agentId === 'string' ? route.query.agentId : ''
+  const nextAgentId =
+    agents.value.find((item) => item.agent_id === requestedAgentId)?.agent_id ?? agents.value[0]?.agent_id ?? ''
+  if (nextAgentId) {
+    await selectAgent(nextAgentId)
+    return
+  }
+
+  selectedAgentId.value = ''
 }
 
 function handleRowSelect(row: Record<string, string>) {
-  selectedAgentId.value = row.id
+  void selectAgent(row.id)
 }
+
+watch(
+  () => route.query.agentId,
+  (agentId) => {
+    const nextAgentId = typeof agentId === 'string' ? agentId : ''
+    if (!nextAgentId || nextAgentId === selectedAgentId.value) {
+      return
+    }
+
+    const exists = agents.value.some((item) => item.agent_id === nextAgentId)
+    if (exists) {
+      selectedAgentId.value = nextAgentId
+    }
+  },
+)
 
 onMounted(() => {
   void loadProxyData()

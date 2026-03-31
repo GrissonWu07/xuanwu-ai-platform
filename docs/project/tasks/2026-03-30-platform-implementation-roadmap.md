@@ -84,11 +84,23 @@
     - `Settings`
     - `Sign out`
     - `Telemetry & Alarms`
+  - query-backed detail selection for:
+    - `Users & Roles`
+    - `Channels & Gateways`
+    - `AI Config Proxy`
   - portal-facing management read models
   - detail-backed drilldown on:
     - `Jobs` via schedule and run detail APIs
     - `Alerts` via alarm detail API
+    - profile destinations via selected-object detail panels
   - actionable `Overview` quick cards that route into the corresponding primary workspaces
+  - actionable `Overview` live activity items that route into deep-linked object workspaces
+  - deep-linkable workspace selection on:
+    - `Devices`
+    - `Agents`
+    - `Jobs`
+    - `Alerts`
+  - `Channels & Gateways` upgraded from raw lists to a live gateway overview view with protocol and site distribution
 - Verified with portal unit tests and `vite` production build.
 
 ### Phase 7: upstream `XuanWu` integration

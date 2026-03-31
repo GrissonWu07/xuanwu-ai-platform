@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import App from '@/App.vue'
 import { routes } from '@/router'
+import { renderPortal } from './renderPortal'
 
 const devicesPayload = {
   items: [
@@ -150,5 +151,75 @@ describe('DevicesPage', () => {
     expect(await within(detailPanel).findByText('agent_line_supervisor')).toBeVisible()
     expect(within(detailPanel).getByText('pending_bind')).toBeVisible()
     expect(within(detailPanel).getByText('screen_brightness')).toBeVisible()
+  })
+
+  it('honors the deviceId query parameter for initial selection', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => devicesPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => secondDetail,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/edge-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => firstDetail,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/devices?deviceId=panel-07', fetchMock)
+
+    const detailPanel = await screen.findByTestId('device-detail-panel')
+    expect(await within(detailPanel).findByText('agent_line_supervisor')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/devices/panel-07/detail', expect.any(Object))
+  })
+
+  it('updates the route query when a different device is selected', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => devicesPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/edge-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => firstDetail,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/panel-07/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => secondDetail,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    const { router } = await renderPortal('/devices', fetchMock)
+
+    await fireEvent.click(await screen.findByRole('button', { name: /Assembly panel seven/i }))
+
+    await waitFor(() => {
+      expect(router.currentRoute.value.query.deviceId).toBe('panel-07')
+    })
+    const detailPanel = await screen.findByTestId('device-detail-panel')
+    expect(await within(detailPanel).findByText('agent_line_supervisor')).toBeVisible()
   })
 })

@@ -2010,6 +2010,12 @@ def test_control_plane_overview_and_device_detail_endpoints_return_real_aggregat
         assert overview_payload["summary"]["gateway_count"] == 1
         assert overview_payload["activity"][0]["event_id"] == "evt-device-001"
         assert overview_payload["gateway_summary"]["protocol_distribution"]["http"] == 1
+        assert overview_payload["hero"]["title"]
+        assert overview_payload["statusPills"][0]["label"]
+        assert any(item["id"] == "devices" for item in overview_payload["quickStats"])
+        assert overview_payload["todaySummary"]
+        assert overview_payload["liveActivity"][0]["id"] == "evt-device-001"
+        assert overview_payload["liveActivity"][0]["to"] == "/devices?deviceId=dev-living-room-001"
 
         assert portal_config_response.status == 200
         assert portal_config_payload["product"]["name"] == "XuanWu Portal"
@@ -2027,12 +2033,18 @@ def test_control_plane_overview_and_device_detail_endpoints_return_real_aggregat
         assert jobs_overview_payload["running_count"] == 1
         assert jobs_overview_payload["recent_failures"][0]["job_run_id"] == failed_run["job_run_id"]
         assert jobs_overview_payload["executor_distribution"] == {"platform": 1, "gateway": 1}
+        assert jobs_overview_payload["summary"][0]["label"] == "Healthy schedules"
+        assert jobs_overview_payload["schedules"][0]["schedule_id"] == "sched-home-rollup-001"
+        assert jobs_overview_payload["runs"][0]["job_run_id"] == failed_run["job_run_id"]
 
         assert alerts_overview_response.status == 200
         assert alerts_overview_payload["severity_counts"]["critical"] == 1
         assert alerts_overview_payload["ack_pending_count"] == 1
         assert alerts_overview_payload["escalated_today"] == 1
         assert alerts_overview_payload["top_active_sources"][0]["source"] == "living-room-sensor"
+        assert alerts_overview_payload["summary"][0]["label"] == "Active alerts"
+        assert alerts_overview_payload["alerts"][0]["alarm_id"] == "alarm-001"
+        assert alerts_overview_payload["activity"][0]["title"]
 
         assert device_detail_response.status == 200
         assert device_detail_payload["owner_summary"]["user_id"] == "user-ops-001"

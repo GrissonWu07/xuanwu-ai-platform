@@ -115,4 +115,37 @@ describe('AgentsPage', () => {
     expect(await screen.findByText('XuanWu upstream unavailable')).toBeVisible()
     expect(screen.getByText(/Agent proxy data is temporarily unavailable/i)).toBeVisible()
   })
+
+  it('honors the agentId query parameter for initial selection', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/xuanwu/agents') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => agentsPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/xuanwu/model-providers') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => providersPayload,
+        })
+      }
+
+      if (input === '/control-plane/v1/xuanwu/models') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => modelsPayload,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/agents?agentId=agent_line_supervisor', fetchMock)
+
+    const detail = await screen.findByTestId('agent-detail-panel')
+    expect(await within(detail).findByText('Assembly line supervisor')).toBeVisible()
+    expect(within(detail).getByText('provider_local_fallback')).toBeVisible()
+  })
 })

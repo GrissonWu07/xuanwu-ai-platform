@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -11,6 +12,10 @@ const me = ref<AuthMeResponse | null>(null)
 const roles = ref<RoleItem[]>([])
 const users = ref<UserItem[]>([])
 const error = ref('')
+const selectedUserId = ref('')
+const selectedRoleId = ref('')
+const route = useRoute()
+const router = useRouter()
 
 const roleColumns: DataTableColumn[] = [
   { key: 'label', label: 'Role' },
@@ -44,6 +49,51 @@ const userRows = computed(() =>
   })),
 )
 
+const selectedUser = computed(
+  () => users.value.find((user) => user.user_id === selectedUserId.value) ?? users.value[0] ?? null,
+)
+
+const selectedRole = computed(
+  () => roles.value.find((role) => role.role_id === selectedRoleId.value) ?? roles.value[0] ?? null,
+)
+
+const selectedRolePermissions = computed(() => selectedRole.value?.permissions ?? [])
+
+async function syncQuery(next: { userId?: string; roleId?: string }) {
+  const query = {
+    ...route.query,
+    userId: next.userId || undefined,
+    roleId: next.roleId || undefined,
+  }
+  await router.replace({ query })
+}
+
+async function selectUser(userId: string) {
+  if (!userId) {
+    return
+  }
+  selectedUserId.value = userId
+  if (route.query.userId !== userId) {
+    await syncQuery({
+      userId,
+      roleId: selectedRoleId.value,
+    })
+  }
+}
+
+async function selectRole(roleId: string) {
+  if (!roleId) {
+    return
+  }
+  selectedRoleId.value = roleId
+  if (route.query.roleId !== roleId) {
+    await syncQuery({
+      userId: selectedUserId.value,
+      roleId,
+    })
+  }
+}
+
 async function loadUsersRoles() {
   loading.value = true
   error.value = ''
@@ -53,12 +103,64 @@ async function loadUsersRoles() {
     me.value = mePayload
     roles.value = rolesPayload.items
     users.value = usersPayload.items
+
+    const requestedUserId = typeof route.query.userId === 'string' ? route.query.userId : ''
+    const requestedRoleId = typeof route.query.roleId === 'string' ? route.query.roleId : ''
+    const nextUserId = usersPayload.items.find((user) => user.user_id === requestedUserId)?.user_id ?? usersPayload.items[0]?.user_id ?? ''
+    const nextRoleId = rolesPayload.items.find((role) => role.role_id === requestedRoleId)?.role_id ?? rolesPayload.items[0]?.role_id ?? ''
+
+    if (nextUserId) {
+      selectedUserId.value = nextUserId
+    }
+    if (nextRoleId) {
+      selectedRoleId.value = nextRoleId
+    }
+
+    if (nextUserId && nextRoleId && (route.query.userId !== nextUserId || route.query.roleId !== nextRoleId)) {
+      await syncQuery({ userId: nextUserId, roleId: nextRoleId })
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unable to load users and roles'
   } finally {
     loading.value = false
   }
 }
+
+function handleUserSelect(row: Record<string, string>) {
+  void selectUser(row.id)
+}
+
+function handleRoleSelect(row: Record<string, string>) {
+  void selectRole(row.id)
+}
+
+watch(
+  () => route.query.userId,
+  (userId) => {
+    const nextUserId = typeof userId === 'string' ? userId : ''
+    if (!nextUserId || nextUserId === selectedUserId.value || users.value.length === 0) {
+      return
+    }
+    const exists = users.value.some((user) => user.user_id === nextUserId)
+    if (exists) {
+      selectedUserId.value = nextUserId
+    }
+  },
+)
+
+watch(
+  () => route.query.roleId,
+  (roleId) => {
+    const nextRoleId = typeof roleId === 'string' ? roleId : ''
+    if (!nextRoleId || nextRoleId === selectedRoleId.value || roles.value.length === 0) {
+      return
+    }
+    const exists = roles.value.some((role) => role.role_id === nextRoleId)
+    if (exists) {
+      selectedRoleId.value = nextRoleId
+    }
+  },
+)
 
 onMounted(loadUsersRoles)
 </script>
@@ -101,9 +203,67 @@ onMounted(loadUsersRoles)
 
       <div v-if="loading" class="loading-copy">Loading users and roles...</div>
 
-      <section v-else class="table-grid">
-        <DataTable title="Role catalogue" :columns="roleColumns" :rows="roleRows" row-key="id" />
-        <DataTable title="User directory" :columns="userColumns" :rows="userRows" row-key="id" />
+      <section v-else class="surface-grid">
+        <div class="table-stack">
+          <DataTable
+            title="Role catalogue"
+            :columns="roleColumns"
+            :rows="roleRows"
+            row-key="id"
+            row-label-key="label"
+            :selected-row-key="selectedRole?.role_id"
+            selectable
+            @row-select="handleRoleSelect"
+          />
+          <DataTable
+            title="User directory"
+            :columns="userColumns"
+            :rows="userRows"
+            row-key="id"
+            row-label-key="display_name"
+            :selected-row-key="selectedUser?.user_id"
+            selectable
+            @row-select="handleUserSelect"
+          />
+        </div>
+
+        <aside class="detail-stack">
+          <article v-if="selectedUser" class="panel" data-testid="user-detail-panel">
+            <header class="panel-head">
+              <div>
+                <span class="detail-eyebrow">Selected user</span>
+                <h2>{{ selectedUser.display_name ?? selectedUser.user_id }}</h2>
+              </div>
+              <span>{{ selectedUser.status ?? 'unknown' }}</span>
+            </header>
+            <div class="detail-grid">
+              <div class="detail-card">
+                <span>Email</span>
+                <strong>{{ selectedUser.email ?? 'No email' }}</strong>
+              </div>
+              <div class="detail-card">
+                <span>Role assignments</span>
+                <strong>{{ (selectedUser.role_ids ?? []).join(', ') || 'No roles' }}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article v-if="selectedRole" class="panel" data-testid="role-detail-panel">
+            <header class="panel-head">
+              <div>
+                <span class="detail-eyebrow">Selected role</span>
+                <h2>{{ selectedRole.label }}</h2>
+              </div>
+              <span>{{ selectedRole.permission_count ?? selectedRolePermissions.length }} permissions</span>
+            </header>
+            <p class="profile-copy">{{ selectedRole.description ?? 'No description' }}</p>
+            <div class="permission-list">
+              <span v-for="permission in selectedRolePermissions" :key="permission" class="permission-chip">
+                {{ permission }}
+              </span>
+            </div>
+          </article>
+        </aside>
       </section>
     </template>
   </section>
@@ -151,15 +311,22 @@ onMounted(loadUsersRoles)
   font-weight: 700;
 }
 
-.metric-grid,
-.table-grid {
+.metric-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.table-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.surface-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+  gap: 1rem;
+}
+
+.table-stack,
+.detail-stack {
+  display: grid;
+  gap: 1rem;
 }
 
 .panel {
@@ -178,10 +345,56 @@ onMounted(loadUsersRoles)
   margin-bottom: 0.75rem;
 }
 
+.panel-head h2 {
+  margin: 0.3rem 0 0;
+}
+
+.detail-eyebrow {
+  color: var(--soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.detail-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(124, 108, 255, 0.06);
+}
+
+.detail-card span {
+  color: var(--muted);
+}
+
+.permission-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.permission-chip {
+  display: inline-flex;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(124, 108, 255, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 @media (max-width: 960px) {
   .page-head,
   .metric-grid,
-  .table-grid {
+  .surface-grid,
+  .detail-grid {
     grid-template-columns: 1fr;
     display: grid;
   }

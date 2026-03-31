@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
@@ -19,6 +20,8 @@ const selectedScheduleId = ref('')
 const selectedScheduleDetail = ref<JobScheduleDetailResponse | null>(null)
 const selectedRunDetail = ref<JobRunDetailResponse | null>(null)
 const loadError = ref('')
+const route = useRoute()
+const router = useRouter()
 
 const columns: DataTableColumn[] = [
   { key: 'name', label: 'Schedule' },
@@ -76,6 +79,7 @@ const selectedRunSummary = computed(() => {
 
 async function loadScheduleDetail(scheduleId: string) {
   try {
+    selectedScheduleId.value = scheduleId
     selectedScheduleDetail.value = await getJobSchedule(scheduleId)
     const latestRun = runs.value.find((item) => item.schedule_id === scheduleId)
     if (latestRun) {
@@ -88,15 +92,32 @@ async function loadScheduleDetail(scheduleId: string) {
   }
 }
 
+async function selectSchedule(scheduleId: string) {
+  await loadScheduleDetail(scheduleId)
+
+  if (route.query.scheduleId !== scheduleId) {
+    await router.replace({
+      query: {
+        ...route.query,
+        scheduleId,
+      },
+    })
+  }
+}
+
 async function loadOverview() {
   loadError.value = ''
 
   try {
     const response = await getJobsOverview()
     overview.value = response
-    selectedScheduleId.value = response.schedules[0]?.schedule_id ?? ''
-    if (selectedScheduleId.value) {
-      await loadScheduleDetail(selectedScheduleId.value)
+    const requestedScheduleId = typeof route.query.scheduleId === 'string' ? route.query.scheduleId : ''
+    const nextScheduleId =
+      response.schedules.find((item) => item.schedule_id === requestedScheduleId)?.schedule_id ??
+      response.schedules[0]?.schedule_id ??
+      ''
+    if (nextScheduleId) {
+      await selectSchedule(nextScheduleId)
     }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Jobs overview is unavailable.'
@@ -104,9 +125,23 @@ async function loadOverview() {
 }
 
 function handleRowSelect(row: Record<string, string>) {
-  selectedScheduleId.value = row.id
-  void loadScheduleDetail(row.id)
+  void selectSchedule(row.id)
 }
+
+watch(
+  () => route.query.scheduleId,
+  (scheduleId) => {
+    const nextScheduleId = typeof scheduleId === 'string' ? scheduleId : ''
+    if (!nextScheduleId || nextScheduleId === selectedScheduleId.value || schedules.value.length === 0) {
+      return
+    }
+
+    const exists = schedules.value.some((item) => item.schedule_id === nextScheduleId)
+    if (exists) {
+      void loadScheduleDetail(nextScheduleId)
+    }
+  },
+)
 
 onMounted(() => {
   void loadOverview()

@@ -20,9 +20,14 @@ export async function renderPortal(initialPath: string, fetchMock?: ReturnType<t
   router.push(initialPath)
   await router.isReady()
 
-  return render(App, {
+  const rendered = render(App, {
     global: {
       plugins: [router],
     },
   })
+
+  return {
+    router,
+    ...rendered,
+  }
 }

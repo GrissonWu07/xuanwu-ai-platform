@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
@@ -15,6 +16,8 @@ const selectedAlarmId = ref('')
 const selectedAlarmDetail = ref<AlarmDetailResponse | null>(null)
 const loadError = ref('')
 const isAcking = ref(false)
+const route = useRoute()
+const router = useRouter()
 
 const columns: DataTableColumn[] = [
   { key: 'title', label: 'Alert' },
@@ -48,7 +51,21 @@ const activityItems = computed(
 )
 
 async function loadAlarmDetail(alarmId: string) {
+  selectedAlarmId.value = alarmId
   selectedAlarmDetail.value = await getAlarm(alarmId)
+}
+
+async function selectAlarm(alarmId: string) {
+  await loadAlarmDetail(alarmId)
+
+  if (route.query.alarmId !== alarmId) {
+    await router.replace({
+      query: {
+        ...route.query,
+        alarmId,
+      },
+    })
+  }
 }
 
 async function loadAlerts() {
@@ -58,9 +75,13 @@ async function loadAlerts() {
     const [overviewResponse, alarmsResponse] = await Promise.all([getAlertsOverview(), listAlarms()])
     overview.value = overviewResponse
     alarms.value = alarmsResponse.items
-    selectedAlarmId.value = alarmsResponse.items[0]?.alarm_id ?? ''
-    if (selectedAlarmId.value) {
-      await loadAlarmDetail(selectedAlarmId.value)
+    const requestedAlarmId = typeof route.query.alarmId === 'string' ? route.query.alarmId : ''
+    const nextAlarmId =
+      alarmsResponse.items.find((item) => item.alarm_id === requestedAlarmId)?.alarm_id ??
+      alarmsResponse.items[0]?.alarm_id ??
+      ''
+    if (nextAlarmId) {
+      await selectAlarm(nextAlarmId)
     }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Alerts overview is unavailable.'
@@ -68,8 +89,7 @@ async function loadAlerts() {
 }
 
 function handleRowSelect(row: Record<string, string>) {
-  selectedAlarmId.value = row.id
-  void loadAlarmDetail(row.id)
+  void selectAlarm(row.id)
 }
 
 async function acknowledgeSelectedAlarm() {
@@ -95,6 +115,21 @@ async function acknowledgeSelectedAlarm() {
 onMounted(() => {
   void loadAlerts()
 })
+
+watch(
+  () => route.query.alarmId,
+  (alarmId) => {
+    const nextAlarmId = typeof alarmId === 'string' ? alarmId : ''
+    if (!nextAlarmId || nextAlarmId === selectedAlarmId.value || alarms.value.length === 0) {
+      return
+    }
+
+    const exists = alarms.value.some((item) => item.alarm_id === nextAlarmId)
+    if (exists) {
+      void loadAlarmDetail(nextAlarmId)
+    }
+  },
+)
 </script>
 
 <template>

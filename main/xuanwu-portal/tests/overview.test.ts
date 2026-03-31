@@ -179,4 +179,112 @@ describe('OverviewPage', () => {
       expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/devices/dev-lobby-01/detail', expect.any(Object))
     })
   })
+
+  it('routes into a deep-linked alert from live activity items', async () => {
+    const fetchMock = vi.fn((input: string) => {
+      if (input === '/control-plane/v1/dashboard/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            ...dashboardPayload,
+            liveActivity: [
+              {
+                id: 'evt_alert',
+                title: 'Critical alert acknowledged',
+                detail: 'Alert alarm_gateway_latency was acknowledged by operator gang.wu.',
+                at: '2026-03-31T10:58:00+08:00',
+                to: '/alerts?alarmId=alarm_gateway_latency',
+              },
+            ],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/alerts/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            summary: [
+              { label: 'Active alerts', value: '1' },
+              { label: 'Acknowledged', value: '4' },
+              { label: 'Critical', value: '1' },
+            ],
+            alerts: [
+              {
+                alarm_id: 'alarm_gateway_latency',
+                title: 'Gateway latency spike',
+                severity: 'critical',
+                status: 'active',
+                source: 'gateway-west',
+                created_at: '2026-03-31T10:24:00+08:00',
+              },
+            ],
+            activity: [],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            items: [
+              {
+                alarm_id: 'alarm_gateway_latency',
+                title: 'Gateway latency spike',
+                severity: 'critical',
+                status: 'active',
+                source: 'gateway-west',
+                created_at: '2026-03-31T10:24:00+08:00',
+              },
+            ],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/alarms/alarm_gateway_latency') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            alarm_id: 'alarm_gateway_latency',
+            title: 'Gateway latency spike',
+            severity: 'critical',
+            status: 'active',
+            source: 'gateway-west',
+            created_at: '2026-03-31T10:24:00+08:00',
+            gateway_id: 'gw-west-01',
+            device_id: 'dev-floor-02',
+            message: 'Gateway west exceeded the latency budget for three consecutive intervals.',
+          }),
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes,
+    })
+    router.push('/overview')
+    await router.isReady()
+
+    render(App, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await fireEvent.click(await screen.findByRole('link', { name: /Critical alert acknowledged/i }))
+
+    expect(await screen.findByRole('heading', { name: 'Alerts' })).toBeVisible()
+    await waitFor(() => {
+      expect(router.currentRoute.value.query.alarmId).toBe('alarm_gateway_latency')
+    })
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/alarms/alarm_gateway_latency', expect.any(Object))
+    })
+  })
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import ActivityFeed from '@/components/ActivityFeed.vue'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
@@ -11,6 +12,8 @@ const selectedDeviceId = ref('')
 const detail = ref<DeviceDetailResponse | null>(null)
 const search = ref('')
 const loadError = ref('')
+const route = useRoute()
+const router = useRouter()
 
 const columns: DataTableColumn[] = [
   { key: 'name', label: 'Device' },
@@ -47,6 +50,23 @@ async function loadDeviceDetail(deviceId: string) {
   detail.value = await getDeviceDetail(deviceId)
 }
 
+async function selectDevice(deviceId: string) {
+  if (!deviceId) {
+    return
+  }
+
+  await loadDeviceDetail(deviceId)
+
+  if (route.query.deviceId !== deviceId) {
+    await router.replace({
+      query: {
+        ...route.query,
+        deviceId,
+      },
+    })
+  }
+}
+
 async function loadDevices() {
   loadError.value = ''
 
@@ -54,8 +74,12 @@ async function loadDevices() {
     const response = await getDevices()
     devices.value = response.items
 
-    if (response.items.length > 0) {
-      await loadDeviceDetail(response.items[0].device_id)
+    const requestedDeviceId = typeof route.query.deviceId === 'string' ? route.query.deviceId : ''
+    const nextDeviceId =
+      response.items.find((item) => item.device_id === requestedDeviceId)?.device_id ?? response.items[0]?.device_id ?? ''
+
+    if (nextDeviceId) {
+      await selectDevice(nextDeviceId)
     }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Device inventory is unavailable.'
@@ -63,8 +87,23 @@ async function loadDevices() {
 }
 
 function handleRowSelect(row: Record<string, string>) {
-  void loadDeviceDetail(row.id)
+  void selectDevice(row.id)
 }
+
+watch(
+  () => route.query.deviceId,
+  (deviceId) => {
+    const nextDeviceId = typeof deviceId === 'string' ? deviceId : ''
+    if (!nextDeviceId || nextDeviceId === selectedDeviceId.value || devices.value.length === 0) {
+      return
+    }
+
+    const exists = devices.value.some((item) => item.device_id === nextDeviceId)
+    if (exists) {
+      void loadDeviceDetail(nextDeviceId)
+    }
+  },
+)
 
 const detailActivity = computed(
   () =>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 defineProps<{
-  items: Array<{ title: string; meta: string }>
+  items: Array<{ title: string; meta: string; to?: string }>
 }>()
 </script>
 
@@ -9,7 +11,8 @@ defineProps<{
     <div v-for="item in items" :key="item.title" class="feed-item">
       <span class="feed-dot" aria-hidden="true" />
       <div>
-        <p>{{ item.title }}</p>
+        <RouterLink v-if="item.to" :to="item.to" class="feed-link">{{ item.title }}</RouterLink>
+        <p v-else>{{ item.title }}</p>
         <span>{{ item.meta }}</span>
       </div>
     </div>
@@ -41,6 +44,17 @@ defineProps<{
 .feed-item p {
   margin: 0;
   font-weight: 600;
+}
+
+.feed-link {
+  display: inline-flex;
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.feed-link:hover {
+  color: var(--accent-strong);
 }
 
 .feed-item span {
