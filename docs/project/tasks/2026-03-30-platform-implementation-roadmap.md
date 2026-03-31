@@ -88,12 +88,13 @@
     - `Users & Roles`
     - `Channels & Gateways`
     - `AI Config Proxy`
+    - `Settings`
     - `Telemetry & Alarms`
   - portal-facing management read models
   - detail-backed drilldown on:
     - `Jobs` via schedule and run detail APIs
     - `Alerts` via alarm detail API
-    - profile destinations via selected-object detail panels
+    - profile destinations via selected-object detail panels, including feature flags and service endpoints in `Settings`
   - actionable `Overview` quick cards that route into the corresponding primary workspaces
   - actionable `Overview` live activity items that route into deep-linked object workspaces
   - deep-linkable workspace selection on:

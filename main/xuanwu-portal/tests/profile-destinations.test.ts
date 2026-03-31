@@ -218,8 +218,9 @@ describe('portal profile destinations', () => {
     await renderPortal('/settings', fetchMock)
     expect(await screen.findByRole('heading', { name: 'Settings' })).toBeVisible()
     expect(await screen.findByText('support@example.com')).toBeVisible()
-    expect(await screen.findByText('management')).toBeVisible()
-    expect(await screen.findByText('http://management:8000')).toBeVisible()
+    const endpointDetail = await screen.findByTestId('endpoint-detail-panel')
+    expect(within(endpointDetail).getByRole('heading', { name: 'management' })).toBeVisible()
+    expect(within(endpointDetail).getByText('http://management:8000')).toBeVisible()
   })
 
   it('honors query-backed detail selection for users/roles and AI proxy resources', async () => {
