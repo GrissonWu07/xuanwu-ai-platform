@@ -49,10 +49,12 @@
   - `Users & Roles` via `?userId=...&roleId=...`
   - `Channels & Gateways` via `?channelId=...&gatewayId=...`
   - `AI Config Proxy` via `?agentId=...&providerId=...&modelId=...`
+  - `Telemetry & Alarms` via `?telemetryId=...&eventId=...&alarmId=...`
 - `xuanwu-portal` profile-menu destinations now expose detail panels for:
   - selected user and role
   - selected channel and gateway
   - selected proxied agent, provider, and model
+  - selected telemetry sample, event, and alarm
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`

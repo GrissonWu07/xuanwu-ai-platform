@@ -88,6 +88,7 @@
     - `Users & Roles`
     - `Channels & Gateways`
     - `AI Config Proxy`
+    - `Telemetry & Alarms`
   - portal-facing management read models
   - detail-backed drilldown on:
     - `Jobs` via schedule and run detail APIs
