@@ -9,7 +9,7 @@ class OpcUaAdapter(BaseGatewayAdapter):
     adapter_type = "opc_ua"
     display_name = "OPC UA Adapter"
     supports_dry_run = False
-    supported_capabilities = ("industrial.node.read", "industrial.node.write")
+    supported_capabilities = ("industrial.node.read", "industrial.node.write", "industrial.node.browse")
 
     def __init__(self, *, transport=None):
         self.transport = transport or OpcUaTransport()
@@ -57,6 +57,15 @@ class OpcUaTransport:
         try:
             client.connect()
             node = client.get_node(kwargs["node_id"])
+            if kwargs["action"] == "browse_node":
+                children = []
+                for child in node.get_children():
+                    node_id = getattr(child, "nodeid", child)
+                    if hasattr(node_id, "to_string"):
+                        children.append(node_id.to_string())
+                    else:
+                        children.append(str(node_id))
+                return {"status": "ok", "children": children}
             if kwargs["action"] == "read_node":
                 return {"status": "ok", "value": node.get_value()}
             if kwargs["action"] == "write_node":

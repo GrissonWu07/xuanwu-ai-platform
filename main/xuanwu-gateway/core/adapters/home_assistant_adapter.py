@@ -7,7 +7,8 @@ from core.adapters.http_adapter import HttpAdapter
 class HomeAssistantAdapter(HttpAdapter):
     adapter_type = "home_assistant"
     display_name = "Home Assistant Adapter"
-    supported_capabilities = ("switch.on_off", "light.brightness", "home_assistant.service")
+    supports_ingest = True
+    supported_capabilities = ("switch.on_off", "light.brightness", "home_assistant.service", "home_assistant.state")
 
     def validate_command(self, command: dict) -> None:
         route = dict(command.get("route") or {})
@@ -60,4 +61,47 @@ class HomeAssistantAdapter(HttpAdapter):
             "timeout_ms": route.get("timeout_ms", 5000),
         }
         return translated
+
+    def validate_ingest_payload(self, payload: dict) -> None:
+        if not str(payload.get("device_id") or "").strip():
+            raise GatewayConfigurationError("device_id_required", "device_id is required")
+        if not str(payload.get("gateway_id") or "").strip():
+            raise GatewayConfigurationError("gateway_id_required", "gateway_id is required")
+        if not str(payload.get("entity_id") or "").strip():
+            raise GatewayConfigurationError("entity_id_required", "entity_id is required")
+        if not isinstance(payload.get("state"), dict):
+            raise GatewayConfigurationError("state_required", "state object is required")
+
+    def normalize_ingest(self, payload: dict) -> dict:
+        state = dict(payload.get("state") or {})
+        attributes = dict(state.get("attributes") or {})
+        telemetry_payload = {
+            "telemetry_id": payload.get("telemetry_id") or f"telemetry-{payload.get('device_id')}",
+            "device_id": payload.get("device_id"),
+            "gateway_id": payload.get("gateway_id"),
+            "capability_code": payload.get("capability_code") or "home_assistant.state",
+            "observed_at": payload.get("observed_at"),
+            "metrics": {
+                "state": state.get("state"),
+                **attributes,
+            },
+        }
+        event_payload = {
+            "event_id": payload.get("event_id") or f"event-{payload.get('device_id')}",
+            "device_id": payload.get("device_id"),
+            "gateway_id": payload.get("gateway_id"),
+            "event_type": "home_assistant.state_changed",
+            "severity": "info",
+            "occurred_at": payload.get("observed_at"),
+            "payload": {
+                "entity_id": payload.get("entity_id"),
+                "state": state.get("state"),
+                "attributes": attributes,
+            },
+        }
+        return {
+            "status": "accepted",
+            "telemetry": [telemetry_payload],
+            "events": [event_payload],
+        }
 

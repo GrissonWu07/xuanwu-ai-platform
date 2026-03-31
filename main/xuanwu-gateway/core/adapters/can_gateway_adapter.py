@@ -34,6 +34,7 @@ class CanGatewayAdapter(BaseGatewayAdapter):
             frame_id=int(route.get("frame_id")),
             dlc=int(route.get("dlc") or 8),
             data=list((command.get("arguments") or {}).get("data") or []),
+            action=str(command.get("command_name") or "").strip(),
             timeout_ms=int(route.get("timeout_ms") or 5000),
         )
         if response.get("status") != "ok":
@@ -61,8 +62,9 @@ class CanHttpBridgeTransport:
             "data": kwargs["data"],
         }
         data = json.dumps(payload).encode("utf-8")
+        path = "/frames/query" if kwargs.get("action") == "query_frame_state" else "/frames"
         req = urllib_request.Request(
-            url=f"{kwargs['bridge_url']}/frames",
+            url=f"{kwargs['bridge_url']}{path}",
             data=data,
             method="POST",
             headers={"Content-Type": "application/json"},

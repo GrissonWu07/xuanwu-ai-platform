@@ -109,3 +109,22 @@ def test_mqtt_adapter_normalizes_broker_message_into_gateway_ingest_payload():
     assert result["status"] == "accepted"
     assert result["telemetry"][0]["metrics"]["temperature"] == 24.6
     assert result["events"][0]["payload"]["topic"] == "factory/line-1/temp"
+
+
+def test_mqtt_adapter_ingest_uses_broker_message_normalization():
+    module = _load_mqtt_adapter_module()
+    adapter = module.MqttAdapter()
+
+    result = adapter.ingest(
+        {
+            "device_id": "sensor-mqtt-002",
+            "gateway_id": "gateway-mqtt-001",
+            "topic": "factory/line-2/temp",
+            "observed_at": "2026-03-31T10:05:00Z",
+            "telemetry": {"temperature": 25.1},
+        }
+    )
+
+    assert result["status"] == "accepted"
+    assert result["telemetry"][0]["device_id"] == "sensor-mqtt-002"
+    assert result["events"][0]["payload"]["topic"] == "factory/line-2/temp"

@@ -80,3 +80,23 @@ def test_mqtt_ingest_normalizes_telemetry_and_event():
     assert payload["status"] == "accepted"
     assert management_client.telemetry[0]["device_id"] == "sensor-002"
     assert management_client.events[0]["payload"]["topic"] == "site/plant/sensor-002/telemetry"
+
+
+def test_home_assistant_ingest_normalizes_state_change_event():
+    module = _load_handler_module()
+    management_client = FakeManagementClient()
+    handler = module.GatewayHandler({}, management_client=management_client)
+    request = make_mocked_request("POST", "/gateway/v1/ingest/home-assistant")
+    request._read_bytes = (
+        b'{"adapter_type":"home_assistant","gateway_id":"gateway-ha-001","device_id":"light-living-room",'
+        b'"observed_at":"2026-03-31T10:03:00Z","entity_id":"light.living_room",'
+        b'"state":{"state":"on","attributes":{"brightness":180,"color_mode":"rgb"}}}'
+    )
+
+    response = asyncio.run(handler.handle_ingest_home_assistant(request))
+
+    assert response.status == 202
+    payload = handler._loads_json(response.text)
+    assert payload["status"] == "accepted"
+    assert management_client.telemetry[0]["metrics"]["brightness"] == 180
+    assert management_client.events[0]["event_type"] == "home_assistant.state_changed"

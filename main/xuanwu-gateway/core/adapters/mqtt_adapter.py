@@ -10,6 +10,7 @@ from core.contracts.models import build_command_result
 class MqttAdapter(BaseGatewayAdapter):
     adapter_type = "mqtt"
     display_name = "MQTT Adapter"
+    supports_ingest = True
     supported_capabilities = ("switch.on_off", "actuator.mqtt", "sensor.mqtt")
 
     def __init__(self, *, transport=None):
@@ -87,6 +88,19 @@ class MqttAdapter(BaseGatewayAdapter):
             "telemetry": [telemetry_payload],
             "events": [event_payload],
         }
+
+    def validate_ingest_payload(self, payload: dict) -> None:
+        if not str(payload.get("device_id") or "").strip():
+            raise GatewayConfigurationError("device_id_required", "device_id is required")
+        if not str(payload.get("gateway_id") or "").strip():
+            raise GatewayConfigurationError("gateway_id_required", "gateway_id is required")
+        if not str(payload.get("topic") or "").strip():
+            raise GatewayConfigurationError("topic_required", "topic is required")
+        if not isinstance(payload.get("telemetry"), dict):
+            raise GatewayConfigurationError("telemetry_required", "telemetry object is required")
+
+    def normalize_ingest(self, payload: dict) -> dict:
+        return self.normalize_broker_message(payload)
 
 
 class PahoMqttTransport:

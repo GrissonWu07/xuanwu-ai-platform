@@ -138,7 +138,16 @@ class GatewayHandler:
             payload = await request.json()
         except Exception:
             return self._json_response({"error": "invalid_json"}, status=400)
-        payload.setdefault("adapter_type", "sensor_mqtt")
+        payload.setdefault("adapter_type", "mqtt")
+        result, status = await self._ingest_payload(payload)
+        return self._json_response(result, status=status)
+
+    async def handle_ingest_home_assistant(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        payload.setdefault("adapter_type", "home_assistant")
         result, status = await self._ingest_payload(payload)
         return self._json_response(result, status=status)
 

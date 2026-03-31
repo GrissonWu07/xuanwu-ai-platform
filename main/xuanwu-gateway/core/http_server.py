@@ -16,6 +16,7 @@ def create_http_app(config: dict) -> web.Application:
             web.post("/gateway/v1/jobs:execute", handler.handle_execute_job),
             web.post("/gateway/v1/ingest/http-push", handler.handle_ingest_http_push),
             web.post("/gateway/v1/ingest/mqtt", handler.handle_ingest_mqtt),
+            web.post("/gateway/v1/ingest/home-assistant", handler.handle_ingest_home_assistant),
             web.get("/gateway/v1/devices/{device_id}/state", handler.handle_get_device_state),
         ]
     )

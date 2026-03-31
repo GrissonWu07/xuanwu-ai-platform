@@ -9,7 +9,7 @@ class BacnetIpAdapter(BaseGatewayAdapter):
     adapter_type = "bacnet_ip"
     display_name = "BACnet IP Adapter"
     supports_dry_run = False
-    supported_capabilities = ("industrial.property.read", "industrial.property.write")
+    supported_capabilities = ("industrial.property.read", "industrial.property.write", "industrial.property.read_multiple")
 
     def __init__(self, *, transport=None):
         self.transport = transport or BacnetTransport()
@@ -19,7 +19,11 @@ class BacnetIpAdapter(BaseGatewayAdapter):
         route = dict(command.get("route") or {})
         if not str(route.get("address") or "").strip():
             raise GatewayConfigurationError("address_required", "route.address is required")
-        if not str(route.get("property_name") or "").strip():
+        if str(command.get("command_name") or "").strip() == "read_property_multiple":
+            property_names = route.get("property_names")
+            if not isinstance(property_names, list) or not property_names:
+                raise GatewayConfigurationError("property_names_required", "route.property_names is required")
+        elif not str(route.get("property_name") or "").strip():
             raise GatewayConfigurationError("property_name_required", "route.property_name is required")
         if route.get("object_instance") is None:
             raise GatewayConfigurationError("object_instance_required", "route.object_instance is required")
@@ -32,6 +36,7 @@ class BacnetIpAdapter(BaseGatewayAdapter):
             object_type=str(route.get("object_type") or "").strip(),
             object_instance=int(route.get("object_instance")),
             property_name=str(route.get("property_name") or "").strip(),
+            property_names=list(route.get("property_names") or []),
             value=(command.get("arguments") or {}).get("value"),
             timeout_ms=int(route.get("timeout_ms") or 5000),
         )
@@ -60,6 +65,13 @@ class BacnetTransport:
         bacnet = BAC0.lite()
         try:
             target = f"{kwargs['object_type']} {kwargs['object_instance']} {kwargs['property_name']}"
+            if kwargs["action"] == "read_property_multiple":
+                values = {}
+                for property_name in kwargs.get("property_names") or []:
+                    values[property_name] = bacnet.read(
+                        f"{kwargs['address']} {kwargs['object_type']} {kwargs['object_instance']} {property_name}"
+                    )
+                return {"status": "ok", "values": values}
             if kwargs["action"] == "read_property":
                 value = bacnet.read(f"{kwargs['address']} {target}")
                 return {"status": "ok", "value": value}

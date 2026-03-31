@@ -2,6 +2,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import sys
 import types
+import json
 
 
 def _load_module(module_name, relative_path):
@@ -235,6 +236,54 @@ def test_opc_ua_adapter_normalizes_node_browse():
     assert result["result"]["protocol_response"]["children"] == ["ns=2;s=Demo.Child.1", "ns=2;s=Demo.Child.2"]
 
 
+def test_opc_ua_transport_supports_browse_node(monkeypatch):
+    module = _load_module("xuanwu_gateway_opcua_transport_browse", "opc_ua_adapter.py")
+
+    class FakeNodeId:
+        def __init__(self, value):
+            self.value = value
+
+        def to_string(self):
+            return self.value
+
+    class FakeChildNode:
+        def __init__(self, value):
+            self.nodeid = FakeNodeId(value)
+
+    class FakeNode:
+        def get_children(self):
+            return [FakeChildNode("ns=2;s=Demo.Child.1"), FakeChildNode("ns=2;s=Demo.Child.2")]
+
+    class FakeClient:
+        def __init__(self, endpoint, timeout):
+            self.endpoint = endpoint
+            self.timeout = timeout
+
+        def connect(self):
+            return None
+
+        def get_node(self, node_id):
+            return FakeNode()
+
+        def disconnect(self):
+            return None
+
+    fake_opcua_module = types.ModuleType("opcua")
+    fake_opcua_module.Client = FakeClient
+    monkeypatch.setitem(sys.modules, "opcua", fake_opcua_module)
+
+    transport = module.OpcUaTransport()
+    result = transport.request(
+        action="browse_node",
+        endpoint="opc.tcp://10.0.0.30:4840",
+        node_id="ns=2;s=Demo.Root",
+        value=None,
+        timeout_ms=1000,
+    )
+
+    assert result == {"status": "ok", "children": ["ns=2;s=Demo.Child.1", "ns=2;s=Demo.Child.2"]}
+
+
 def test_bacnet_ip_adapter_normalizes_property_read():
     module = _load_module("xuanwu_gateway_bacnet_adapter", "bacnet_ip_adapter.py")
     transport = FakeTransport({"status": "ok", "value": "active"})
@@ -260,6 +309,66 @@ def test_bacnet_ip_adapter_normalizes_property_read():
     assert result["status"] == "succeeded"
     assert transport.calls[0]["property_name"] == "presentValue"
     assert result["result"]["protocol_response"]["value"] == "active"
+
+
+def test_bacnet_ip_adapter_normalizes_property_multiple_read():
+    module = _load_module("xuanwu_gateway_bacnet_adapter_multi", "bacnet_ip_adapter.py")
+    transport = FakeTransport({"status": "ok", "values": {"presentValue": 23.1, "units": "celsius"}})
+    adapter = module.BacnetIpAdapter(transport=transport)
+
+    result = adapter.dispatch(
+        {
+            "request_id": "req-bacnet-multi-001",
+            "gateway_id": "gateway-bacnet-001",
+            "adapter_type": "bacnet_ip",
+            "device_id": "ahu-001",
+            "capability_code": "industrial.property.read_multiple",
+            "command_name": "read_property_multiple",
+            "route": {
+                "address": "192.168.10.20",
+                "object_type": "analogValue",
+                "object_instance": 3,
+                "property_names": ["presentValue", "units"],
+            },
+        }
+    )
+
+    assert result["status"] == "succeeded"
+    assert transport.calls[0]["property_names"] == ["presentValue", "units"]
+    assert result["result"]["protocol_response"]["values"]["presentValue"] == 23.1
+
+
+def test_bacnet_transport_supports_property_multiple_read(monkeypatch):
+    module = _load_module("xuanwu_gateway_bacnet_transport_multi", "bacnet_ip_adapter.py")
+
+    class FakeBacnetRuntime:
+        def read(self, target):
+            if target.endswith("presentValue"):
+                return 23.1
+            if target.endswith("units"):
+                return "celsius"
+            raise AssertionError(f"unexpected target {target}")
+
+        def disconnect(self):
+            return None
+
+    fake_bac0_module = types.ModuleType("BAC0")
+    fake_bac0_module.lite = lambda: FakeBacnetRuntime()
+    monkeypatch.setitem(sys.modules, "BAC0", fake_bac0_module)
+
+    transport = module.BacnetTransport()
+    result = transport.request(
+        action="read_property_multiple",
+        address="192.168.10.20",
+        object_type="analogValue",
+        object_instance=3,
+        property_name="",
+        property_names=["presentValue", "units"],
+        value=None,
+        timeout_ms=1000,
+    )
+
+    assert result == {"status": "ok", "values": {"presentValue": 23.1, "units": "celsius"}}
 
 
 def test_can_gateway_adapter_normalizes_frame_command():
@@ -316,3 +425,45 @@ def test_can_gateway_adapter_normalizes_frame_query():
     assert result["status"] == "succeeded"
     assert transport.calls[0]["frame_id"] == 322
     assert result["result"]["protocol_response"]["signals"]["motor_speed"] == 1450
+
+
+def test_can_http_bridge_transport_supports_frame_query(monkeypatch):
+    module = _load_module("xuanwu_gateway_can_transport_query", "can_gateway_adapter.py")
+
+    captured = {}
+
+    class FakeResponse:
+        status = 200
+
+        def read(self):
+            return json.dumps({"signals": {"motor_speed": 1450}}).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        captured["method"] = req.get_method()
+        captured["body"] = json.loads(req.data.decode("utf-8"))
+        return FakeResponse()
+
+    monkeypatch.setattr(module.urllib_request, "urlopen", fake_urlopen)
+
+    transport = module.CanHttpBridgeTransport()
+    result = transport.request(
+        bridge_url="http://can-bridge.local",
+        channel="can0",
+        frame_id=322,
+        dlc=8,
+        data=[0, 0, 0, 0],
+        action="query_frame_state",
+        timeout_ms=1000,
+    )
+
+    assert captured["url"] == "http://can-bridge.local/frames/query"
+    assert captured["method"] == "POST"
+    assert result["status"] == "ok"
+    assert result["body"]["signals"]["motor_speed"] == 1450

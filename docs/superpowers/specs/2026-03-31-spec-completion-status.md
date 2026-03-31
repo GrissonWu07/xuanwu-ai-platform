@@ -21,10 +21,9 @@ It is the implementation-oriented completion ledger for the current platform blu
 
 - `xuanwu-portal` deeper operational CRUD across every workspace
 - `xuanwu-jobs` richer scheduling semantics
-- `xuanwu-gateway` deeper platform depth beyond the adapter baseline:
-  - broker-backed MQTT runtime operations
-  - richer Home Assistant sync beyond state reads
-  - deeper industrial browse/subscribe coverage
+- standalone wireless bridge services are specified but not implemented:
+  - `xuanwu-bluetooth-bridge`
+  - `xuanwu-nearlink-bridge`
 
 ### Not locally completable without upstream
 
@@ -41,6 +40,7 @@ It is the implementation-oriented completion ledger for the current platform blu
 | Management governance APIs | Defined | Complete | Events, telemetry, alarms, OTA, mappings, schedules are live |
 | Gateway contract | Defined | Complete | Contract is implemented through unified gateway surfaces |
 | Gateway module blueprint | Defined | Complete | Registry, dispatch, ingest, and adapter families are implemented |
+| Gateway adapter completion | Defined | Complete locally | MQTT, Home Assistant, Modbus, OPC UA, BACnet/IP, and CAN baseline depth are implemented |
 | Device-server boundary | Defined | Complete | Runtime service no longer hosts management paths |
 | Jobs foundation | Defined | Complete | Local lightweight scheduler-dispatcher is live |
 | Jobs advanced semantics | Defined implicitly | Partial | Pause/resume/trigger exist, but richer semantics are still pending |
@@ -94,7 +94,9 @@ Completed:
 
 - HTTP actuator adapter
 - MQTT actuator adapter
+- MQTT broker-message ingest normalization
 - Home Assistant service-call adapter
+- Home Assistant state read and state-change ingest
 - sensor HTTP push ingest adapter
 - sensor MQTT ingest adapter
 - industrial adapters for:
@@ -137,6 +139,16 @@ Still incomplete:
 - clearer retry / failure policy controls at the schedule definition level
 - deeper run-history and operator controls in the portal
 
+### Wireless bridge services
+
+Still incomplete:
+
+- standalone `xuanwu-bluetooth-bridge`
+- standalone `xuanwu-nearlink-bridge`
+- Linux RPM packaging for both bridge services
+- Windows Service packaging for both bridge services
+- gateway callback validation against real bridge implementations
+
 ## Upstream-Blocked Areas
 
 The following remain blocked on `XuanWu`:
@@ -158,4 +170,5 @@ The highest-priority local unfinished spec area is:
 
 1. `xuanwu-portal` deeper operational actions
 2. `xuanwu-jobs` richer scheduling semantics
-3. upstream `XuanWu` contract integration
+3. wireless bridge service implementation
+4. upstream `XuanWu` contract integration

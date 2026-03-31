@@ -50,15 +50,22 @@ That is not sufficient to satisfy the gateway-related platform specs.
 - adapter-level error normalization
 - realistic protocol integration tests
 
-### Remaining gap after the first adapter pass
+### Remaining gap after the current local pass
 
-The repository now has real adapter entrypoints and test-covered baseline implementations, but the following areas are still below the intended completion bar:
+The repository now has real adapter entrypoints and test-covered baseline implementations plus:
 
-- MQTT support is currently publish-oriented only and does not yet define broker-backed subscription ingestion or broker service deployment requirements
-- Home Assistant support is currently service-call oriented and does not yet define entity state read, state sync, or event-stream expectations
-- industrial adapters provide baseline read/write flows but do not yet define richer operation coverage and deployment dependencies in one place
-- runtime packaging does not yet formalize required Python dependencies and gateway container build expectations
-- wireless bridge services are not yet implemented as independent services, even though the gateway contract now expects bridge-style execution for Bluetooth and NearLink
+- MQTT publish and broker-message ingest normalization
+- Home Assistant service calls, entity-state reads, and state-change ingest
+- Modbus TCP baseline read/write coverage
+- OPC UA browse/read/write coverage
+- BACnet/IP property read/write plus multi-property read
+- CAN gateway command and query routing
+- explicit gateway dependency packaging and dedicated gateway Docker image
+
+The main remaining gap is no longer inside the gateway-local adapter logic. It is now primarily:
+
+- standalone wireless bridge service implementation for Bluetooth and NearLink
+- production hardening and deeper external dependency validation in real environments
 
 ## Required Completion Standard
 
@@ -292,69 +299,80 @@ It must also document that an MQTT broker is external infrastructure and not an 
 
 ### MQTT
 
-Still required beyond the current baseline:
-
-- broker-oriented subscription ingestion contract
-- stable topic-to-telemetry mapping profile
-- explicit broker deployment expectation
-- clearer retained-message and QoS handling guidance
-- runtime dependency packaging for `paho-mqtt`
-
-Gateway acceptance for MQTT should include both:
+Gateway-local completion now includes:
 
 - command publish
-- inbound telemetry/event ingestion through a broker-backed flow
+- broker-message normalization
+- broker-backed telemetry/event ingestion through gateway ingest surfaces
+- explicit external broker deployment expectation
+- runtime dependency packaging for `paho-mqtt`
+
+Remaining work is operational depth:
+
+- long-running broker subscription daemon strategy
+- richer retained-message and QoS recovery policy
 
 ### Home Assistant
 
-Still required beyond the current baseline:
-
-- entity-state read capability
-- normalized `device state` pull contract
-- optional event-stream sync strategy definition
-- clearer route schema for entity metadata and domain/service separation
-
-Gateway acceptance for Home Assistant should include:
+Gateway-local completion now includes:
 
 - service invocation
 - entity state read
+- normalized state-change ingest contract
+
+Remaining work is operational depth:
+
+- richer event-stream deployment patterns
+- broader entity discovery and sync ergonomics
 
 ### Modbus TCP
 
-Still required beyond the current baseline:
+Gateway-local completion now includes:
 
-- discrete input read
-- input register read
-- coil read
-- clearer function-to-command mapping table
+- holding-register reads
+- coil reads
+- discrete-input reads
+- input-register reads
+- single register writes
+- single coil writes
 - dependency packaging for `pymodbus`
 
 ### OPC UA
 
-Still required beyond the current baseline:
+Gateway-local completion now includes:
 
-- browse/read/write operation contract
+- browse/read/write operation support
 - explicit dependency packaging for the chosen OPC UA library
-- clearer security/session expectations
+
+Remaining work is operational depth:
+
+- richer security policy handling
+- deeper session management
 
 ### BACnet/IP
 
-Still required beyond the current baseline:
+Gateway-local completion now includes:
 
-- explicit `BAC0` deployment requirements
-- clearer network-mode expectations for Docker and host networking
-- object/property route examples beyond a single property read/write pair
+- property read
+- property write
+- multi-property read support
+- explicit `BAC0` dependency packaging
+
+Remaining work is deployment hardening:
+
+- host-network deployment guidance and production validation
 
 ### CAN gateway
 
-Still required beyond the current baseline:
+Gateway-local completion now includes:
 
-- stronger external bridge contract examples
-- state-query examples, not only command examples
+- command frame execution
+- state-query bridge routing
+- normalized command and query response paths
 
 ### Wireless adapters
 
-Still required beyond the current baseline:
+Gateway-local adapter routing is complete, but the standalone bridge services remain external implementation work:
 
 - standalone bridge specs for Bluetooth and NearLink
 - external bridge deployment guidance
@@ -394,10 +412,12 @@ Where a real external dependency is too heavy for the local suite, use:
 
 ## Definition of Done
 
-The gateway adapter implementation spec is complete only when:
+The gateway adapter implementation spec is complete locally when:
 
 - the Priority 1 adapter families are fully real implementations
-- `industrial/modbus_tcp` is implemented as the first industrial baseline
+- industrial baseline actions are implemented for Modbus TCP, OPC UA, BACnet/IP, and CAN query routing
 - realistic tests exist for each completed family
 - `xuanwu-gateway` is no longer accurately described as "skeleton adapters"
+
+Wireless bridge services remain separate implementation topics and are not counted as incomplete gateway-local adapter work.
 
