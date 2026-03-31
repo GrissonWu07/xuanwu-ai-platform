@@ -29,7 +29,19 @@ def test_registry_lists_builtin_adapters():
 
     adapter_types = sorted(item["adapter_type"] for item in registry.describe())
 
-    assert adapter_types == ["home_assistant", "http", "mqtt"]
+    assert adapter_types == [
+        "bacnet_ip",
+        "bluetooth",
+        "can_gateway",
+        "home_assistant",
+        "http",
+        "modbus_tcp",
+        "mqtt",
+        "nearlink",
+        "opc_ua",
+        "sensor_http_push",
+        "sensor_mqtt",
+    ]
 
 
 def test_builtin_adapters_describe_themselves():
@@ -40,3 +52,6 @@ def test_builtin_adapters_describe_themselves():
     assert descriptions["http"]["supports_dry_run"] is True
     assert descriptions["mqtt"]["supports_dry_run"] is True
     assert descriptions["home_assistant"]["supports_dry_run"] is True
+    assert descriptions["http"]["supports_ingest"] is False
+    assert descriptions["mqtt"]["supported_capabilities"]
+    assert descriptions["home_assistant"]["supported_capabilities"]

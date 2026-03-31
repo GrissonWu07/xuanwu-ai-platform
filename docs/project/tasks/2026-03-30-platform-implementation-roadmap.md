@@ -46,7 +46,20 @@
   - command dispatch
   - adapter inventory endpoint
   - health/config/device-state endpoints
-  - adapter directory layout for conversation, actuator, sensor, and industrial classes
+  - ingest endpoints for HTTP push and MQTT telemetry
+  - adapter directory layout for conversation, actuator, sensor, industrial, and wireless classes
+  - implemented adapter families:
+    - `http`
+    - `mqtt`
+    - `home_assistant`
+    - `sensor_http_push`
+    - `sensor_mqtt`
+    - `modbus_tcp`
+    - `opc_ua`
+    - `bacnet_ip`
+    - `can_gateway`
+    - `bluetooth`
+    - `nearlink`
 - Verified with bootstrap, registry, and dispatch tests.
 
 ### Phase 4: `xuanwu-device-server` boundary cleanup

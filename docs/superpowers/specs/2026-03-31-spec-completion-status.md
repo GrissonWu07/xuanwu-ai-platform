@@ -12,7 +12,7 @@ It is the implementation-oriented completion ledger for the current platform blu
 
 - `xuanwu-management-server` foundation and governance surfaces
 - `xuanwu-device-server` local boundary cleanup
-- `xuanwu-gateway` foundation, registry, and dispatch surfaces
+- `xuanwu-gateway` foundation plus protocol adapter implementation
 - `xuanwu-jobs` lightweight scheduler-dispatcher
 - `xuanwu-portal` unified frontend shell and current workspaces
 - Docker-first local delivery path
@@ -21,7 +21,6 @@ It is the implementation-oriented completion ledger for the current platform blu
 
 - `xuanwu-portal` deeper operational CRUD across every workspace
 - `xuanwu-jobs` richer scheduling semantics
-- `xuanwu-gateway` industrial and IoT protocol adapters beyond skeleton level
 
 ### Not locally completable without upstream
 
@@ -36,8 +35,8 @@ It is the implementation-oriented completion ledger for the current platform blu
 | Platform blueprint | Defined | Complete | Active blueprint and index are in place |
 | Management data model | Defined | Complete | User/device/channel/mapping/runtime model is live |
 | Management governance APIs | Defined | Complete | Events, telemetry, alarms, OTA, mappings, schedules are live |
-| Gateway contract | Defined | Partial | Contract is written; only foundation-level implementations are live |
-| Gateway module blueprint | Defined | Partial | Registry and dispatch exist; protocol adapters are not fully implemented |
+| Gateway contract | Defined | Complete | Contract is implemented through unified gateway surfaces |
+| Gateway module blueprint | Defined | Complete | Registry, dispatch, ingest, and adapter families are implemented |
 | Device-server boundary | Defined | Complete | Runtime service no longer hosts management paths |
 | Jobs foundation | Defined | Complete | Local lightweight scheduler-dispatcher is live |
 | Jobs advanced semantics | Defined implicitly | Partial | Pause/resume/trigger exist, but richer semantics are still pending |
@@ -85,6 +84,25 @@ Completed:
 - direct dispatch to local execution APIs
 - Docker service delivery path
 
+### `xuanwu-gateway`
+
+Completed:
+
+- HTTP actuator adapter
+- MQTT actuator adapter
+- Home Assistant service-call adapter
+- sensor HTTP push ingest adapter
+- sensor MQTT ingest adapter
+- industrial adapters for:
+  - Modbus TCP
+  - OPC UA
+  - BACnet/IP
+  - CAN gateway
+- wireless adapters for:
+  - Bluetooth
+  - NearLink
+- gateway ingress surfaces for telemetry and event normalization
+
 ### `xuanwu-portal`
 
 Completed:
@@ -115,21 +133,6 @@ Still incomplete:
 - clearer retry / failure policy controls at the schedule definition level
 - deeper run-history and operator controls in the portal
 
-### `xuanwu-gateway` adapters
-
-Still incomplete:
-
-- real HTTP actuator adapter behavior
-- real MQTT actuator and sensor behavior
-- real Home Assistant bridge behavior
-- real industrial protocol behavior for:
-  - Modbus TCP
-  - OPC UA
-  - BACnet/IP
-  - CAN gateway
-
-This area must not remain at dry-run/skeleton level if the gateway is expected to satisfy the platform blueprint.
-
 ## Upstream-Blocked Areas
 
 The following remain blocked on `XuanWu`:
@@ -149,7 +152,6 @@ The following remain blocked on `XuanWu`:
 
 The highest-priority local unfinished spec area is:
 
-1. `xuanwu-gateway` adapter completion
-2. `xuanwu-portal` deeper operational actions
-3. `xuanwu-jobs` richer scheduling semantics
-4. upstream `XuanWu` contract integration
+1. `xuanwu-portal` deeper operational actions
+2. `xuanwu-jobs` richer scheduling semantics
+3. upstream `XuanWu` contract integration

@@ -38,6 +38,8 @@ def test_create_app_registers_gateway_routes():
     assert "/gateway/v1/commands" in registered_paths
     assert "/gateway/v1/commands:dispatch" in registered_paths
     assert "/gateway/v1/jobs:execute" in registered_paths
+    assert "/gateway/v1/ingest/http-push" in registered_paths
+    assert "/gateway/v1/ingest/mqtt" in registered_paths
     assert "/gateway/v1/devices/{device_id}/state" in registered_paths
 
 
@@ -56,6 +58,8 @@ def test_gateway_device_type_adapter_directories_exist():
         root / "industrial" / "opc_ua",
         root / "industrial" / "bacnet_ip",
         root / "industrial" / "can_gateway",
+        root / "wireless" / "bluetooth",
+        root / "wireless" / "nearlink",
     ]
 
     for path in expected:

@@ -28,5 +28,49 @@ class ManagementClient:
             response.raise_for_status()
             return await response.json()
 
+    async def post_event(self, payload: dict):
+        async with self._session.post(
+            f"{self.base_url}/control-plane/v1/gateway/events",
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def post_telemetry(self, payload: dict):
+        async with self._session.post(
+            f"{self.base_url}/control-plane/v1/gateway/telemetry",
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def post_command_result(self, payload: dict):
+        async with self._session.post(
+            f"{self.base_url}/control-plane/v1/gateway/command-results",
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
     async def close(self):
         await self._session.close()
+
+
+class NullManagementClient:
+    async def complete_job_run(self, job_run_id: str, payload: dict):
+        return {"job_run_id": job_run_id, "payload": payload}
+
+    async def fail_job_run(self, job_run_id: str, payload: dict):
+        return {"job_run_id": job_run_id, "payload": payload}
+
+    async def post_event(self, payload: dict):
+        return payload
+
+    async def post_telemetry(self, payload: dict):
+        return payload
+
+    async def post_command_result(self, payload: dict):
+        return payload
+
+    async def close(self):
+        return None

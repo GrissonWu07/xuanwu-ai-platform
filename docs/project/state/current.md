@@ -94,14 +94,28 @@
 - `xuanwu-gateway` now provides:
   - standalone service bootstrap
   - adapter registry
-  - adapter directory skeleton by device/protocol class
+  - adapter directory implementation by device/protocol class
   - `/gateway/v1/adapters`
   - `/gateway/v1/commands`
   - `/gateway/v1/commands:dispatch`
   - `/gateway/v1/health`
   - `/gateway/v1/config`
+  - `/gateway/v1/ingest/http-push`
+  - `/gateway/v1/ingest/mqtt`
   - `/gateway/v1/devices/{device_id}/state`
   - `/gateway/v1/jobs:execute`
+  - implemented adapter families:
+    - `http`
+    - `mqtt`
+    - `home_assistant`
+    - `sensor_http_push`
+    - `sensor_mqtt`
+    - `modbus_tcp`
+    - `opc_ua`
+    - `bacnet_ip`
+    - `can_gateway`
+    - `bluetooth`
+    - `nearlink`
 - `xuanwu-device-server` boundary work is complete for the local phase:
   - `XuanWu` runtime naming is aligned
   - runtime context exposes `xuanwu_session_key`
@@ -139,7 +153,7 @@
 - Decision: `xuanwu-jobs` owns due-schedule triggering and direct execution dispatch.
 - Decision: this phase is Docker-first; Kubernetes is deferred.
 - Risk: `xuanwu-device-server` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-gateway` contract is live.
-- Risk: industrial adapters are still framework skeletons and dry-run surfaces, not full protocol implementations.
+- Risk: upstream `XuanWu` still needs to consume the final gateway contract end-to-end before local runtime compatibility paths can be removed.
 
 ## Next Step
 - Expand schedule semantics and execution classes:

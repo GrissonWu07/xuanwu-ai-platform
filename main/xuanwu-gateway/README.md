@@ -1,21 +1,59 @@
 # xuanwu-gateway
 
-`xuanwu-gateway` 是本项目独立的南向协议与能力适配层。
+`xuanwu-gateway` is the protocol execution layer for IoT, industrial, and wireless devices in the local XuanWu platform stack.
 
-## 当前范围
+## Implemented APIs
 
-- 内建 adapter registry
-- 首批 dry-run adapters:
-  - `http`
-  - `mqtt`
-  - `home_assistant`
-- 最小 API:
-  - `GET /gateway/v1/adapters`
-  - `POST /gateway/v1/commands:dispatch`
+- `GET /gateway/v1/adapters`
+- `GET /gateway/v1/health`
+- `GET /gateway/v1/config`
+- `POST /gateway/v1/commands`
+- `POST /gateway/v1/commands:dispatch`
+- `POST /gateway/v1/jobs:execute`
+- `POST /gateway/v1/ingest/http-push`
+- `POST /gateway/v1/ingest/mqtt`
+- `GET /gateway/v1/devices/{device_id}/state`
 
-## 当前边界
+## Implemented Adapter Families
 
-- 上游由 `XuanWu` 产出标准能力命令
-- `xuanwu-management-server` 维护网关目录、能力目录和路由
-- `xuanwu-gateway` 只做命令分发和协议适配
+- `http`
+- `mqtt`
+- `home_assistant`
+- `sensor_http_push`
+- `sensor_mqtt`
+- `modbus_tcp`
+- `opc_ua`
+- `bacnet_ip`
+- `can_gateway`
+- `bluetooth`
+- `nearlink`
 
+## Boundaries
+
+`xuanwu-gateway` owns:
+
+- southbound protocol execution
+- adapter validation
+- command result normalization
+- telemetry and event normalization
+
+`xuanwu-management-server` owns:
+
+- gateway definitions
+- gateway routes
+- capability catalog
+- telemetry, event, and command-result persistence
+
+`XuanWu` owns:
+
+- Agent decisions
+- capability selection
+- device invocation intent
+
+## Verification
+
+Run the gateway suite with:
+
+```bash
+python -m pytest main/xuanwu-gateway/tests -q
+```

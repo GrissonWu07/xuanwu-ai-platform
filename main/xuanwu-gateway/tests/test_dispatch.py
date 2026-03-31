@@ -29,10 +29,26 @@ def _load_handler_module():
 
 def test_dispatch_routes_command_to_matching_adapter():
     handler = _load_handler_module().GatewayHandler({})
+    handler.registry.register(
+        _load_handler_module().create_builtin_registry().get("http").__class__(
+            transport=type(
+                "FakeTransport",
+                (),
+                {
+                    "request": lambda self, **kwargs: {
+                        "status_code": 200,
+                        "body": {"ok": True},
+                        "headers": {},
+                    }
+                },
+            )()
+        )
+    )
     request = make_mocked_request("POST", "/gateway/v1/commands:dispatch")
     request._read_bytes = (
         b'{"request_id":"req-001","gateway_id":"gateway-http-001","adapter_type":"http",'
-        b'"device_id":"device-001","capability_code":"switch.on_off","command_name":"turn_on","arguments":{"state":true}}'
+        b'"device_id":"device-001","capability_code":"switch.on_off","command_name":"turn_on","arguments":{"state":true},'
+        b'"route":{"url":"http://device.local/api/power","method":"POST","body_template":{"power":"{arguments.state}"}}}'
     )
 
     response = asyncio.run(handler.handle_dispatch_command(request))
@@ -40,7 +56,7 @@ def test_dispatch_routes_command_to_matching_adapter():
     assert response.status == 200
     payload = handler._loads_json(response.text)
     assert payload["adapter_type"] == "http"
-    assert payload["status"] == "accepted"
+    assert payload["status"] == "succeeded"
     assert payload["result"]["command_name"] == "turn_on"
 
 
@@ -76,10 +92,26 @@ def test_health_and_config_endpoints_return_status_and_config():
 
 def test_commands_alias_and_device_state_work():
     handler = _load_handler_module().GatewayHandler({})
+    handler.registry.register(
+        _load_handler_module().create_builtin_registry().get("http").__class__(
+            transport=type(
+                "FakeTransport",
+                (),
+                {
+                    "request": lambda self, **kwargs: {
+                        "status_code": 200,
+                        "body": {"ok": True},
+                        "headers": {},
+                    }
+                },
+            )()
+        )
+    )
     dispatch_request = make_mocked_request("POST", "/gateway/v1/commands")
     dispatch_request._read_bytes = (
         b'{"request_id":"req-003","gateway_id":"gateway-http-001","adapter_type":"http",'
-        b'"device_id":"device-003","capability_code":"switch.on_off","command_name":"turn_on","arguments":{"state":true}}'
+        b'"device_id":"device-003","capability_code":"switch.on_off","command_name":"turn_on","arguments":{"state":true},'
+        b'"route":{"url":"http://device.local/api/power","method":"POST","body_template":{"power":"{arguments.state}"}}}'
     )
 
     dispatch_response = asyncio.run(handler.handle_command_collection(dispatch_request))
@@ -100,11 +132,27 @@ def test_commands_alias_and_device_state_work():
 
 def test_job_execution_dispatches_real_gateway_command_payload():
     handler = _load_handler_module().GatewayHandler({})
+    handler.registry.register(
+        _load_handler_module().create_builtin_registry().get("http").__class__(
+            transport=type(
+                "FakeTransport",
+                (),
+                {
+                    "request": lambda self, **kwargs: {
+                        "status_code": 200,
+                        "body": {"ok": True},
+                        "headers": {},
+                    }
+                },
+            )()
+        )
+    )
     request = make_mocked_request("POST", "/gateway/v1/jobs:execute")
     request._read_bytes = (
         b'{"job_run_id":"run-gateway-001","job_type":"device_command","executor_type":"gateway",'
         b'"payload":{"request_id":"req-004","gateway_id":"gateway-http-001","adapter_type":"http",'
-        b'"device_id":"device-004","capability_code":"switch.on_off","command_name":"turn_off","arguments":{"state":false}}}'
+        b'"device_id":"device-004","capability_code":"switch.on_off","command_name":"turn_off","arguments":{"state":false},'
+        b'"route":{"url":"http://device.local/api/power","method":"POST","body_template":{"power":"{arguments.state}"}}}}'
     )
 
     response = asyncio.run(handler.handle_execute_job(request))

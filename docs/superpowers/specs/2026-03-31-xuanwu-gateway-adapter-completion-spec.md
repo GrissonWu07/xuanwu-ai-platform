@@ -90,6 +90,13 @@ This is the first industrial adapter that should move past skeleton level.
 
 These can follow after Modbus TCP is stable.
 
+### Priority 4: wireless device expansion
+
+- `wireless/bluetooth`
+- `wireless/nearlink`
+
+These must be included as first-class gateway families for future wearable, proximity, low-power accessory, and star-flash class devices.
+
 ### Deferred
 
 - conversation-class gateway adapters
@@ -109,6 +116,8 @@ Conversation devices remain primarily owned by `xuanwu-device-server`, so these 
 | `industrial/opc_ua` | Directory only | Real OPC UA browse/read/write adapter |
 | `industrial/bacnet_ip` | Directory only | Real BACnet/IP property adapter |
 | `industrial/can_gateway` | Directory only | Real CAN gateway command/state adapter |
+| `wireless/bluetooth` | Not present yet | Real Bluetooth command/state adapter family |
+| `wireless/nearlink` | Not present yet | Real NearLink command/state adapter family |
 
 ## Required Capabilities By Adapter Family
 
@@ -194,6 +203,24 @@ Must support:
 - decoded state reads for configured signals
 - route-level signal mapping
 
+### `wireless/bluetooth`
+
+Must support:
+
+- gateway-mediated BLE device discovery metadata
+- characteristic read/write mapping
+- notification/event normalization
+- route-level pairing and addressing metadata
+
+### `wireless/nearlink`
+
+Must support:
+
+- gateway-mediated NearLink device addressing
+- low-latency command dispatch mapping
+- state/event normalization
+- route-level transport and topology metadata
+
 ## Implementation Boundaries
 
 `xuanwu-gateway` owns:
@@ -271,6 +298,8 @@ Where a real external dependency is too heavy for the local suite, use:
 7. `industrial/opc_ua`
 8. `industrial/bacnet_ip`
 9. `industrial/can_gateway`
+10. `wireless/bluetooth`
+11. `wireless/nearlink`
 
 ## Definition of Done
 
