@@ -28,7 +28,9 @@ If you only want one document to start from, read:
 16. [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
 17. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
 18. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
-19. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
+19. [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
+20. [xuanwu-gateway Adapter Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-gateway-adapter-completion-spec.md)
+21. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
 
 ## Current Implementation Blueprints
 
@@ -40,6 +42,8 @@ If you only want one document to start from, read:
 - [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
 - [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
 - [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+- [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
+- [xuanwu-gateway Adapter Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-gateway-adapter-completion-spec.md)
 
 ## Notes
 
