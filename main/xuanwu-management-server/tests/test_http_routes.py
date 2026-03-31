@@ -40,9 +40,14 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/config/server" in registered_paths
     assert "/control-plane/v1/auth/login" in registered_paths
     assert "/control-plane/v1/auth/logout" in registered_paths
+    assert "/control-plane/v1/auth/me" in registered_paths
+    assert "/control-plane/v1/dashboard/overview" in registered_paths
+    assert "/control-plane/v1/portal/config" in registered_paths
+    assert "/control-plane/v1/roles" in registered_paths
     assert "/control-plane/v1/devices" in registered_paths
     assert "/control-plane/v1/devices:batch-import" in registered_paths
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}/detail" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:claim" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:bind" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:suspend" in registered_paths
@@ -56,9 +61,12 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/events/{event_id}" in registered_paths
     assert "/control-plane/v1/telemetry" in registered_paths
     assert "/control-plane/v1/alarms" in registered_paths
+    assert "/control-plane/v1/alerts/overview" in registered_paths
+    assert "/control-plane/v1/alarms/{alarm_id}" in registered_paths
     assert "/control-plane/v1/alarms/{alarm_id}:ack" in registered_paths
     assert "/control-plane/v1/gateways" in registered_paths
     assert "/control-plane/v1/gateways/{gateway_id}" in registered_paths
+    assert "/control-plane/v1/gateway/overview" in registered_paths
     assert "/control-plane/v1/mappings/user-devices" in registered_paths
     assert "/control-plane/v1/mappings/user-channels" in registered_paths
     assert "/control-plane/v1/mappings/channel-devices" in registered_paths
@@ -81,9 +89,12 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/gateway/telemetry" in registered_paths
     assert "/control-plane/v1/gateway/command-results" in registered_paths
     assert "/control-plane/v1/jobs/schedules" in registered_paths
+    assert "/control-plane/v1/jobs/schedules/{schedule_id}" in registered_paths
+    assert "/control-plane/v1/jobs/overview" in registered_paths
     assert "/control-plane/v1/jobs/schedules:due" in registered_paths
     assert "/control-plane/v1/jobs/schedules/{schedule_id}:claim" in registered_paths
     assert "/control-plane/v1/jobs:execute" in registered_paths
     assert "/control-plane/v1/jobs/runs" in registered_paths
+    assert "/control-plane/v1/jobs/runs/{job_run_id}" in registered_paths
     assert "/control-plane/v1/jobs/runs/{job_run_id}:complete" in registered_paths
     assert "/control-plane/v1/jobs/runs/{job_run_id}:fail" in registered_paths

@@ -11,12 +11,59 @@ from core.store.exceptions import DeviceBindException, DeviceNotFoundException
 
 
 class LocalControlPlaneStore:
+    DEFAULT_ROLE_DEFINITIONS = [
+        {
+            "role_id": "owner",
+            "display_label": "Owner",
+            "description": "Full ownership for personal devices, agents, and automations.",
+            "permissions": [
+                "devices.read",
+                "devices.write",
+                "agents.read",
+                "agents.write",
+                "jobs.read",
+                "jobs.write",
+                "alerts.read",
+                "alerts.ack",
+                "users.read",
+                "channels.read",
+                "channels.write",
+            ],
+        },
+        {
+            "role_id": "operator",
+            "display_label": "Operator",
+            "description": "Operate devices and acknowledge alerts without ownership changes.",
+            "permissions": [
+                "devices.read",
+                "devices.write",
+                "jobs.read",
+                "jobs.write",
+                "alerts.read",
+                "alerts.ack",
+                "channels.read",
+            ],
+        },
+        {
+            "role_id": "viewer",
+            "display_label": "Viewer",
+            "description": "Read-only access for dashboards, device state, and jobs.",
+            "permissions": [
+                "devices.read",
+                "jobs.read",
+                "alerts.read",
+                "channels.read",
+            ],
+        },
+    ]
+
     def __init__(self, root_dir: str | Path):
         self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
         (self.root_dir / "devices").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "agents").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "users").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "roles").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channels").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "user_device_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "user_channel_mappings").mkdir(parents=True, exist_ok=True)
@@ -174,9 +221,17 @@ class LocalControlPlaneStore:
         if expected_password and expected_password != provided_password:
             raise ValueError("password_invalid")
         token = f"session-{user_id}"
-        record = {"session_token": token, "user_id": user_id, "status": "active"}
+        record = {
+            "session_token": token,
+            "user_id": user_id,
+            "status": "active",
+            "issued_at": self._format_timestamp(datetime.now(timezone.utc)),
+        }
         self._write_yaml(self.root_dir / "auth_sessions" / f"{token}.yaml", record)
         return record
+
+    def get_auth_session(self, session_token: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "auth_sessions" / f"{session_token}.yaml")
 
     def delete_auth_session(self, session_token: str) -> bool:
         path = self.root_dir / "auth_sessions" / f"{session_token}.yaml"
@@ -194,9 +249,37 @@ class LocalControlPlaneStore:
             "name": "Anonymous",
             "status": "active",
             "is_anonymous": True,
+            "role_ids": ["viewer"],
         }
         self._write_yaml(self.root_dir / "users" / "anonymous.yaml", payload)
         return payload
+
+    def get_role(self, role_id: str) -> dict[str, Any] | None:
+        payload = self._read_yaml(self.root_dir / "roles" / f"{role_id}.yaml")
+        if isinstance(payload, dict):
+            return payload
+        for item in self.DEFAULT_ROLE_DEFINITIONS:
+            if item["role_id"] == role_id:
+                return deepcopy(item)
+        return None
+
+    def save_role(self, role_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        role_id = str(role_id or payload.get("role_id", "")).strip()
+        if not role_id:
+            raise ValueError("role_id_required")
+        record = dict(payload)
+        record["role_id"] = role_id
+        record.setdefault("display_label", role_id.replace("-", " ").title())
+        record.setdefault("description", "")
+        record.setdefault("permissions", [])
+        self._write_yaml(self.root_dir / "roles" / f"{role_id}.yaml", record)
+        return record
+
+    def list_roles(self) -> list[dict[str, Any]]:
+        items = self._list_yaml_dir(self.root_dir / "roles")
+        if items:
+            return items
+        return [deepcopy(item) for item in self.DEFAULT_ROLE_DEFINITIONS]
 
     def get_channel(self, channel_id: str) -> dict[str, Any] | None:
         return self._read_yaml(self.root_dir / "channels" / f"{channel_id}.yaml")
@@ -420,12 +503,22 @@ class LocalControlPlaneStore:
 
         alarm_id = str(payload.get("alarm_id", "")).strip()
         if payload.get("event_type") == "alarm.triggered" and alarm_id:
+            alarm_source = (
+                payload.get("source")
+                or (payload.get("payload") or {}).get("source")
+                or payload.get("device_id")
+                or payload.get("gateway_id")
+            )
             self._write_yaml(
                 self.root_dir / "alarms" / f"{alarm_id}.yaml",
                 {
                     "alarm_id": alarm_id,
                     "device_id": payload.get("device_id"),
-                    "message": payload.get("message"),
+                    "gateway_id": payload.get("gateway_id"),
+                    "message": payload.get("message") or (payload.get("payload") or {}).get("message"),
+                    "severity": payload.get("severity"),
+                    "source": alarm_source,
+                    "site_id": payload.get("site_id"),
                     "status": "active",
                     "last_event_id": event_id,
                 },
@@ -483,6 +576,9 @@ class LocalControlPlaneStore:
 
     def list_alarms(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "alarms")
+
+    def get_alarm(self, alarm_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml")
 
     def acknowledge_alarm(self, alarm_id: str) -> dict[str, Any] | None:
         payload = self._read_yaml(self.root_dir / "alarms" / f"{alarm_id}.yaml")
@@ -776,6 +872,234 @@ class LocalControlPlaneStore:
             "command_routes": routes,
         }
 
+    def build_auth_me(self, session_token: str) -> dict[str, Any] | None:
+        session = self.get_auth_session(session_token)
+        if session is None or str(session.get("status") or "").lower() != "active":
+            return None
+        user = self.get_user(str(session.get("user_id") or "").strip())
+        if user is None:
+            return None
+        role_ids = list(user.get("role_ids") or [])
+        permissions: set[str] = set()
+        for role_id in role_ids:
+            role = self.get_role(str(role_id))
+            if role:
+                permissions.update(str(item) for item in role.get("permissions") or [])
+        return {
+            "user_id": user["user_id"],
+            "display_name": user.get("display_name") or user.get("name") or user["user_id"],
+            "avatar_url": user.get("avatar_url"),
+            "email": user.get("email"),
+            "role_ids": role_ids,
+            "permissions": sorted(permissions),
+            "session_token": session_token,
+            "session_status": session.get("status"),
+            "is_anonymous": bool(user.get("is_anonymous")),
+        }
+
+    def build_dashboard_overview(self) -> dict[str, Any]:
+        users = self.list_users()
+        devices = self.list_devices()
+        channels = self.list_channels()
+        gateways = self.list_gateways()
+        events = self.list_events()
+        recent_events = self._sort_records_by_time(events, "occurred_at", "event_id", reverse=True)[:5]
+        return {
+            "summary": {
+                "user_count": len([item for item in users if item.get("user_id") != "anonymous"]),
+                "device_count": len(devices),
+                "channel_count": len(channels),
+                "gateway_count": len(gateways),
+            },
+            "activity": recent_events,
+            "device_summary": self._build_device_summary(devices),
+            "jobs_summary": self.build_jobs_overview(),
+            "alerts_summary": self.build_alerts_overview(),
+            "gateway_summary": self.build_gateway_overview(),
+        }
+
+    def build_portal_config(self, config: dict[str, Any]) -> dict[str, Any]:
+        server_profile = self.load_server_profile()
+        return {
+            "product": {
+                "name": "XuanWu Portal",
+                "default_tab": "overview",
+            },
+            "navigation": {
+                "primary_tabs": ["overview", "devices", "agents", "jobs", "alerts"],
+                "profile_menu": ["profile", "users", "channels", "gateways", "settings", "logout"],
+            },
+            "feature_flags": {
+                "agents_proxy_enabled": True,
+                "jobs_enabled": True,
+                "alerts_enabled": True,
+                "gateway_overview_enabled": True,
+            },
+            "visible_modules": [
+                "overview",
+                "devices",
+                "agents",
+                "jobs",
+                "alerts",
+                "users",
+                "channels",
+                "gateways",
+            ],
+            "upstream_status": {
+                "management_server": "ready",
+                "gateway": "ready" if self.list_gateways() else "empty",
+                "jobs": "ready" if config.get("jobs") or server_profile.get("jobs") else "configured",
+                "xuanwu": "proxy",
+            },
+            "documentation_links": {
+                "blueprint": "/docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md",
+                "api_completion": "/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md",
+            },
+            "environment": {
+                "marker": config.get("env") or server_profile.get("environment") or "local",
+                "management_api_base": "/control-plane/v1",
+            },
+        }
+
+    def build_jobs_overview(self) -> dict[str, Any]:
+        schedules = self.list_schedules()
+        runs = self.list_job_runs()
+        now = datetime.now(timezone.utc)
+        running_statuses = {"queued", "running"}
+        overdue_runs = [
+            item
+            for item in runs
+            if str(item.get("status") or "").lower() in running_statuses
+            and str(item.get("scheduled_for") or "").strip()
+            and self._parse_timestamp(str(item["scheduled_for"])) <= now
+        ]
+        recent_failures = [
+            item for item in self._sort_records_by_time(runs, "scheduled_for", "job_run_id", reverse=True)
+            if str(item.get("status") or "").lower() == "failed"
+        ][:5]
+        executor_distribution: dict[str, int] = {}
+        for item in schedules:
+            executor_type = str(item.get("executor_type") or "platform")
+            executor_distribution[executor_type] = executor_distribution.get(executor_type, 0) + 1
+        return {
+            "scheduler_health": {
+                "status": "ready",
+                "enabled_schedule_count": len([item for item in schedules if item.get("enabled", True)]),
+                "due_schedule_count": len(
+                    [
+                        item
+                        for item in schedules
+                        if item.get("enabled", True)
+                        and str(item.get("next_run_at") or "").strip()
+                        and self._parse_timestamp(str(item["next_run_at"])) <= now
+                    ]
+                ),
+            },
+            "running_count": len(
+                [item for item in runs if str(item.get("status") or "").lower() in running_statuses]
+            ),
+            "recent_failures": recent_failures,
+            "dispatch_lag": {
+                "overdue_run_count": len(overdue_runs),
+                "oldest_due_at": overdue_runs[0].get("scheduled_for") if overdue_runs else None,
+            },
+            "executor_distribution": executor_distribution,
+        }
+
+    def build_alerts_overview(self) -> dict[str, Any]:
+        alarms = self.list_alarms()
+        active_alarms = [
+            item
+            for item in alarms
+            if str(item.get("status") or "").lower() not in {"acked", "cleared", "resolved"}
+        ]
+        severity_counts: dict[str, int] = {}
+        source_counts: dict[str, int] = {}
+        for item in active_alarms:
+            severity = str(item.get("severity") or "unknown")
+            source = str(item.get("source") or item.get("device_id") or "unknown")
+            severity_counts[severity] = severity_counts.get(severity, 0) + 1
+            source_counts[source] = source_counts.get(source, 0) + 1
+        today_prefix = self._format_timestamp(datetime.now(timezone.utc))[:10]
+        escalated_today = len(
+            [
+                item
+                for item in self.list_events()
+                if str(item.get("event_type") or "") == "alarm.escalated"
+                and str(item.get("occurred_at") or item.get("timestamp") or "").startswith(today_prefix)
+            ]
+        )
+        top_sources = [
+            {"source": source, "count": count}
+            for source, count in sorted(source_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
+        ]
+        return {
+            "severity_counts": severity_counts,
+            "ack_pending_count": len(active_alarms),
+            "escalated_today": escalated_today,
+            "top_active_sources": top_sources,
+        }
+
+    def build_gateway_overview(self) -> dict[str, Any]:
+        gateways = self.list_gateways()
+        by_protocol: dict[str, int] = {}
+        by_site: dict[str, int] = {}
+        for item in gateways:
+            protocol_type = str(item.get("protocol_type") or "unknown")
+            site_id = str(item.get("site_id") or "unassigned")
+            by_protocol[protocol_type] = by_protocol.get(protocol_type, 0) + 1
+            by_site[site_id] = by_site.get(site_id, 0) + 1
+        return {
+            "total_count": len(gateways),
+            "protocol_distribution": by_protocol,
+            "site_distribution": by_site,
+            "items": self._sort_records_by_time(gateways, "updated_at", "gateway_id", reverse=True)[:5],
+        }
+
+    def build_device_detail(self, device_id: str) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        owner = self.get_user(str(device.get("user_id") or "anonymous"))
+        channel_memberships = [
+            item
+            for item in self.list_channel_device_mappings()
+            if str(item.get("device_id") or "") == device_id and item.get("enabled", True)
+        ]
+        device_agent_mapping = self.get_active_device_agent_mapping(device_id)
+        agent = None
+        if device_agent_mapping:
+            agent = self.get_agent(str(device_agent_mapping.get("agent_id") or ""))
+        recent_events = self._sort_records_by_time(
+            [item for item in self.list_events({"device_id": device_id})],
+            "occurred_at",
+            "event_id",
+            reverse=True,
+        )[:5]
+        telemetry_items = self._sort_records_by_time(
+            [item for item in self.list_telemetry({"device_id": device_id})],
+            "observed_at",
+            "telemetry_id",
+            reverse=True,
+        )
+        latest_by_capability: dict[str, dict[str, Any]] = {}
+        for item in telemetry_items:
+            capability_code = str(item.get("capability_code") or "unknown")
+            latest_by_capability.setdefault(capability_code, item)
+        return {
+            "device": device,
+            "owner_summary": owner,
+            "channel_memberships": channel_memberships,
+            "agent_binding": {
+                "mapping": deepcopy(device_agent_mapping or {}),
+                "agent": deepcopy(agent or {}),
+            },
+            "runtime_binding_view": self.build_runtime_binding_view(device_id),
+            "capability_routing_view": self.build_runtime_capability_routing_view(device_id),
+            "recent_events": recent_events,
+            "latest_telemetry_snapshot": list(latest_by_capability.values()),
+        }
+
     def _read_yaml(self, path: Path, default: dict[str, Any] | None = None) -> dict[str, Any] | None:
         if not path.exists():
             return deepcopy(default) if default is not None else None
@@ -893,6 +1217,44 @@ class LocalControlPlaneStore:
             return True
 
         return [item for item in items if matches(item)]
+
+    def _sort_records_by_time(
+        self,
+        items: list[dict[str, Any]],
+        primary_key: str,
+        fallback_key: str,
+        *,
+        reverse: bool = False,
+    ) -> list[dict[str, Any]]:
+        def sort_key(item: dict[str, Any]):
+            primary_value = str(
+                item.get(primary_key)
+                or item.get("updated_at")
+                or item.get("created_at")
+                or item.get("timestamp")
+                or ""
+            ).strip()
+            try:
+                parsed = self._parse_timestamp(primary_value) if primary_value else datetime.min.replace(tzinfo=timezone.utc)
+            except Exception:
+                parsed = datetime.min.replace(tzinfo=timezone.utc)
+            return (parsed, str(item.get(fallback_key) or ""))
+
+        return sorted(items, key=sort_key, reverse=reverse)
+
+    def _build_device_summary(self, devices: list[dict[str, Any]]) -> dict[str, Any]:
+        bind_status_counts: dict[str, int] = {}
+        lifecycle_counts: dict[str, int] = {}
+        for item in devices:
+            bind_status = str(item.get("bind_status") or "unknown")
+            lifecycle_status = str(item.get("lifecycle_status") or "unknown")
+            bind_status_counts[bind_status] = bind_status_counts.get(bind_status, 0) + 1
+            lifecycle_counts[lifecycle_status] = lifecycle_counts.get(lifecycle_status, 0) + 1
+        return {
+            "total_count": len(devices),
+            "bind_status_counts": bind_status_counts,
+            "lifecycle_counts": lifecycle_counts,
+        }
 
     def _sync_user_channel_mapping(self, user_id: str, channel_id: str):
         mapping_id = f"user-channel-{user_id}-{channel_id}"

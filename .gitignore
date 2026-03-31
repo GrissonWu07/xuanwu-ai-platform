@@ -152,6 +152,8 @@ tmp
 main/xuanwu-device-server/data
 
 main/manager-web/node_modules
+main/xuanwu-portal/node_modules/
+main/xuanwu-portal/dist/
 .config.yaml
 .secrets.yaml
 .private_config.yaml
@@ -182,6 +184,8 @@ uploadfile
  
 !package.json
 !**/package.json
+!main/xuanwu-portal/package-lock.json
+!main/xuanwu-portal/tsconfig.json
 
 !main/xuanwu-device-server/**/*.json
 

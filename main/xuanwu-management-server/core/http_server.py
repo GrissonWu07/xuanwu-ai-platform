@@ -35,12 +35,44 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/auth/logout",
                 control_plane_handler.handle_logout,
             ),
+            web.get(
+                "/control-plane/v1/auth/me",
+                control_plane_handler.handle_get_me,
+            ),
             web.options(
                 "/control-plane/v1/auth/login",
                 control_plane_handler.handle_options,
             ),
             web.options(
                 "/control-plane/v1/auth/logout",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/auth/me",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/dashboard/overview",
+                control_plane_handler.handle_get_dashboard_overview,
+            ),
+            web.options(
+                "/control-plane/v1/dashboard/overview",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/portal/config",
+                control_plane_handler.handle_get_portal_config,
+            ),
+            web.options(
+                "/control-plane/v1/portal/config",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/roles",
+                control_plane_handler.handle_list_roles,
+            ),
+            web.options(
+                "/control-plane/v1/roles",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -135,8 +167,24 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/alarms",
                 control_plane_handler.handle_list_alarms,
             ),
+            web.get(
+                "/control-plane/v1/alarms/{alarm_id}",
+                control_plane_handler.handle_get_alarm,
+            ),
             web.options(
                 "/control-plane/v1/alarms",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/alarms/{alarm_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/alerts/overview",
+                control_plane_handler.handle_get_alerts_overview,
+            ),
+            web.options(
+                "/control-plane/v1/alerts/overview",
                 control_plane_handler.handle_options,
             ),
             web.post(
@@ -151,12 +199,20 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/gateways",
                 control_plane_handler.handle_list_gateways,
             ),
+            web.get(
+                "/control-plane/v1/gateway/overview",
+                control_plane_handler.handle_get_gateway_overview,
+            ),
             web.post(
                 "/control-plane/v1/gateways",
                 control_plane_handler.handle_upsert_gateway,
             ),
             web.options(
                 "/control-plane/v1/gateways",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/gateway/overview",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -331,12 +387,28 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/jobs/schedules",
                 control_plane_handler.handle_list_job_schedules,
             ),
+            web.get(
+                "/control-plane/v1/jobs/schedules/{schedule_id}",
+                control_plane_handler.handle_get_job_schedule,
+            ),
+            web.get(
+                "/control-plane/v1/jobs/overview",
+                control_plane_handler.handle_get_jobs_overview,
+            ),
             web.post(
                 "/control-plane/v1/jobs/schedules",
                 control_plane_handler.handle_create_job_schedule,
             ),
             web.options(
                 "/control-plane/v1/jobs/schedules",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules/{schedule_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/overview",
                 control_plane_handler.handle_options,
             ),
             web.get(
@@ -367,8 +439,16 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/jobs/runs",
                 control_plane_handler.handle_list_job_runs,
             ),
+            web.get(
+                "/control-plane/v1/jobs/runs/{job_run_id}",
+                control_plane_handler.handle_get_job_run,
+            ),
             web.options(
                 "/control-plane/v1/jobs/runs",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs/{job_run_id}",
                 control_plane_handler.handle_options,
             ),
             web.post(
@@ -411,12 +491,20 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_get_device,
             ),
+            web.get(
+                "/control-plane/v1/devices/{device_id}/detail",
+                control_plane_handler.handle_get_device_detail,
+            ),
             web.put(
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_put_device,
             ),
             web.options(
                 "/control-plane/v1/devices/{device_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}/detail",
                 control_plane_handler.handle_options,
             ),
             web.post(

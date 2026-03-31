@@ -218,6 +218,90 @@ def test_control_plane_auth_login_and_logout_issue_session():
         assert logout_response.status == 204
 
 
+def test_control_plane_auth_me_and_roles_return_effective_profile_data():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.save_role(
+            "owner",
+            {
+                "role_id": "owner",
+                "display_label": "Owner",
+                "description": "Primary device owner",
+                "permissions": ["devices.read", "devices.write", "alerts.read"],
+            },
+        )
+        handler.store.save_role(
+            "operator",
+            {
+                "role_id": "operator",
+                "display_label": "Operator",
+                "description": "Runs scheduled jobs and acknowledges alarms",
+                "permissions": ["jobs.read", "jobs.write", "alerts.ack"],
+            },
+        )
+        handler.store.create_user(
+            {
+                "user_id": "user-admin-001",
+                "name": "Plant Owner",
+                "display_name": "Plant Owner",
+                "email": "owner@example.com",
+                "avatar_url": "https://example.com/avatar.png",
+                "password": "pw-owner",
+                "role_ids": ["owner", "operator"],
+            }
+        )
+
+        login_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/auth/login",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        login_request._read_bytes = b'{"user_id":"user-admin-001","password":"pw-owner"}'
+        login_response = asyncio.run(handler.handle_login(login_request))
+        session_token = yaml.safe_load(login_response.text)["session_token"]
+
+        me_request = make_mocked_request(
+            "GET",
+            "/control-plane/v1/auth/me",
+            headers={
+                "X-Xuanwu-Control-Secret": "runtime-secret",
+                "Authorization": f"Bearer {session_token}",
+            },
+        )
+        roles_request = make_mocked_request(
+            "GET",
+            "/control-plane/v1/roles",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+
+        me_response = asyncio.run(handler.handle_get_me(me_request))
+        roles_response = asyncio.run(handler.handle_list_roles(roles_request))
+        me_payload = yaml.safe_load(me_response.text)
+        roles_payload = yaml.safe_load(roles_response.text)
+
+        assert me_response.status == 200
+        assert me_payload["display_name"] == "Plant Owner"
+        assert me_payload["email"] == "owner@example.com"
+        assert me_payload["role_ids"] == ["owner", "operator"]
+        assert sorted(me_payload["permissions"]) == [
+            "alerts.ack",
+            "alerts.read",
+            "devices.read",
+            "devices.write",
+            "jobs.read",
+            "jobs.write",
+        ]
+        assert roles_response.status == 200
+        assert {item["role_id"] for item in roles_payload["items"]} == {"owner", "operator"}
+        assert roles_payload["items"][0]["permission_count"] >= 3
+
+
 def test_import_control_plane_bundle_writes_server_agents_and_devices():
     with tempfile.TemporaryDirectory() as temp_dir:
         store = LocalControlPlaneStore(Path(temp_dir))
@@ -1683,6 +1767,388 @@ def test_control_plane_resource_item_endpoints_round_trip_real_records():
         assert yaml.safe_load(list_firmware_response.text)["items"][0]["firmware_id"] == "fw-industrial-001"
         assert yaml.safe_load(get_firmware_response.text)["version"] == "2.3.7"
         assert yaml.safe_load(list_campaign_response.text)["items"][0]["campaign_id"] == "campaign-industrial-001"
+
+
+def test_control_plane_overview_and_device_detail_endpoints_return_real_aggregates():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "env": "staging",
+                "server": {"auth_key": "runtime-secret"},
+                "jobs": {"scheduler": {"poll_interval_seconds": 2}},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.save_role(
+            "owner",
+            {
+                "role_id": "owner",
+                "display_label": "Owner",
+                "description": "Owns devices and automations",
+                "permissions": ["devices.read", "devices.write", "jobs.read", "alerts.read"],
+            },
+        )
+        handler.store.create_user(
+            {
+                "user_id": "user-ops-001",
+                "name": "Ops Team",
+                "display_name": "Operations Team",
+                "email": "ops@example.com",
+                "password": "pw-ops",
+                "role_ids": ["owner"],
+            }
+        )
+        handler.store.create_channel(
+            {
+                "channel_id": "channel-home-001",
+                "user_id": "user-ops-001",
+                "name": "Home Console",
+            }
+        )
+        handler.store.save_gateway(
+            "gateway-http-001",
+            {
+                "gateway_id": "gateway-http-001",
+                "protocol_type": "http",
+                "site_id": "site-a",
+                "updated_at": "2026-03-31T10:30:00Z",
+            },
+        )
+        handler.store.save_agent(
+            "agent-home-001",
+            {
+                "agent_id": "agent-home-001",
+                "name": "Home Operations Agent",
+            },
+        )
+        handler.store.save_device(
+            "dev-living-room-001",
+            {
+                "device_id": "dev-living-room-001",
+                "user_id": "user-ops-001",
+                "device_type": "speaker_hub",
+                "protocol_type": "websocket",
+                "bind_status": "bound",
+                "lifecycle_status": "bound",
+                "gateway_id": "gateway-http-001",
+                "capability_refs": ["switch.on_off", "sensor.temperature"],
+                "runtime_overrides": {"voice": "calm"},
+            },
+        )
+        handler.store.save_channel_device_mapping(
+            "map-channel-device-001",
+            {
+                "mapping_id": "map-channel-device-001",
+                "channel_id": "channel-home-001",
+                "device_id": "dev-living-room-001",
+                "enabled": True,
+                "priority": 10,
+            },
+        )
+        handler.store.bind_device_agent(
+            {
+                "mapping_id": "map-device-agent-001",
+                "device_id": "dev-living-room-001",
+                "agent_id": "agent-home-001",
+                "enabled": True,
+            }
+        )
+        handler.store.save_capability_route(
+            "route-switch-http",
+            {
+                "route_id": "route-switch-http",
+                "capability_code": "switch.on_off",
+                "gateway_id": "gateway-http-001",
+                "protocol_type": "http",
+            },
+        )
+        handler.store.save_capability_route(
+            "route-temperature-http",
+            {
+                "route_id": "route-temperature-http",
+                "capability_code": "sensor.temperature",
+                "gateway_id": "gateway-http-001",
+                "protocol_type": "http",
+            },
+        )
+        handler.store.append_event(
+            {
+                "event_id": "evt-alarm-001",
+                "device_id": "dev-living-room-001",
+                "gateway_id": "gateway-http-001",
+                "event_type": "alarm.triggered",
+                "alarm_id": "alarm-001",
+                "severity": "critical",
+                "source": "living-room-sensor",
+                "message": "Temperature exceeded safe threshold",
+                "occurred_at": "2026-03-31T09:50:00Z",
+            }
+        )
+        handler.store.append_event(
+            {
+                "event_id": "evt-alarm-002",
+                "device_id": "dev-living-room-001",
+                "gateway_id": "gateway-http-001",
+                "event_type": "alarm.escalated",
+                "alarm_id": "alarm-001",
+                "severity": "critical",
+                "source": "living-room-sensor",
+                "message": "Temperature alarm escalated",
+                "occurred_at": "2026-03-31T10:05:00Z",
+            }
+        )
+        handler.store.append_event(
+            {
+                "event_id": "evt-device-001",
+                "device_id": "dev-living-room-001",
+                "event_type": "device.online",
+                "severity": "info",
+                "occurred_at": "2026-03-31T10:15:00Z",
+                "message": "Device came online",
+            }
+        )
+        handler.store.append_telemetry(
+            {
+                "telemetry_id": "tel-temp-001",
+                "device_id": "dev-living-room-001",
+                "capability_code": "sensor.temperature",
+                "value": 31.8,
+                "observed_at": "2026-03-31T10:12:00Z",
+            }
+        )
+        handler.store.append_telemetry(
+            {
+                "telemetry_id": "tel-switch-001",
+                "device_id": "dev-living-room-001",
+                "capability_code": "switch.on_off",
+                "value": "on",
+                "observed_at": "2026-03-31T10:13:00Z",
+            }
+        )
+        handler.store.save_schedule(
+            "sched-home-rollup-001",
+            {
+                "schedule_id": "sched-home-rollup-001",
+                "enabled": True,
+                "job_type": "telemetry_rollup",
+                "executor_type": "platform",
+                "interval_seconds": 300,
+                "next_run_at": "2026-03-31T10:00:00Z",
+                "payload": {"site_id": "site-a"},
+            },
+        )
+        handler.store.save_schedule(
+            "sched-gateway-command-001",
+            {
+                "schedule_id": "sched-gateway-command-001",
+                "enabled": True,
+                "job_type": "device_command",
+                "executor_type": "gateway",
+                "interval_seconds": 600,
+                "next_run_at": "2026-03-31T10:20:00Z",
+                "payload": {"device_id": "dev-living-room-001", "command": "switch.off"},
+            },
+        )
+        queued_run = handler.store.claim_schedule("sched-home-rollup-001", "2026-03-31T10:00:00Z")
+        failed_run = handler.store.claim_schedule("sched-gateway-command-001", "2026-03-31T10:20:00Z")
+        handler.store.fail_job_run(
+            failed_run["job_run_id"],
+            {
+                "status": "failed",
+                "error": {"code": "gateway_timeout", "message": "Gateway did not respond"},
+            },
+        )
+
+        headers = {"X-Xuanwu-Control-Secret": "runtime-secret"}
+        overview_response = asyncio.run(
+            handler.handle_get_dashboard_overview(
+                make_mocked_request("GET", "/control-plane/v1/dashboard/overview", headers=headers)
+            )
+        )
+        portal_config_response = asyncio.run(
+            handler.handle_get_portal_config(
+                make_mocked_request("GET", "/control-plane/v1/portal/config", headers=headers)
+            )
+        )
+        jobs_overview_response = asyncio.run(
+            handler.handle_get_jobs_overview(
+                make_mocked_request("GET", "/control-plane/v1/jobs/overview", headers=headers)
+            )
+        )
+        alerts_overview_response = asyncio.run(
+            handler.handle_get_alerts_overview(
+                make_mocked_request("GET", "/control-plane/v1/alerts/overview", headers=headers)
+            )
+        )
+        device_detail_response = asyncio.run(
+            handler.handle_get_device_detail(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/devices/dev-living-room-001/detail",
+                    headers=headers,
+                    match_info={"device_id": "dev-living-room-001"},
+                )
+            )
+        )
+        gateway_overview_response = asyncio.run(
+            handler.handle_get_gateway_overview(
+                make_mocked_request("GET", "/control-plane/v1/gateway/overview", headers=headers)
+            )
+        )
+
+        overview_payload = yaml.safe_load(overview_response.text)
+        portal_config_payload = yaml.safe_load(portal_config_response.text)
+        jobs_overview_payload = yaml.safe_load(jobs_overview_response.text)
+        alerts_overview_payload = yaml.safe_load(alerts_overview_response.text)
+        device_detail_payload = yaml.safe_load(device_detail_response.text)
+        gateway_overview_payload = yaml.safe_load(gateway_overview_response.text)
+
+        assert overview_response.status == 200
+        assert overview_payload["summary"]["device_count"] == 1
+        assert overview_payload["summary"]["gateway_count"] == 1
+        assert overview_payload["activity"][0]["event_id"] == "evt-device-001"
+        assert overview_payload["gateway_summary"]["protocol_distribution"]["http"] == 1
+
+        assert portal_config_response.status == 200
+        assert portal_config_payload["product"]["name"] == "XuanWu Portal"
+        assert portal_config_payload["navigation"]["primary_tabs"] == [
+            "overview",
+            "devices",
+            "agents",
+            "jobs",
+            "alerts",
+        ]
+        assert portal_config_payload["environment"]["marker"] == "staging"
+
+        assert jobs_overview_response.status == 200
+        assert jobs_overview_payload["scheduler_health"]["enabled_schedule_count"] == 2
+        assert jobs_overview_payload["running_count"] == 1
+        assert jobs_overview_payload["recent_failures"][0]["job_run_id"] == failed_run["job_run_id"]
+        assert jobs_overview_payload["executor_distribution"] == {"platform": 1, "gateway": 1}
+
+        assert alerts_overview_response.status == 200
+        assert alerts_overview_payload["severity_counts"]["critical"] == 1
+        assert alerts_overview_payload["ack_pending_count"] == 1
+        assert alerts_overview_payload["escalated_today"] == 1
+        assert alerts_overview_payload["top_active_sources"][0]["source"] == "living-room-sensor"
+
+        assert device_detail_response.status == 200
+        assert device_detail_payload["owner_summary"]["user_id"] == "user-ops-001"
+        assert device_detail_payload["agent_binding"]["mapping"]["agent_id"] == "agent-home-001"
+        assert device_detail_payload["runtime_binding_view"]["channel_id"] == "channel-home-001"
+        assert device_detail_payload["capability_routing_view"]["command_routes"][0]["gateway_id"] == "gateway-http-001"
+        assert {item["capability_code"] for item in device_detail_payload["latest_telemetry_snapshot"]} == {
+            "sensor.temperature",
+            "switch.on_off",
+        }
+
+        assert gateway_overview_response.status == 200
+        assert gateway_overview_payload["total_count"] == 1
+        assert gateway_overview_payload["protocol_distribution"]["http"] == 1
+
+
+def test_control_plane_job_and_alarm_detail_endpoints_return_real_records():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.save_schedule(
+            "sched-nightly-001",
+            {
+                "schedule_id": "sched-nightly-001",
+                "job_type": "alarm_escalation",
+                "executor_type": "platform",
+                "enabled": True,
+                "cron": "0 */5 * * *",
+                "timezone": "Asia/Shanghai",
+                "next_run_at": "2026-03-31T18:00:00Z",
+                "payload": {"site_id": "site-sh-01"},
+            },
+        )
+        claimed = handler.store.claim_schedule("sched-nightly-001", "2026-03-31T18:00:00Z")
+        handler.store.complete_job_run(
+            claimed["job_run_id"],
+            {
+                "status": "completed",
+                "result": {
+                    "status": "completed",
+                    "executor_type": "platform",
+                    "details": {"escalated_alarm_count": 2},
+                },
+            },
+        )
+        handler.store.append_event(
+            {
+                "event_id": "evt-alarm-detail-001",
+                "device_id": "dev-alarm-001",
+                "gateway_id": "gateway-http-001",
+                "event_type": "alarm.triggered",
+                "alarm_id": "alarm-detail-001",
+                "severity": "warning",
+                "source": "warehouse-sensor",
+                "message": "Humidity threshold exceeded",
+                "occurred_at": "2026-03-31T18:05:00Z",
+            }
+        )
+
+        headers = {"X-Xuanwu-Control-Secret": "runtime-secret"}
+        schedule_response = asyncio.run(
+            handler.handle_get_job_schedule(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/schedules/sched-nightly-001",
+                    headers=headers,
+                    match_info={"schedule_id": "sched-nightly-001"},
+                )
+            )
+        )
+        job_run_response = asyncio.run(
+            handler.handle_get_job_run(
+                make_mocked_request(
+                    "GET",
+                    f"/control-plane/v1/jobs/runs/{claimed['job_run_id']}",
+                    headers=headers,
+                    match_info={"job_run_id": claimed["job_run_id"]},
+                )
+            )
+        )
+        alarm_response = asyncio.run(
+            handler.handle_get_alarm(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/alarms/alarm-detail-001",
+                    headers=headers,
+                    match_info={"alarm_id": "alarm-detail-001"},
+                )
+            )
+        )
+
+        schedule_payload = yaml.safe_load(schedule_response.text)
+        job_run_payload = yaml.safe_load(job_run_response.text)
+        alarm_payload = yaml.safe_load(alarm_response.text)
+
+        assert schedule_response.status == 200
+        assert schedule_payload["schedule_id"] == "sched-nightly-001"
+        assert schedule_payload["executor_type"] == "platform"
+        assert schedule_payload["payload"]["site_id"] == "site-sh-01"
+
+        assert job_run_response.status == 200
+        assert job_run_payload["job_run_id"] == claimed["job_run_id"]
+        assert job_run_payload["status"] == "completed"
+        assert job_run_payload["result"]["details"]["escalated_alarm_count"] == 2
+
+        assert alarm_response.status == 200
+        assert alarm_payload["alarm_id"] == "alarm-detail-001"
+        assert alarm_payload["source"] == "warehouse-sensor"
+        assert alarm_payload["message"] == "Humidity threshold exceeded"
+        assert alarm_payload["status"] == "active"
 
 
 def test_control_plane_returns_expected_errors_for_invalid_management_requests():

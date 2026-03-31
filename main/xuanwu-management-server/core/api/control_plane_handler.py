@@ -32,6 +32,12 @@ class ControlPlaneHandler(BaseHandler):
         self._add_cors_headers(response)
         return response
 
+    def _extract_session_token(self, request: web.Request) -> str:
+        authorization = str(request.headers.get("Authorization", "")).strip()
+        if authorization.lower().startswith("bearer "):
+            return authorization[7:].strip()
+        return str(request.headers.get("X-Session-Token", "")).strip()
+
     async def handle_login(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -61,6 +67,52 @@ class ControlPlaneHandler(BaseHandler):
         response = web.Response(status=204)
         self._add_cors_headers(response)
         return response
+
+    async def handle_get_me(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        session_token = self._extract_session_token(request)
+        if not session_token:
+            return self._json_response({"error": "session_token_required"}, status=401)
+        payload = self.store.build_auth_me(session_token)
+        if payload is None:
+            return self._json_response({"error": "session_not_found"}, status=401)
+        return self._json_response(payload)
+
+    async def handle_list_roles(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        items = []
+        for role in self.store.list_roles():
+            normalized = dict(role)
+            normalized["permission_count"] = len(normalized.get("permissions") or [])
+            items.append(normalized)
+        return self._json_response({"items": items})
+
+    async def handle_get_dashboard_overview(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response(self.store.build_dashboard_overview())
+
+    async def handle_get_portal_config(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response(self.store.build_portal_config(self.config))
+
+    async def handle_get_jobs_overview(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response(self.store.build_jobs_overview())
+
+    async def handle_get_alerts_overview(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response(self.store.build_alerts_overview())
+
+    async def handle_get_gateway_overview(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response(self.store.build_gateway_overview())
 
     async def handle_get_server_config(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
@@ -363,6 +415,18 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "device_not_found"}, status=404)
         return self._json_response(payload)
 
+    async def handle_get_device_detail(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        if not device_id:
+            return self._json_response({"error": "device_id_required"}, status=400)
+        try:
+            payload = self.store.build_device_detail(device_id)
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(payload)
+
     async def handle_put_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -525,6 +589,17 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_alarms()})
 
+    async def handle_get_alarm(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        alarm_id = str(request.match_info["alarm_id"]).strip()
+        if not alarm_id:
+            return self._json_response({"error": "alarm_id_required"}, status=400)
+        payload = self.store.get_alarm(alarm_id)
+        if payload is None:
+            return self._json_response({"error": "alarm_not_found"}, status=404)
+        return self._json_response(payload)
+
     async def handle_ack_alarm(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -651,6 +726,17 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_schedules()})
 
+    async def handle_get_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        schedule_id = str(request.match_info["schedule_id"]).strip()
+        if not schedule_id:
+            return self._json_response({"error": "schedule_id_required"}, status=400)
+        payload = self.store.get_schedule(schedule_id)
+        if payload is None:
+            return self._json_response({"error": "schedule_not_found"}, status=404)
+        return self._json_response(payload)
+
     async def handle_create_job_schedule(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -697,6 +783,17 @@ class ControlPlaneHandler(BaseHandler):
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_job_runs()})
+
+    async def handle_get_job_run(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        job_run_id = str(request.match_info["job_run_id"]).strip()
+        if not job_run_id:
+            return self._json_response({"error": "job_run_id_required"}, status=400)
+        payload = self.store.get_job_run(job_run_id)
+        if payload is None:
+            return self._json_response({"error": "job_run_not_found"}, status=404)
+        return self._json_response(payload)
 
     async def handle_execute_job(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
