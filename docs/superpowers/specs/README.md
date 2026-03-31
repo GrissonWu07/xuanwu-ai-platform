@@ -24,13 +24,15 @@ If you only want one document to start from, read:
 12. [Distributed Deployment and Scaling Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
 13. [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
 14. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
-15. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
+15. [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
+16. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
 
 ## Current Implementation Blueprints
 
 - [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
 - [xuanwu-device-server Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
 - [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
+- [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
 - [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
 
 ## Notes
