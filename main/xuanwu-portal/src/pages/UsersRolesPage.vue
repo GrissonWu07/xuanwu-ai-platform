@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
-import { getAuthMe, listRoles, listUsers, type AuthMeResponse, type RoleItem, type UserItem } from '@/api/management'
+import { getAuthMe, listRoles, listUsers, updateUser, type AuthMeResponse, type RoleItem, type UserItem } from '@/api/management'
 
 const loading = ref(true)
 const me = ref<AuthMeResponse | null>(null)
@@ -14,6 +14,8 @@ const users = ref<UserItem[]>([])
 const error = ref('')
 const selectedUserId = ref('')
 const selectedRoleId = ref('')
+const userActionBusy = ref(false)
+const userActionError = ref('')
 const route = useRoute()
 const router = useRouter()
 
@@ -123,6 +125,55 @@ async function loadUsersRoles() {
     error.value = err instanceof Error ? err.message : 'Unable to load users and roles'
   } finally {
     loading.value = false
+  }
+}
+
+function patchUser(userId: string, patch: Partial<UserItem>) {
+  users.value = users.value.map((user) =>
+    user.user_id === userId
+      ? {
+          ...user,
+          ...patch,
+        }
+      : user,
+  )
+}
+
+async function activateSelectedUser() {
+  if (!selectedUser.value || userActionBusy.value || selectedUser.value.status === 'active') {
+    return
+  }
+  userActionBusy.value = true
+  userActionError.value = ''
+  try {
+    const updated = await updateUser(selectedUser.value.user_id, {
+      ...selectedUser.value,
+      status: 'active',
+    })
+    patchUser(selectedUser.value.user_id, updated)
+  } catch (err) {
+    userActionError.value = err instanceof Error ? err.message : 'Unable to activate user.'
+  } finally {
+    userActionBusy.value = false
+  }
+}
+
+async function suspendSelectedUser() {
+  if (!selectedUser.value || userActionBusy.value || selectedUser.value.status === 'suspended') {
+    return
+  }
+  userActionBusy.value = true
+  userActionError.value = ''
+  try {
+    const updated = await updateUser(selectedUser.value.user_id, {
+      ...selectedUser.value,
+      status: 'suspended',
+    })
+    patchUser(selectedUser.value.user_id, updated)
+  } catch (err) {
+    userActionError.value = err instanceof Error ? err.message : 'Unable to suspend user.'
+  } finally {
+    userActionBusy.value = false
   }
 }
 
@@ -246,6 +297,27 @@ onMounted(loadUsersRoles)
                 <strong>{{ (selectedUser.role_ids ?? []).join(', ') || 'No roles' }}</strong>
               </div>
             </div>
+            <div class="user-actions">
+              <button
+                v-if="selectedUser.status !== 'active'"
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="userActionBusy"
+                @click="activateSelectedUser"
+              >
+                Activate user
+              </button>
+              <button
+                v-if="selectedUser.status !== 'suspended'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="userActionBusy"
+                @click="suspendSelectedUser"
+              >
+                Suspend user
+              </button>
+            </div>
+            <p v-if="userActionError" class="action-error">{{ userActionError }}</p>
           </article>
 
           <article v-if="selectedRole" class="panel" data-testid="role-detail-panel">
@@ -388,6 +460,53 @@ onMounted(loadUsersRoles)
   color: var(--accent-strong);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.72rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.action-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(65, 46, 109, 0.14);
+}
+
+.action-button--primary {
+  background: linear-gradient(135deg, var(--accent-strong), #7f6bff);
+  border-color: transparent;
+  color: white;
+}
+
+.action-button--ghost {
+  background: rgba(124, 108, 255, 0.08);
+  color: var(--text);
+}
+
+.action-error {
+  margin: 0.75rem 0 0;
+  color: #b42318;
+  font-size: 0.92rem;
 }
 
 @media (max-width: 960px) {

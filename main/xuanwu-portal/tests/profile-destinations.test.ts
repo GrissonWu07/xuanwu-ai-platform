@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { screen, within } from '@testing-library/vue'
+import { fireEvent, screen, within } from '@testing-library/vue'
 
 import { renderPortal } from './renderPortal'
 
@@ -243,5 +243,85 @@ describe('portal profile destinations', () => {
     expect(within(providerDetail).getByRole('heading', { name: 'Local' })).toBeVisible()
     expect(within(modelDetail).getByRole('heading', { name: 'Line Model' })).toBeVisible()
     expect(within(modelDetail).getByText('qwen-max')).toBeVisible()
+  })
+
+  it('updates the selected user status from the users and roles workspace', async () => {
+    const mutableUsers = [
+      {
+        user_id: 'user_gangwu',
+        display_name: 'Gang Wu',
+        email: 'gangwu@example.com',
+        status: 'active',
+        role_ids: ['platform_owner'],
+      },
+      {
+        user_id: 'user_lin',
+        display_name: 'Lin Chen',
+        email: 'lin@example.com',
+        status: 'invited',
+        role_ids: ['site_operator'],
+      },
+    ]
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path.endsWith('/control-plane/v1/auth/me')) {
+        return new Response(
+          JSON.stringify({
+            user_id: 'user_gangwu',
+            display_name: 'Gang Wu',
+            email: 'gangwu@example.com',
+            role_ids: ['platform_owner'],
+            permissions: ['users.read', 'users.write', 'roles.read'],
+          }),
+        )
+      }
+      if (path.endsWith('/control-plane/v1/roles')) {
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                role_id: 'platform_owner',
+                label: 'Platform owner',
+                permission_count: 3,
+                description: 'Owns the portal',
+                permissions: ['users.read', 'roles.read', 'devices.read'],
+              },
+              {
+                role_id: 'site_operator',
+                label: 'Site operator',
+                permission_count: 2,
+                description: 'Operates the assigned site',
+                permissions: ['devices.read', 'alerts.read'],
+              },
+            ],
+          }),
+        )
+      }
+      if (path.endsWith('/control-plane/v1/users')) {
+        return new Response(JSON.stringify({ items: structuredClone(mutableUsers) }))
+      }
+      if (path.endsWith('/control-plane/v1/users/user_lin') && init?.method === 'PUT') {
+        mutableUsers[1] = {
+          ...mutableUsers[1],
+          status: 'active',
+        }
+        return new Response(JSON.stringify(structuredClone(mutableUsers[1])))
+      }
+      throw new Error(`Unexpected request: ${path}`)
+    })
+
+    await renderPortal('/users-roles?userId=user_lin&roleId=site_operator', fetchMock)
+
+    const userDetail = await screen.findByTestId('user-detail-panel')
+    expect(within(userDetail).getByText('invited')).toBeVisible()
+
+    await fireEvent.click(within(userDetail).getByRole('button', { name: 'Activate user' }))
+
+    expect(await within(userDetail).findByText('active')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/users/user_lin',
+      expect.objectContaining({ method: 'PUT' }),
+    )
   })
 })

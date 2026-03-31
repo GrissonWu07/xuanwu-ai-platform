@@ -275,6 +275,16 @@ export function listUsers() {
   return requestJson<{ items: UserItem[] }>('/control-plane/v1/users')
 }
 
+export function updateUser(userId: string, payload: Partial<UserItem>) {
+  return requestJson<UserItem>(`/control-plane/v1/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function listChannels() {
   return requestJson<{ items: ChannelItem[] }>('/control-plane/v1/channels')
 }
