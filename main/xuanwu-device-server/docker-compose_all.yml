@@ -12,6 +12,8 @@ services:
       - default
     ports:
       - "18081:80"
+    environment:
+      - XUANWU_PORTAL_CONTROL_SECRET=xuanwu-management-local-secret
     depends_on:
       - xuanwu-management-server
       - xuanwu-gateway

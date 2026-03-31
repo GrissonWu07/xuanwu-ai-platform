@@ -59,3 +59,7 @@ Nginx forwards platform APIs to the local services:
 - `/gateway` -> `xuanwu-gateway`
 - `/runtime` -> `xuanwu-device-server`
 - `/jobs` -> `xuanwu-jobs`
+
+The portal container injects `X-Xuanwu-Control-Secret` into proxied API requests
+through the `XUANWU_PORTAL_CONTROL_SECRET` environment variable so the browser
+does not need direct access to the management secret.
