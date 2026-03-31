@@ -1,10 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { profileMenuItems } from '@/data/portal'
 
+const props = withDefaults(
+  defineProps<{
+    displayName?: string
+    subtitle?: string
+  }>(),
+  {
+    displayName: 'Gang Wu',
+    subtitle: 'Platform owner',
+  },
+)
+
 const open = ref(false)
+
+const avatarLabel = computed(() =>
+  props.displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'XW',
+)
 
 function toggleMenu() {
   open.value = !open.value
@@ -21,16 +41,16 @@ function closeMenu() {
       class="profile-trigger"
       type="button"
       @click="toggleMenu"
-      aria-label="Gang Wu profile menu"
+      :aria-label="`${displayName} profile menu`"
       :aria-expanded="open ? 'true' : 'false'"
       aria-haspopup="menu"
     >
-      <span class="avatar">GW</span>
+      <span class="avatar">{{ avatarLabel }}</span>
       <span class="profile-label">
-        <strong>Gang Wu</strong>
-        <small>Platform owner</small>
+        <strong>{{ displayName }}</strong>
+        <small>{{ subtitle }}</small>
       </span>
-      <span aria-hidden="true">▾</span>
+      <span aria-hidden="true">v</span>
     </button>
 
     <div v-if="open" class="menu" role="menu">

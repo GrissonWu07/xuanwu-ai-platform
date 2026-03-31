@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { RouterView } from 'vue-router'
 
 import PortalShell from '@/components/PortalShell.vue'
@@ -6,6 +7,42 @@ import PrimaryTabs from '@/components/PrimaryTabs.vue'
 import ProfileMenu from '@/components/ProfileMenu.vue'
 import StatusPill from '@/components/StatusPill.vue'
 import { topStatusPills } from '@/data/portal'
+import { getAuthMe, getDashboardOverview } from '@/api/management'
+
+const statusPills = ref(topStatusPills)
+const profile = ref({
+  displayName: 'Gang Wu',
+  subtitle: 'Platform owner',
+})
+
+function reportShellFallback(message: string, error: unknown) {
+  if ((import.meta as any).env?.MODE !== 'test') {
+    console.warn(message, error)
+  }
+}
+
+onMounted(async () => {
+  try {
+    const me = await getAuthMe()
+    const roleIds = Array.isArray(me.role_ids) ? me.role_ids : []
+    profile.value = {
+      displayName: me.display_name || me.user_id,
+      subtitle: roleIds[0] || 'Platform operator',
+    }
+  } catch (error) {
+    reportShellFallback('portal auth/me unavailable, using shell fallback', error)
+  }
+
+  try {
+    const overview = await getDashboardOverview()
+    statusPills.value = overview.quickStats.slice(0, 3).map((item) => ({
+      label: item.label,
+      value: item.value,
+    }))
+  } catch (error) {
+    reportShellFallback('portal dashboard unavailable, using shell fallback', error)
+  }
+})
 </script>
 
 <template>
@@ -26,12 +63,12 @@ import { topStatusPills } from '@/data/portal'
         </label>
 
         <div class="status-cluster" aria-label="Platform status">
-          <StatusPill v-for="pill in topStatusPills" :key="pill.label" :label="pill.label" :value="pill.value" />
+          <StatusPill v-for="pill in statusPills" :key="pill.label" :label="pill.label" :value="pill.value" />
         </div>
 
         <div class="top-actions">
           <button type="button" class="icon-button" aria-label="Notifications">4</button>
-          <ProfileMenu />
+          <ProfileMenu :display-name="profile.displayName" :subtitle="profile.subtitle" />
         </div>
       </header>
 

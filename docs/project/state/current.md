@@ -32,6 +32,7 @@
   - `/runtime`
   - `/jobs`
 - `xuanwu-portal` now includes a module-local README and build/runtime guidance for the Docker delivery path.
+- `xuanwu-portal` shell now hydrates the profile menu and top status cluster from `auth/me` and `dashboard/overview`, while keeping safe local fallbacks.
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`
