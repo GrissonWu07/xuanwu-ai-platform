@@ -162,3 +162,74 @@ def test_job_execution_dispatches_real_gateway_command_payload():
     assert payload["status"] == "completed"
     assert payload["job_run_id"] == "run-gateway-001"
     assert payload["result"]["result"]["command_name"] == "turn_off"
+
+
+def test_mqtt_ingest_can_use_mqtt_adapter_normalization():
+    handler_module = _load_handler_module()
+
+    class FakeMqttAdapter:
+        adapter_type = "mqtt"
+
+        def normalize_broker_message(self, payload):
+            return {
+                "status": "accepted",
+                "telemetry": [
+                    {
+                        "telemetry_id": "telemetry-mqtt-001",
+                        "device_id": payload["device_id"],
+                        "gateway_id": payload["gateway_id"],
+                        "capability_code": "sensor.mqtt",
+                        "observed_at": payload["observed_at"],
+                        "metrics": payload["telemetry"],
+                    }
+                ],
+                "events": [
+                    {
+                        "event_id": "event-mqtt-001",
+                        "device_id": payload["device_id"],
+                        "gateway_id": payload["gateway_id"],
+                        "event_type": "telemetry.reported",
+                        "severity": "info",
+                        "occurred_at": payload["observed_at"],
+                        "payload": {"topic": payload["topic"], **payload["telemetry"]},
+                    }
+                ],
+            }
+
+    class FakeRegistry:
+        def __init__(self):
+            self.adapter = FakeMqttAdapter()
+
+        def get(self, adapter_type):
+            if adapter_type == "mqtt":
+                return self.adapter
+            return None
+
+        def describe(self):
+            return [{"adapter_type": "mqtt"}]
+
+    class FakeManagementClient:
+        def __init__(self):
+            self.telemetry = []
+            self.events = []
+
+        async def post_telemetry(self, payload):
+            self.telemetry.append(payload)
+
+        async def post_event(self, payload):
+            self.events.append(payload)
+
+    management_client = FakeManagementClient()
+    handler = handler_module.GatewayHandler({}, registry=FakeRegistry(), management_client=management_client)
+    request = make_mocked_request("POST", "/gateway/v1/ingest/mqtt")
+    request._read_bytes = (
+        b'{"adapter_type":"mqtt","device_id":"sensor-mqtt-001","gateway_id":"gateway-mqtt-001",'
+        b'"topic":"factory/line-1/temp","observed_at":"2026-03-31T10:00:00Z",'
+        b'"telemetry":{"temperature":24.6,"humidity":53.1}}'
+    )
+
+    response = asyncio.run(handler.handle_ingest_mqtt(request))
+
+    assert response.status == 202
+    assert management_client.telemetry[0]["metrics"]["temperature"] == 24.6
+    assert management_client.events[0]["payload"]["topic"] == "factory/line-1/temp"

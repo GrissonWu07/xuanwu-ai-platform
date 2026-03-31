@@ -90,3 +90,22 @@ def test_mqtt_adapter_normalizes_publish_failure():
 
     assert result["status"] == "failed"
     assert result["error"]["code"] == "mqtt_publish_failed"
+
+
+def test_mqtt_adapter_normalizes_broker_message_into_gateway_ingest_payload():
+    module = _load_mqtt_adapter_module()
+    adapter = module.MqttAdapter()
+
+    result = adapter.normalize_broker_message(
+        {
+            "device_id": "sensor-mqtt-001",
+            "gateway_id": "gateway-mqtt-001",
+            "topic": "factory/line-1/temp",
+            "observed_at": "2026-03-31T10:00:00Z",
+            "telemetry": {"temperature": 24.6, "humidity": 53.1},
+        }
+    )
+
+    assert result["status"] == "accepted"
+    assert result["telemetry"][0]["metrics"]["temperature"] == 24.6
+    assert result["events"][0]["payload"]["topic"] == "factory/line-1/temp"

@@ -2,6 +2,15 @@
 
 version: "3"
 services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: always
+    networks:
+      - default
+    ports:
+      - "1883:1883"
+
   xuanwu-portal:
     build:
       context: ../..
@@ -64,26 +73,24 @@ services:
       - ../xuanwu-management-server:/opt/xuanwu-management-server
 
   xuanwu-gateway:
-    image: python:3.11-slim
+    build:
+      context: ../..
+      dockerfile: main/xuanwu-gateway/Dockerfile
     container_name: xuanwu-gateway
     restart: always
     networks:
       - default
     ports:
       - "18084:18084"
-    working_dir: /opt/xuanwu-gateway
-    command: >
-      sh -c "pip install --no-cache-dir aiohttp httpx && python app.py"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
       - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
       - XUANWU_GATEWAY_HOST=0.0.0.0
       - XUANWU_GATEWAY_PORT=18084
-    volumes:
-      - ../xuanwu-gateway:/opt/xuanwu-gateway
     depends_on:
       - xuanwu-management-server
+      - mosquitto
 
   xuanwu-jobs:
     image: python:3.11-slim

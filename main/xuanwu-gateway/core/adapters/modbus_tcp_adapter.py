@@ -69,6 +69,18 @@ class PymodbusTransport:
                 response = client.read_holding_registers(kwargs["address"], count=kwargs["quantity"], slave=kwargs["unit_id"])
                 values = list(response.registers or []) if not response.isError() else None
                 return {"status": "ok" if not response.isError() else "failed", "values": values}
+            if function == "read_coils":
+                response = client.read_coils(kwargs["address"], count=kwargs["quantity"], slave=kwargs["unit_id"])
+                values = list(response.bits or [])[: kwargs["quantity"]] if not response.isError() else None
+                return {"status": "ok" if not response.isError() else "failed", "values": values}
+            if function == "read_discrete_inputs":
+                response = client.read_discrete_inputs(kwargs["address"], count=kwargs["quantity"], slave=kwargs["unit_id"])
+                values = list(response.bits or [])[: kwargs["quantity"]] if not response.isError() else None
+                return {"status": "ok" if not response.isError() else "failed", "values": values}
+            if function == "read_input_registers":
+                response = client.read_input_registers(kwargs["address"], count=kwargs["quantity"], slave=kwargs["unit_id"])
+                values = list(response.registers or []) if not response.isError() else None
+                return {"status": "ok" if not response.isError() else "failed", "values": values}
             if function == "write_single_register":
                 response = client.write_register(kwargs["address"], kwargs["value"], slave=kwargs["unit_id"])
                 return {"status": "ok" if not response.isError() else "failed"}

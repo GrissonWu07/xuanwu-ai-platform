@@ -50,6 +50,16 @@ That is not sufficient to satisfy the gateway-related platform specs.
 - adapter-level error normalization
 - realistic protocol integration tests
 
+### Remaining gap after the first adapter pass
+
+The repository now has real adapter entrypoints and test-covered baseline implementations, but the following areas are still below the intended completion bar:
+
+- MQTT support is currently publish-oriented only and does not yet define broker-backed subscription ingestion or broker service deployment requirements
+- Home Assistant support is currently service-call oriented and does not yet define entity state read, state sync, or event-stream expectations
+- industrial adapters provide baseline read/write flows but do not yet define richer operation coverage and deployment dependencies in one place
+- runtime packaging does not yet formalize required Python dependencies and gateway container build expectations
+- wireless bridge services are not yet implemented as independent services, even though the gateway contract now expects bridge-style execution for Bluetooth and NearLink
+
 ## Required Completion Standard
 
 An adapter family is considered complete only when all of the following are true:
@@ -268,6 +278,87 @@ Each adapter family must define:
 - supported capability codes
 
 This validation must occur before protocol execution begins.
+
+The gateway implementation must also define a concrete dependency and packaging model for:
+
+- `pymodbus`
+- `opcua` or `asyncua`
+- `BAC0`
+- `paho-mqtt`
+
+It must also document that an MQTT broker is external infrastructure and not an in-process replacement inside `xuanwu-gateway`.
+
+## Remaining Adapter-Specific Completion Work
+
+### MQTT
+
+Still required beyond the current baseline:
+
+- broker-oriented subscription ingestion contract
+- stable topic-to-telemetry mapping profile
+- explicit broker deployment expectation
+- clearer retained-message and QoS handling guidance
+- runtime dependency packaging for `paho-mqtt`
+
+Gateway acceptance for MQTT should include both:
+
+- command publish
+- inbound telemetry/event ingestion through a broker-backed flow
+
+### Home Assistant
+
+Still required beyond the current baseline:
+
+- entity-state read capability
+- normalized `device state` pull contract
+- optional event-stream sync strategy definition
+- clearer route schema for entity metadata and domain/service separation
+
+Gateway acceptance for Home Assistant should include:
+
+- service invocation
+- entity state read
+
+### Modbus TCP
+
+Still required beyond the current baseline:
+
+- discrete input read
+- input register read
+- coil read
+- clearer function-to-command mapping table
+- dependency packaging for `pymodbus`
+
+### OPC UA
+
+Still required beyond the current baseline:
+
+- browse/read/write operation contract
+- explicit dependency packaging for the chosen OPC UA library
+- clearer security/session expectations
+
+### BACnet/IP
+
+Still required beyond the current baseline:
+
+- explicit `BAC0` deployment requirements
+- clearer network-mode expectations for Docker and host networking
+- object/property route examples beyond a single property read/write pair
+
+### CAN gateway
+
+Still required beyond the current baseline:
+
+- stronger external bridge contract examples
+- state-query examples, not only command examples
+
+### Wireless adapters
+
+Still required beyond the current baseline:
+
+- standalone bridge specs for Bluetooth and NearLink
+- external bridge deployment guidance
+- bridge callback validation against the gateway ingest contract
 
 ## Testing Requirements
 

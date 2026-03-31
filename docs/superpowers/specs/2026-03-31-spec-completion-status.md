@@ -21,6 +21,10 @@ It is the implementation-oriented completion ledger for the current platform blu
 
 - `xuanwu-portal` deeper operational CRUD across every workspace
 - `xuanwu-jobs` richer scheduling semantics
+- `xuanwu-gateway` deeper platform depth beyond the adapter baseline:
+  - broker-backed MQTT runtime operations
+  - richer Home Assistant sync beyond state reads
+  - deeper industrial browse/subscribe coverage
 
 ### Not locally completable without upstream
 

@@ -61,6 +61,33 @@ class MqttAdapter(BaseGatewayAdapter):
             },
         )
 
+    def normalize_broker_message(self, payload: dict) -> dict:
+        telemetry_payload = {
+            "telemetry_id": payload.get("telemetry_id") or f"telemetry-{payload.get('device_id')}",
+            "device_id": payload.get("device_id"),
+            "gateway_id": payload.get("gateway_id"),
+            "capability_code": payload.get("capability_code") or "sensor.mqtt",
+            "observed_at": payload.get("observed_at"),
+            "metrics": dict(payload.get("telemetry") or {}),
+        }
+        event_payload = {
+            "event_id": payload.get("event_id") or f"event-{payload.get('device_id')}",
+            "device_id": payload.get("device_id"),
+            "gateway_id": payload.get("gateway_id"),
+            "event_type": "telemetry.reported",
+            "severity": "info",
+            "occurred_at": payload.get("observed_at"),
+            "payload": {
+                "topic": payload.get("topic"),
+                **dict(payload.get("telemetry") or {}),
+            },
+        }
+        return {
+            "status": "accepted",
+            "telemetry": [telemetry_payload],
+            "events": [event_payload],
+        }
+
 
 class PahoMqttTransport:
     def publish(self, **kwargs):

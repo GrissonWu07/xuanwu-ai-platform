@@ -28,6 +28,22 @@
 - `bluetooth`
 - `nearlink`
 
+## Current Capability Notes
+
+- `mqtt` now supports command publish and broker-message normalization, but MQTT broker runtime is still expected as external infrastructure such as Mosquitto or EMQX
+- `home_assistant` supports service calls and entity-state reads
+- `modbus_tcp` supports holding-register reads plus coil, discrete-input, and input-register reads
+- `bluetooth` and `nearlink` remain bridge-oriented adapter families and expect standalone bridge services in production
+
+## Runtime Dependencies
+
+The dedicated gateway container now formalizes these protocol dependencies:
+
+- `pymodbus`
+- `opcua`
+- `BAC0`
+- `paho-mqtt`
+
 ## Boundaries
 
 `xuanwu-gateway` owns:

@@ -74,7 +74,12 @@ class GatewayHandler:
         adapter = self.registry.get(adapter_type)
         if adapter is None:
             return {"error": "adapter_not_found"}, 404
-        result = adapter.ingest(payload)
+        if hasattr(adapter, "ingest"):
+            result = adapter.ingest(payload)
+        elif hasattr(adapter, "normalize_broker_message"):
+            result = adapter.normalize_broker_message(payload)
+        else:
+            return {"error": "adapter_ingest_not_supported"}, 400
         if result.get("error"):
             return result, 400
         for telemetry in result.get("telemetry") or []:

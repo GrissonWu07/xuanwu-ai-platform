@@ -75,3 +75,50 @@ def test_home_assistant_adapter_calls_service_endpoint():
     assert transport.calls[0]["headers"]["Authorization"] == "Bearer ha-token-001"
     assert transport.calls[0]["json_body"]["entity_id"] == "light.living_room"
     assert transport.calls[0]["json_body"]["brightness"] == 180
+
+
+def test_home_assistant_adapter_reads_entity_state():
+    module = _load_home_assistant_module()
+
+    class FakeStateTransport:
+        def __init__(self):
+            self.calls = []
+
+        def request(self, *, method, url, headers, json_body, timeout_ms):
+            self.calls.append(
+                {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "json_body": json_body,
+                    "timeout_ms": timeout_ms,
+                }
+            )
+            return {
+                "status_code": 200,
+                "body": {"state": "on", "attributes": {"brightness": 80}},
+                "headers": {},
+            }
+
+    transport = FakeStateTransport()
+    adapter = module.HomeAssistantAdapter(transport=transport)
+    result = adapter.dispatch(
+        {
+            "request_id": "req-ha-read-001",
+            "gateway_id": "gateway-ha-001",
+            "adapter_type": "home_assistant",
+            "device_id": "ha-light-001",
+            "capability_code": "home_assistant.state",
+            "command_name": "read_state",
+            "route": {
+                "base_url": "http://ha.local:8123",
+                "token": "secret-token",
+                "entity_id": "light.living_room",
+            },
+        }
+    )
+
+    assert result["status"] == "succeeded"
+    assert transport.calls[0]["method"] == "GET"
+    assert transport.calls[0]["url"] == "http://ha.local:8123/api/states/light.living_room"
+    assert result["result"]["protocol_response"]["state"] == "on"
