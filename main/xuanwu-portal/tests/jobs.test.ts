@@ -238,4 +238,104 @@ describe('JobsPage', () => {
     const detail = await screen.findByTestId('job-detail-panel')
     expect(await within(detail).findByText('Alarm sweep escalation')).toBeVisible()
   })
+
+  it('pauses, resumes, and manually triggers the selected schedule', async () => {
+    const mutableOverview = structuredClone(jobsOverviewPayload)
+    const mutableScheduleDetail = structuredClone(scheduleDetailPayload)
+    const mutableJobRunDetail = structuredClone(jobRunDetailPayload)
+
+    const fetchMock = vi.fn((input: string, init?: RequestInit) => {
+      if (input === '/control-plane/v1/jobs/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone(mutableOverview),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone(mutableScheduleDetail),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_1030') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone(mutableJobRunDetail),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep:pause' && init?.method === 'POST') {
+        mutableOverview.schedules[1].status = 'disabled'
+        mutableScheduleDetail.status = 'disabled'
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone({ ...mutableScheduleDetail, enabled: false }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep:resume' && init?.method === 'POST') {
+        mutableOverview.schedules[1].status = 'active'
+        mutableScheduleDetail.status = 'active'
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone({ ...mutableScheduleDetail, enabled: true }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep:trigger' && init?.method === 'POST') {
+        mutableOverview.runs.unshift({
+          job_run_id: 'run_alarm_1040',
+          schedule_id: 'sched_alarm_sweep',
+          status: 'queued',
+          executor_type: 'management',
+          started_at: '2026-03-31T10:40:00+08:00',
+          finished_at: '',
+        })
+        mutableJobRunDetail.job_run_id = 'run_alarm_1040'
+        mutableJobRunDetail.scheduled_for = '2026-03-31T10:40:00+08:00'
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone({
+            job_run_id: 'run_alarm_1040',
+            schedule_id: 'sched_alarm_sweep',
+            status: 'queued',
+            executor_type: 'management',
+            scheduled_for: '2026-03-31T10:40:00+08:00',
+          }),
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/jobs?scheduleId=sched_alarm_sweep', fetchMock)
+
+    const getDetailPanel = async () => screen.findByTestId('job-detail-panel')
+
+    expect(await within(await getDetailPanel()).findByText('queued')).toBeVisible()
+
+    await fireEvent.click(within(await getDetailPanel()).getByRole('button', { name: 'Pause schedule' }))
+    expect(await within(await getDetailPanel()).findByText('disabled')).toBeVisible()
+
+    await fireEvent.click(within(await getDetailPanel()).getByRole('button', { name: 'Resume schedule' }))
+    expect(await within(await getDetailPanel()).findByText('active')).toBeVisible()
+
+    await fireEvent.click(within(await getDetailPanel()).getByRole('button', { name: 'Run now' }))
+    expect((await within(await getDetailPanel()).findAllByText('run_alarm_1040')).length).toBeGreaterThanOrEqual(1)
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/jobs/schedules/sched_alarm_sweep:pause',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/jobs/schedules/sched_alarm_sweep:resume',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/jobs/schedules/sched_alarm_sweep:trigger',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
 })

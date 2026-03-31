@@ -10,6 +10,9 @@ import {
   getJobRun,
   getJobsOverview,
   getJobSchedule,
+  pauseJobSchedule,
+  resumeJobSchedule,
+  triggerJobSchedule,
   type JobRunDetailResponse,
   type JobsOverviewResponse,
   type JobScheduleDetailResponse,
@@ -20,6 +23,8 @@ const selectedScheduleId = ref('')
 const selectedScheduleDetail = ref<JobScheduleDetailResponse | null>(null)
 const selectedRunDetail = ref<JobRunDetailResponse | null>(null)
 const loadError = ref('')
+const actionBusy = ref(false)
+const actionError = ref('')
 const route = useRoute()
 const router = useRouter()
 
@@ -89,6 +94,93 @@ async function loadScheduleDetail(scheduleId: string) {
   } catch {
     selectedScheduleDetail.value = null
     selectedRunDetail.value = null
+  }
+}
+
+function patchScheduleOverview(scheduleId: string, patch: Partial<JobsOverviewResponse['schedules'][number]>) {
+  if (!overview.value) {
+    return
+  }
+  overview.value = {
+    ...overview.value,
+    schedules: overview.value.schedules.map((item) =>
+      item.schedule_id === scheduleId
+        ? {
+            ...item,
+            ...patch,
+          }
+        : item,
+    ),
+  }
+}
+
+function upsertJobRun(run: JobRunDetailResponse) {
+  if (!overview.value) {
+    return
+  }
+  const nextRuns = overview.value.runs.filter((item) => item.job_run_id !== run.job_run_id)
+  nextRuns.unshift({
+    job_run_id: run.job_run_id,
+    schedule_id: run.schedule_id,
+    status: run.status,
+    executor_type: run.executor_type,
+    started_at: run.started_at,
+    finished_at: run.finished_at,
+  })
+  overview.value = {
+    ...overview.value,
+    runs: nextRuns,
+  }
+}
+
+async function pauseSelectedSchedule() {
+  if (!selectedScheduleId.value || actionBusy.value) {
+    return
+  }
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await pauseJobSchedule(selectedScheduleId.value, 'Paused from portal Jobs view')
+    selectedScheduleDetail.value = updated
+    patchScheduleOverview(selectedScheduleId.value, { status: updated.status ?? 'disabled' })
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Unable to pause schedule.'
+  } finally {
+    actionBusy.value = false
+  }
+}
+
+async function resumeSelectedSchedule() {
+  if (!selectedScheduleId.value || actionBusy.value) {
+    return
+  }
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await resumeJobSchedule(selectedScheduleId.value, 'Resumed from portal Jobs view')
+    selectedScheduleDetail.value = updated
+    patchScheduleOverview(selectedScheduleId.value, { status: updated.status ?? 'active' })
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Unable to resume schedule.'
+  } finally {
+    actionBusy.value = false
+  }
+}
+
+async function triggerSelectedSchedule() {
+  if (!selectedScheduleId.value || actionBusy.value) {
+    return
+  }
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const run = await triggerJobSchedule(selectedScheduleId.value)
+    selectedRunDetail.value = run
+    upsertJobRun(run)
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Unable to run schedule now.'
+  } finally {
+    actionBusy.value = false
   }
 }
 
@@ -233,6 +325,42 @@ onMounted(() => {
           </section>
 
           <section class="detail-section">
+            <div class="detail-section__head">
+              <h3>Schedule actions</h3>
+              <span class="detail-section__hint">Pause noisy schedules, resume quiet ones, or trigger a run immediately.</span>
+            </div>
+            <div class="action-row">
+              <button
+                v-if="selectedSchedule.status !== 'disabled'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="actionBusy"
+                @click="pauseSelectedSchedule"
+              >
+                Pause schedule
+              </button>
+              <button
+                v-if="selectedSchedule.status === 'disabled'"
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="actionBusy"
+                @click="resumeSelectedSchedule"
+              >
+                Resume schedule
+              </button>
+              <button
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="actionBusy"
+                @click="triggerSelectedSchedule"
+              >
+                Run now
+              </button>
+            </div>
+            <p v-if="actionError" class="action-error">{{ actionError }}</p>
+          </section>
+
+          <section class="detail-section">
             <h3>Recent runs</h3>
             <ActivityFeed v-if="selectedRuns.length > 0" :items="selectedRuns" />
             <EmptyState
@@ -366,9 +494,67 @@ onMounted(() => {
   gap: 0.8rem;
 }
 
+.detail-section__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.detail-section__hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .detail-section h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.action-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.72rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.action-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(65, 46, 109, 0.14);
+}
+
+.action-button--primary {
+  background: linear-gradient(135deg, var(--accent-strong), #7f6bff);
+  border-color: transparent;
+  color: white;
+}
+
+.action-button--ghost {
+  background: rgba(124, 108, 255, 0.08);
+  color: var(--text);
+}
+
+.action-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.92rem;
 }
 
 @media (max-width: 1120px) {

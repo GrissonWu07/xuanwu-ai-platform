@@ -428,6 +428,30 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.post(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:pause",
+                control_plane_handler.handle_pause_job_schedule,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:pause",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:resume",
+                control_plane_handler.handle_resume_job_schedule,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:resume",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:trigger",
+                control_plane_handler.handle_trigger_job_schedule,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/schedules/{schedule_id}:trigger",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
                 "/control-plane/v1/jobs:execute",
                 control_plane_handler.handle_execute_job,
             ),

@@ -1580,6 +1580,105 @@ def test_control_plane_job_schedule_and_run_endpoints_work_together():
         assert yaml.safe_load(list_runs_response.text)["items"][0]["status"] == "completed"
 
 
+def test_control_plane_job_schedule_lifecycle_actions_round_trip():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        create_schedule_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        create_schedule_request._read_bytes = (
+            b'{"schedule_id":"sched-night-shift-001","name":"Night shift sweep","enabled":true,'
+            b'"job_type":"alarm_escalation","executor_type":"management",'
+            b'"interval_seconds":600,"next_run_at":"2026-03-31T22:00:00Z",'
+            b'"payload":{"site_id":"factory-cn-01","policy":"night-shift"}}'
+        )
+
+        create_schedule_response = asyncio.run(
+            handler.handle_create_job_schedule(create_schedule_request)
+        )
+
+        pause_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules/sched-night-shift-001:pause",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"schedule_id": "sched-night-shift-001"},
+        )
+        pause_request._read_bytes = b'{"reason":"manual_pause"}'
+        pause_response = asyncio.run(handler.handle_pause_job_schedule(pause_request))
+
+        resume_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules/sched-night-shift-001:resume",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"schedule_id": "sched-night-shift-001"},
+        )
+        resume_request._read_bytes = b'{"reason":"operator_resume"}'
+        resume_response = asyncio.run(handler.handle_resume_job_schedule(resume_request))
+
+        trigger_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules/sched-night-shift-001:trigger",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"schedule_id": "sched-night-shift-001"},
+        )
+        trigger_request._read_bytes = b'{"scheduled_for":"2026-03-31T21:55:00Z"}'
+        trigger_response = asyncio.run(handler.handle_trigger_job_schedule(trigger_request))
+
+        schedule_response = asyncio.run(
+            handler.handle_get_job_schedule(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/schedules/sched-night-shift-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"schedule_id": "sched-night-shift-001"},
+                )
+            )
+        )
+
+        runs_response = asyncio.run(
+            handler.handle_list_job_runs(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/runs",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+
+        assert create_schedule_response.status == 201
+        assert pause_response.status == 200
+        assert resume_response.status == 200
+        assert trigger_response.status == 201
+
+        paused_payload = yaml.safe_load(pause_response.text)
+        resumed_payload = yaml.safe_load(resume_response.text)
+        triggered_payload = yaml.safe_load(trigger_response.text)
+        schedule_payload = yaml.safe_load(schedule_response.text)
+        runs_payload = yaml.safe_load(runs_response.text)
+
+        assert paused_payload["enabled"] is False
+        assert paused_payload["status"] == "disabled"
+        assert paused_payload["pause_reason"] == "manual_pause"
+        assert resumed_payload["enabled"] is True
+        assert resumed_payload["status"] == "active"
+        assert resumed_payload["resume_reason"] == "operator_resume"
+        assert schedule_payload["enabled"] is True
+        assert schedule_payload["status"] == "active"
+        assert triggered_payload["schedule_id"] == "sched-night-shift-001"
+        assert triggered_payload["status"] == "queued"
+        assert triggered_payload["scheduled_for"] == "2026-03-31T21:55:00Z"
+        assert runs_payload["items"][0]["job_run_id"] == triggered_payload["job_run_id"]
+
+
 def test_control_plane_resource_item_endpoints_round_trip_real_records():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)

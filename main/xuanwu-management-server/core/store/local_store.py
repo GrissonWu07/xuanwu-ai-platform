@@ -691,6 +691,7 @@ class LocalControlPlaneStore:
         record.setdefault("timezone", "UTC")
         record.setdefault("payload", {})
         record.setdefault("executor_type", "platform")
+        record["status"] = "active" if record.get("enabled", True) else "disabled"
         self._write_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml", record)
         return record
 
@@ -748,6 +749,48 @@ class LocalControlPlaneStore:
             self.root_dir / "job_schedules" / f"{schedule_id}.yaml",
             updated_schedule,
         )
+        return run_record
+
+    def pause_schedule(self, schedule_id: str, reason: str | None = None) -> dict[str, Any]:
+        schedule = self.get_schedule(schedule_id)
+        if schedule is None:
+            raise ValueError("schedule_not_found")
+        updated_schedule = dict(schedule)
+        updated_schedule["enabled"] = False
+        updated_schedule["status"] = "disabled"
+        if reason:
+            updated_schedule["pause_reason"] = reason
+        self._write_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml", updated_schedule)
+        return updated_schedule
+
+    def resume_schedule(self, schedule_id: str, reason: str | None = None) -> dict[str, Any]:
+        schedule = self.get_schedule(schedule_id)
+        if schedule is None:
+            raise ValueError("schedule_not_found")
+        updated_schedule = dict(schedule)
+        updated_schedule["enabled"] = True
+        updated_schedule["status"] = "active"
+        if reason:
+            updated_schedule["resume_reason"] = reason
+        self._write_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml", updated_schedule)
+        return updated_schedule
+
+    def trigger_schedule(self, schedule_id: str, scheduled_for: str) -> dict[str, Any]:
+        schedule = self.get_schedule(schedule_id)
+        if schedule is None:
+            raise ValueError("schedule_not_found")
+        job_run_id = self._build_job_run_id(schedule_id, scheduled_for)
+        run_record = {
+            "job_run_id": job_run_id,
+            "schedule_id": schedule_id,
+            "job_type": schedule.get("job_type"),
+            "executor_type": schedule.get("executor_type"),
+            "scheduled_for": scheduled_for,
+            "status": "queued",
+            "payload": deepcopy(schedule.get("payload") or {}),
+            "trigger_mode": "manual",
+        }
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", run_record)
         return run_record
 
     def complete_job_run(self, job_run_id: str, payload: dict[str, Any]) -> dict[str, Any]:

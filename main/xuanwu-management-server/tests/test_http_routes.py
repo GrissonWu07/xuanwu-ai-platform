@@ -90,6 +90,9 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/gateway/command-results" in registered_paths
     assert "/control-plane/v1/jobs/schedules" in registered_paths
     assert "/control-plane/v1/jobs/schedules/{schedule_id}" in registered_paths
+    assert "/control-plane/v1/jobs/schedules/{schedule_id}:pause" in registered_paths
+    assert "/control-plane/v1/jobs/schedules/{schedule_id}:resume" in registered_paths
+    assert "/control-plane/v1/jobs/schedules/{schedule_id}:trigger" in registered_paths
     assert "/control-plane/v1/jobs/overview" in registered_paths
     assert "/control-plane/v1/jobs/schedules:due" in registered_paths
     assert "/control-plane/v1/jobs/schedules/{schedule_id}:claim" in registered_paths

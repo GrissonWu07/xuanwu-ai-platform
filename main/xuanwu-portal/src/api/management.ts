@@ -373,6 +373,42 @@ export function getJobRun(jobRunId: string) {
   return requestJson<JobRunDetailResponse>(`/control-plane/v1/jobs/runs/${jobRunId}`)
 }
 
+export function pauseJobSchedule(scheduleId: string, reason?: string) {
+  return requestJson<JobScheduleDetailResponse>(`/control-plane/v1/jobs/schedules/${scheduleId}:pause`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reason,
+    }),
+  })
+}
+
+export function resumeJobSchedule(scheduleId: string, reason?: string) {
+  return requestJson<JobScheduleDetailResponse>(`/control-plane/v1/jobs/schedules/${scheduleId}:resume`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reason,
+    }),
+  })
+}
+
+export function triggerJobSchedule(scheduleId: string, scheduledFor?: string) {
+  return requestJson<JobRunDetailResponse>(`/control-plane/v1/jobs/schedules/${scheduleId}:trigger`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      scheduled_for: scheduledFor,
+    }),
+  })
+}
+
 export function getAlertsOverview() {
   return requestJson<AlertsOverviewResponse>('/control-plane/v1/alerts/overview')
 }

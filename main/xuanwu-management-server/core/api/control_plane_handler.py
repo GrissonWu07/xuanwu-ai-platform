@@ -779,6 +779,52 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": str(exc)}, status=status)
         return self._json_response(claimed, status=201)
 
+    async def handle_pause_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        schedule_id = str(request.match_info["schedule_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            paused = self.store.pause_schedule(schedule_id, payload.get("reason"))
+        except ValueError as exc:
+            status = 404 if str(exc) == "schedule_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(paused)
+
+    async def handle_resume_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        schedule_id = str(request.match_info["schedule_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            resumed = self.store.resume_schedule(schedule_id, payload.get("reason"))
+        except ValueError as exc:
+            status = 404 if str(exc) == "schedule_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(resumed)
+
+    async def handle_trigger_job_schedule(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        schedule_id = str(request.match_info["schedule_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        scheduled_for = str(payload.get("scheduled_for") or datetime.now(timezone.utc).isoformat()).strip()
+        try:
+            triggered = self.store.trigger_schedule(schedule_id, scheduled_for)
+        except ValueError as exc:
+            status = 404 if str(exc) == "schedule_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(triggered, status=201)
+
     async def handle_list_job_runs(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
