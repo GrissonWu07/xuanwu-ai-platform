@@ -80,6 +80,8 @@
     - `Channels & Gateways`
     - `AI Config Proxy`
     - `Settings`
+    - `Sign out`
+    - `Telemetry & Alarms`
   - portal-facing management read models
 - Verified with portal unit tests and `vite` production build.
 

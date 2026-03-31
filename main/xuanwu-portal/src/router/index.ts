@@ -9,6 +9,8 @@ import JobsPage from '@/pages/JobsPage.vue'
 import OverviewPage from '@/pages/OverviewPage.vue'
 import PhasePage from '@/pages/PhasePage.vue'
 import SettingsPage from '@/pages/SettingsPage.vue'
+import SignOutPage from '@/pages/SignOutPage.vue'
+import TelemetryAlarmsPage from '@/pages/TelemetryAlarmsPage.vue'
 import UsersRolesPage from '@/pages/UsersRolesPage.vue'
 
 const makePhaseRoute = (config: any) =>
@@ -47,9 +49,9 @@ export const routes = [
   { path: '/users-roles', component: UsersRolesPage },
   { path: '/channels-gateways', component: ChannelsGatewaysPage },
   { path: '/ai-config-proxy', component: AIConfigProxyPage },
-  { path: '/telemetry-alarms', component: placeholder('Telemetry & Alarms') },
+  { path: '/telemetry-alarms', component: TelemetryAlarmsPage },
   { path: '/settings', component: SettingsPage },
-  { path: '/sign-out', component: placeholder('Sign out') },
+  { path: '/sign-out', component: SignOutPage },
 ]
 
 export const router = createRouter({

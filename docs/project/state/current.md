@@ -24,6 +24,8 @@
   - `Channels & Gateways`
   - `AI Config Proxy`
   - `Settings`
+  - `Sign out`
+- `xuanwu-portal` has also completed `Telemetry & Alarms` as a live profile-menu workspace backed by existing management read APIs.
 - `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
   - `/control-plane/v1/auth/me`
   - `/control-plane/v1/roles`

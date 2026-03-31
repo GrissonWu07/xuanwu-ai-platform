@@ -161,6 +161,23 @@ export interface PortalConfigResponse {
   endpoints?: Record<string, string>
 }
 
+export interface EventItem {
+  event_id: string
+  event_type: string
+  severity?: string
+  device_id?: string
+  gateway_id?: string
+  occurred_at?: string
+}
+
+export interface TelemetryItem {
+  telemetry_id: string
+  device_id?: string
+  capability_code: string
+  value?: string | number | boolean
+  reported_at?: string
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
@@ -207,6 +224,12 @@ export function getPortalConfig() {
   return requestJson<PortalConfigResponse>('/control-plane/v1/portal/config')
 }
 
+export function logout() {
+  return requestJson<{ ok?: boolean }>('/control-plane/v1/auth/logout', {
+    method: 'POST',
+  })
+}
+
 export function getDevices() {
   return requestJson<DevicesCollectionResponse>('/control-plane/v1/devices')
 }
@@ -225,6 +248,14 @@ export function getAlertsOverview() {
 
 export function listAlarms() {
   return requestJson<{ items: AlertsOverviewResponse['alerts'] }>('/control-plane/v1/alarms')
+}
+
+export function listEvents() {
+  return requestJson<{ items: EventItem[] }>('/control-plane/v1/events')
+}
+
+export function listTelemetry() {
+  return requestJson<{ items: TelemetryItem[] }>('/control-plane/v1/telemetry')
 }
 
 export function ackAlarm(alarmId: string) {
