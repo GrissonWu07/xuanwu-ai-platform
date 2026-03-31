@@ -116,7 +116,7 @@ The required path is:
 
 1. `xuanwu-agent-worker` or `xuanwu-workflow-worker` decides what should happen
 2. `XuanWu` emits a standard device-command plan
-3. `xuanwu-gateway-worker` executes the actual southbound command
+3. `xuanwu-gateway` executes the actual southbound command through its execution API
 4. execution results flow back to `xuanwu-management-server`
 
 ## Schedule Rule
@@ -125,7 +125,7 @@ If a schedule originates from natural language:
 
 1. `XuanWu` parses the user utterance into a schedule draft
 2. `xuanwu-management-server` stores the schedule as the source of truth
-3. `xuanwu-jobs-scheduler` triggers it when due
+3. `xuanwu-jobs` triggers it when due
 4. `xuanwu-agent-worker` or `xuanwu-workflow-worker` executes it
 
 ## Scaling Rule

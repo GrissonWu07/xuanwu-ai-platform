@@ -12,7 +12,22 @@ def load_runtime_config() -> dict:
         os.environ.get("XUANWU_MANAGEMENT_SERVER_SECRET", "").strip()
         or "xuanwu-management-local-secret"
     )
-    redis_url = os.environ.get("XUANWU_JOBS_REDIS_URL", "").strip() or "redis://redis:6379/0"
+    gateway_base_url = (
+        os.environ.get("XUANWU_GATEWAY_URL", "").strip()
+        or "http://xuanwu-gateway:18084"
+    )
+    gateway_secret = (
+        os.environ.get("XUANWU_GATEWAY_SECRET", "").strip()
+        or management_secret
+    )
+    device_base_url = (
+        os.environ.get("XUANWU_DEVICE_RUNTIME_URL", "").strip()
+        or "http://xuanwu-device-server:8003"
+    )
+    device_runtime_secret = (
+        os.environ.get("XUANWU_DEVICE_RUNTIME_SECRET", "").strip()
+        or management_secret
+    )
     batch_size = int(os.environ.get("XUANWU_JOBS_BATCH_SIZE", "100"))
     poll_interval = float(os.environ.get("XUANWU_JOBS_POLL_INTERVAL_SECONDS", "2"))
 
@@ -22,16 +37,22 @@ def load_runtime_config() -> dict:
             "base_url": management_base_url,
             "control_secret": management_secret,
         },
+        "gateway": {
+            "base_url": gateway_base_url,
+            "control_secret": gateway_secret,
+        },
+        "device": {
+            "base_url": device_base_url,
+            "runtime_secret": device_runtime_secret,
+        },
         "jobs": {
-            "redis_url": redis_url,
             "schedule_batch_size": batch_size,
             "poll_interval_seconds": poll_interval,
-            "queue_names": {
-                "platform": "management",
-                "management": "management",
-                "agent": "agent",
-                "gateway": "gateway",
-                "device": "device",
+            "dispatch_targets": {
+                "platform": management_base_url,
+                "management": management_base_url,
+                "gateway": gateway_base_url,
+                "device": device_base_url,
             },
         },
     }

@@ -209,3 +209,31 @@ class RuntimeHandler(BaseHandler):
         )
         conn.tts_MessageText = text
         return self._json_response({"status": "ok", "sentence_id": sentence_id})
+
+    async def handle_execute_job(self, request: web.Request) -> web.Response:
+        if not self._verify_runtime_secret(request):
+            return self._json_response({"error": "runtime_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+
+        job_run_id = str(payload.get("job_run_id", "")).strip()
+        job_type = str(payload.get("job_type", "")).strip()
+        if not job_run_id:
+            return self._json_response({"error": "job_run_id_required"}, status=400)
+        if not job_type:
+            return self._json_response({"error": "job_type_required"}, status=400)
+
+        return self._json_response(
+            {
+                "status": "completed",
+                "executor_type": "device",
+                "job_run_id": job_run_id,
+                "result": {
+                    "status": "completed",
+                    "job_type": job_type,
+                    "details": dict(payload.get("payload") or {}),
+                },
+            }
+        )

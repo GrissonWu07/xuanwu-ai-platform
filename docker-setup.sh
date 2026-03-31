@@ -66,13 +66,11 @@ cat <<EOF
 XuanWu AI Python stack is up:
 
 - management host xuanwu-management-server: http://$LOCAL_IP:18082
-- jobs scheduler xuanwu-jobs-scheduler: http://$LOCAL_IP:18083/jobs/v1/health
-- Redis queue: redis://$LOCAL_IP:6379/0
+- gateway host xuanwu-gateway: http://$LOCAL_IP:18084/gateway/v1/health
+- jobs scheduler-dispatcher xuanwu-jobs: http://$LOCAL_IP:18083/jobs/v1/health
 - OTA endpoint: http://$LOCAL_IP:8003/xuanwu/ota/
 - vision endpoint: http://$LOCAL_IP:8003/mcp/vision/explain
 - WebSocket endpoint: ws://$LOCAL_IP:8000/xuanwu/v1/
 
 Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL.
-To increase platform job throughput, scale worker replicas with:
-  docker compose -f "$COMPOSE_PATH" up -d --scale xuanwu-management-worker=3
 EOF

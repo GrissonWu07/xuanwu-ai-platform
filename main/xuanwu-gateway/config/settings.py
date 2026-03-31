@@ -3,6 +3,10 @@ import os
 
 def load_runtime_config() -> dict:
     return {
+        "server": {
+            "host": os.environ.get("XUANWU_GATEWAY_HOST", "0.0.0.0").strip() or "0.0.0.0",
+            "http_port": int(os.environ.get("XUANWU_GATEWAY_PORT", "18084")),
+        },
         "management": {
             "base_url": (
                 os.environ.get("XUANWU_MANAGEMENT_SERVER_URL", "").strip()
@@ -11,12 +15,6 @@ def load_runtime_config() -> dict:
             "control_secret": (
                 os.environ.get("XUANWU_MANAGEMENT_SERVER_SECRET", "").strip()
                 or "xuanwu-management-local-secret"
-            ),
-        },
-        "jobs": {
-            "redis_url": (
-                os.environ.get("XUANWU_JOBS_REDIS_URL", "").strip()
-                or "redis://redis:6379/0"
             ),
         },
     }

@@ -27,7 +27,7 @@ def _load_jobs_app_module():
 def test_create_app_registers_jobs_routes():
     module = _load_jobs_app_module()
 
-    app = module.create_app({"jobs": {"queue_names": {"platform": "platform"}}})
+    app = module.create_app({"jobs": {"dispatch_targets": {"platform": "http://xuanwu-management-server:18082"}}})
     registered_paths = sorted(
         route.resource.canonical
         for route in app.router.routes()

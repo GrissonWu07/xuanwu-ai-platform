@@ -24,16 +24,7 @@ def _load_module(module_path: Path, module_name: str):
     return module
 
 
-class _FakeRedisQueue:
-    def __init__(self):
-        self.calls = []
-
-    async def enqueue_job(self, function_name: str, message: dict, *, _queue_name: str):
-        self.calls.append((function_name, _queue_name, message))
-        return {"job_id": "redis-job-e2e-001"}
-
-
-def test_scheduler_and_platform_worker_complete_due_job_through_management_api():
+def test_scheduler_and_dispatcher_complete_due_job_through_management_api():
     async def scenario():
         root = Path(__file__).resolve().parents[3]
         management_app_module = _load_module(
@@ -44,9 +35,9 @@ def test_scheduler_and_platform_worker_complete_due_job_through_management_api()
             root / "main" / "xuanwu-jobs" / "core" / "scheduler.py",
             "xuanwu_jobs_scheduler_e2e",
         )
-        worker_module = _load_module(
-            root / "main" / "xuanwu-jobs" / "core" / "platform_worker.py",
-            "xuanwu_jobs_platform_worker_e2e",
+        dispatcher_module = _load_module(
+            root / "main" / "xuanwu-jobs" / "core" / "dispatcher.py",
+            "xuanwu_jobs_dispatcher_e2e",
         )
         client_module = _load_module(
             root / "main" / "xuanwu-jobs" / "core" / "clients" / "management_client.py",
@@ -85,24 +76,23 @@ def test_scheduler_and_platform_worker_complete_due_job_through_management_api()
                     "base_url": f"http://127.0.0.1:{port}",
                     "control_secret": "runtime-secret",
                 },
-                "jobs": {"queue_names": {"platform": "platform"}, "schedule_batch_size": 10},
+                "jobs": {"schedule_batch_size": 10},
             }
             client = client_module.ManagementClient(jobs_config)
-            queue = _FakeRedisQueue()
-            scheduler = scheduler_module.JobScheduler(client=client, redis_queue=queue, config=jobs_config)
+            dispatcher = dispatcher_module.JobDispatcher(
+                management_client=client,
+                gateway_client=None,
+                device_client=None,
+            )
+            scheduler = scheduler_module.JobScheduler(client=client, dispatcher=dispatcher, config=jobs_config)
 
             await scheduler.run_once(now=scheduler_module.parse_timestamp("2026-03-31T10:00:00Z"))
-            assert len(queue.calls) == 1
-
-            _, _, message = queue.calls[0]
-            result = await worker_module.run_platform_job({"management_client": client}, message)
-
-            saved_run = store.get_job_run(message["job_run_id"])
+            saved_runs = store.list_job_runs()
             await client.close()
             await runner.cleanup()
 
-            assert result["status"] == "completed"
-            assert saved_run["status"] == "completed"
-            assert saved_run["result"]["status"] == "completed"
+            assert len(saved_runs) == 1
+            assert saved_runs[0]["status"] == "completed"
+            assert saved_runs[0]["result"]["status"] == "completed"
 
     asyncio.run(scenario())

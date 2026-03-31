@@ -2,85 +2,88 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the first Docker-ready `xuanwu-jobs` service with Redis-backed queueing and horizontally scalable platform workers.
+**Goal:** Build the first Docker-ready `xuanwu-jobs` service as a lightweight scheduler-dispatcher without a separate jobs-worker deployment.
 
-**Architecture:** Add a dedicated async Python jobs service that polls due schedules from `xuanwu-management-server`, enqueues jobs to Redis through ARQ, and runs local platform jobs in separate worker processes. Keep schedule truth in `xuanwu-management-server`, and keep `XuanWu`/gateway execution out of this repository.
+**Architecture:** Add a dedicated async Python jobs service that polls due schedules from `xuanwu-management-server`, claims them, and dispatches them directly to local service execution APIs. Keep schedule truth in `xuanwu-management-server`, keep actual execution inside `xuanwu-management-server` / `xuanwu-gateway` / `xuanwu-device-server`, and leave `XuanWu` execution as an upstream contract.
 
-**Tech Stack:** Python 3, aiohttp, ARQ, Redis, pytest
+**Tech Stack:** Python 3, aiohttp, httpx, pytest
 
 ---
 
-### Task 1: Create `xuanwu-jobs` service skeleton
+### Task 1: Keep `xuanwu-jobs` bootstrap minimal
 
 **Files:**
-- Create: `main/xuanwu-jobs/app.py`
-- Create: `main/xuanwu-jobs/README.md`
-- Create: `main/xuanwu-jobs/core/__init__.py`
-- Create: `main/xuanwu-jobs/core/http_server.py`
-- Create: `main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py`
+- Modify: `main/xuanwu-jobs/app.py`
+- Modify: `main/xuanwu-jobs/core/http_server.py`
+- Modify: `main/xuanwu-jobs/core/api/jobs_handler.py`
+- Modify: `main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py`
 
-- [x] **Step 1: Write the failing bootstrap test**
-- [x] **Step 2: Run the bootstrap test and confirm missing module failure**
-- [x] **Step 3: Implement minimal aiohttp app with health route**
-- [x] **Step 4: Re-run bootstrap test and confirm it passes**
+- [ ] **Step 1: Write the failing bootstrap/config tests**
+- [ ] **Step 2: Run the bootstrap tests and confirm the current config shape fails**
+- [ ] **Step 3: Implement minimal aiohttp app with direct-dispatch config surface**
+- [ ] **Step 4: Re-run bootstrap tests and confirm they pass**
 
-### Task 2: Add queue config, scheduler contract, and platform worker contract
-
-**Files:**
-- Create: `main/xuanwu-jobs/config/__init__.py`
-- Create: `main/xuanwu-jobs/config/settings.py`
-- Create: `main/xuanwu-jobs/core/queue.py`
-- Create: `main/xuanwu-jobs/core/scheduler.py`
-- Create: `main/xuanwu-jobs/core/platform_worker.py`
-- Create: `main/xuanwu-jobs/tests/test_scheduler_contract.py`
-- Create: `main/xuanwu-jobs/tests/test_platform_worker.py`
-
-- [x] **Step 1: Write failing scheduler and worker tests with realistic schedule payloads**
-- [x] **Step 2: Run tests to confirm contract failures**
-- [x] **Step 3: Implement minimal queue names and scheduler/worker entry contracts**
-- [x] **Step 4: Re-run tests and confirm they pass**
-
-### Task 3: Add management-side due-schedule and job-run APIs
+### Task 2: Replace queue/worker semantics with scheduler-dispatch contracts
 
 **Files:**
-- Modify: `main/xuanwu-management-server/core/store/local_store.py`
+- Modify: `main/xuanwu-jobs/config/settings.py`
+- Create: `main/xuanwu-jobs/core/dispatcher.py`
+- Modify: `main/xuanwu-jobs/core/scheduler.py`
+- Create: `main/xuanwu-jobs/core/clients/gateway_client.py`
+- Create: `main/xuanwu-jobs/core/clients/device_client.py`
+- Modify: `main/xuanwu-jobs/core/clients/management_client.py`
+- Create: `main/xuanwu-jobs/tests/test_dispatcher_contract.py`
+- Modify: `main/xuanwu-jobs/tests/test_scheduler_contract.py`
+
+- [ ] **Step 1: Write failing scheduler/dispatcher tests with realistic claimed-job payloads**
+- [ ] **Step 2: Run tests to confirm current queue/worker semantics fail**
+- [ ] **Step 3: Implement minimal dispatch target config and scheduler/dispatcher contracts**
+- [ ] **Step 4: Re-run tests and confirm they pass**
+
+### Task 3: Add local execution endpoints in management, gateway, and device services
+
+**Files:**
 - Modify: `main/xuanwu-management-server/core/api/control_plane_handler.py`
 - Modify: `main/xuanwu-management-server/core/http_server.py`
-- Modify: `main/xuanwu-management-server/tests/test_local_control_plane.py`
 - Modify: `main/xuanwu-management-server/tests/test_http_routes.py`
+- Modify: `main/xuanwu-gateway/core/api/gateway_handler.py`
+- Modify: `main/xuanwu-gateway/core/http_server.py`
+- Modify: `main/xuanwu-gateway/tests/test_dispatch.py`
+- Modify: `main/xuanwu-device-server/core/api/runtime_handler.py`
+- Modify: `main/xuanwu-device-server/core/http_server.py`
+- Modify: `main/xuanwu-device-server/tests/test_runtime_handler_unit.py`
 
-- [x] **Step 1: Write failing management tests for due schedules, claim, and run status**
-- [x] **Step 2: Run tests to confirm routes and store methods are missing**
-- [x] **Step 3: Implement minimal local schedule truth and run-status endpoints**
-- [x] **Step 4: Re-run management tests and confirm they pass**
+- [ ] **Step 1: Write failing execution-endpoint tests for `platform`, `gateway`, and `device` dispatch**
+- [ ] **Step 2: Run the tests and confirm the endpoints are missing**
+- [ ] **Step 3: Implement minimal local execution APIs with realistic payload validation**
+- [ ] **Step 4: Re-run the service tests and confirm they pass**
 
-### Task 4: Wire scheduler polling and worker execution
+### Task 4: Wire scheduler polling and direct dispatch execution
 
 **Files:**
 - Modify: `main/xuanwu-jobs/core/scheduler.py`
-- Modify: `main/xuanwu-jobs/core/platform_worker.py`
-- Create: `main/xuanwu-jobs/core/clients/management_client.py`
-- Create: `main/xuanwu-jobs/tests/test_end_to_end_jobs.py`
+- Modify: `main/xuanwu-jobs/core/dispatcher.py`
+- Modify: `main/xuanwu-jobs/tests/test_end_to_end_jobs.py`
 
-- [x] **Step 1: Write failing end-to-end test for due schedule -> queue -> completion path**
-- [x] **Step 2: Run test to confirm the scheduler/worker path fails**
-- [x] **Step 3: Implement polling, claim, enqueue, and completion reporting**
-- [x] **Step 4: Re-run end-to-end test and confirm it passes**
+- [ ] **Step 1: Write failing end-to-end test for due schedule -> claim -> dispatch -> completion**
+- [ ] **Step 2: Run the test and confirm the dispatch path fails**
+- [ ] **Step 3: Implement polling, claim, dispatch, and completion reporting**
+- [ ] **Step 4: Re-run the end-to-end test and confirm it passes**
 
-### Task 5: Add Docker Compose support for horizontal worker scaling
+### Task 5: Simplify Docker and docs to a single `xuanwu-jobs` service
 
 **Files:**
 - Modify: `main/xuanwu-device-server/docker-compose_all.yml`
 - Modify: `docker-setup.sh`
-- Modify: `main/xuanwu-management-server/README.md`
 - Modify: `main/xuanwu-jobs/README.md`
 - Modify: `main/README.md`
 - Modify: `main/README_en.md`
+- Modify: `tests/test_xuanwu_jobs_docker.py`
 
-- [x] **Step 1: Write a failing repo/documentation test that expects Redis and jobs services**
-- [x] **Step 2: Run the test and confirm the current compose/doc setup fails**
-- [x] **Step 3: Add Redis, scheduler, and platform-worker services plus scale instructions**
-- [x] **Step 4: Re-run the test and confirm Docker documentation and compose are aligned**
+- [ ] **Step 1: Write a failing repo/documentation test that expects one `xuanwu-jobs` service without Redis/jobs-worker**
+- [ ] **Step 2: Run the test and confirm the current compose/doc setup fails**
+- [ ] **Step 3: Simplify compose and installation docs to a single `xuanwu-jobs` service**
+- [ ] **Step 4: Re-run the test and confirm Docker documentation and compose are aligned**
 
 ### Task 6: Update state and verify
 
@@ -89,11 +92,11 @@
 - Modify: `docs/project/tasks/2026-03-30-platform-implementation-roadmap.md`
 - Modify: `docs/superpowers/specs/README.md`
 
-- [x] **Step 1: Run target tests**
-  - `python -m pytest main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_platform_worker.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py -q`
+- [ ] **Step 1: Run target tests**
+  - `python -m pytest main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py tests/test_xuanwu_jobs_docker.py -q`
 - [ ] **Step 2: Run broader verification**
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_platform_worker.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py -q`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
 - [ ] **Step 3: Run syntax validation**
-  - `python -m py_compile main/xuanwu-jobs/app.py main/xuanwu-jobs/core/http_server.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/platform_worker.py main/xuanwu-jobs/core/clients/management_client.py`
-- [x] **Step 4: Update state and spec index**
+  - `python -m py_compile main/xuanwu-jobs/app.py main/xuanwu-jobs/core/http_server.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/dispatcher.py main/xuanwu-jobs/core/clients/management_client.py main/xuanwu-jobs/core/clients/gateway_client.py main/xuanwu-jobs/core/clients/device_client.py`
+- [ ] **Step 4: Update state and spec index**
 - [ ] **Step 5: Commit**

@@ -1,31 +1,28 @@
 # xuanwu-jobs
 
-`xuanwu-jobs` is the platform job triggering service.
+`xuanwu-jobs` is the platform scheduler-dispatcher service.
 
 Current scope:
 
 - poll due schedules from `xuanwu-management-server`
-- enqueue jobs into Redis
-- run local platform jobs with scalable worker replicas
-- provide a dedicated scheduler service `xuanwu-jobs-scheduler`
-- provide a horizontally scalable worker pool `xuanwu-jobs-platform-worker`
+- claim due schedules
+- dispatch jobs directly to local execution APIs
+- keep `schedule` truth in `xuanwu-management-server`
+- stay lightweight and non-authoritative
 
-Current phase does not execute Agent jobs or gateway jobs locally in this repository.
+Current phase does not execute Agent jobs locally in this repository. Agent execution remains an upstream `XuanWu` contract.
 
-## Docker scaling
+## Local dispatch targets
 
-Default Docker wiring runs:
+Default Docker wiring includes:
 
-- `redis`
-- `xuanwu-jobs-scheduler`
-- `xuanwu-management-worker`
-- `xuanwu-gateway-worker`
-- `xuanwu-device-worker`
+- `xuanwu-jobs`
+- `xuanwu-management-server`
+- `xuanwu-gateway`
+- `xuanwu-device-server`
 
-Increase management-job throughput by scaling worker replicas:
+Execution paths:
 
-```bash
-docker compose up -d --scale xuanwu-management-worker=3
-```
-
-This keeps one scheduler instance while allowing multiple `xuanwu-management-worker` replicas to consume more management jobs from Redis.
+- platform jobs -> `POST /control-plane/v1/jobs:execute`
+- gateway jobs -> `POST /gateway/v1/jobs:execute`
+- device jobs -> `POST /runtime/v1/jobs:execute`

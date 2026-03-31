@@ -2,14 +2,14 @@
 
 ## Goal
 
-Add a fifth local service, `xuanwu-jobs`, that provides the minimum viable distributed job triggering layer for this platform.
+Add a fifth local service, `xuanwu-jobs`, that provides the minimum viable job scheduling and dispatch layer for this platform.
 
-This first phase is intentionally small:
+This phase is intentionally small:
 
 - Docker-first, no Kubernetes work yet
-- Redis-backed queueing
-- horizontally scalable workers by replica count
-- local platform tasks only
+- single lightweight jobs service
+- direct API dispatch into local services
+- no separate `xuanwu-jobs-worker` deployment surface
 - no fake `XuanWu` execution logic inside this repository
 
 ## Why A Dedicated Jobs Service
@@ -29,45 +29,39 @@ This first phase is intentionally small:
 `xuanwu-jobs` should not become another source of truth. It exists to:
 
 - scan due schedules
-- enqueue jobs
-- run local platform jobs
+- claim due schedules
+- dispatch claimed jobs to the correct local service API
 - leave Agent-domain execution to `XuanWu`
 - leave device southbound execution to `xuanwu-gateway`
 
 This keeps the boundary clean:
 
 - `xuanwu-management-server`: what, who, state
-- `xuanwu-jobs`: when
-- `XuanWu` / `xuanwu-gateway`: how
+- `xuanwu-jobs`: when and where
+- `XuanWu` / `xuanwu-gateway` / `xuanwu-device-server`: how
 
 ## Scope
 
 ### In Scope
 
 - create `main/xuanwu-jobs`
-- add Redis-backed job queue with ARQ
-- add one scheduler entrypoint
-- add one platform worker entrypoint
-- define queue names for future worker classes:
+- add one scheduler-dispatcher entrypoint
+- add dispatch adapters for:
   - `platform`
-  - `agent`
   - `gateway`
+  - `device`
 - add minimal schedule polling against `xuanwu-management-server`
-- add Docker Compose services for:
-  - `redis`
-  - `xuanwu-jobs-scheduler`
-  - `xuanwu-jobs-platform-worker`
-- make worker scale-out possible by increasing container replica count
+- add direct execution endpoints in local services
+- add one Docker Compose service:
+  - `xuanwu-jobs`
 
 ### Out of Scope
 
 - Kubernetes manifests
-- `XuanWu` worker implementation
-- `xuanwu-gateway` worker implementation
-- full durable job database in this repo
-- advanced retry orchestration
+- upstream `XuanWu` agent execution implementation
+- durable retry orchestration
 - dead-letter UI
-- HPA or queue-depth autoscaling
+- autoscaling
 
 ## Architecture
 
@@ -75,38 +69,45 @@ This keeps the boundary clean:
 
 - `xuanwu-management-server`
   - stores schedules and exposes schedule APIs
+  - executes local platform jobs through its own execution API
 - `xuanwu-jobs`
   - scheduler process
-  - platform worker process
-- `redis`
-  - shared queue backend
+  - direct dispatcher process
+- `xuanwu-gateway`
+  - executes gateway jobs through its own execution API
+- `xuanwu-device-server`
+  - executes runtime maintenance jobs through its own execution API
 - future:
-  - `XuanWu` agent worker
-  - `xuanwu-gateway` gateway worker
+  - upstream `XuanWu` execution API for agent jobs
 
 ### Job Flow
 
 1. A schedule exists in `xuanwu-management-server`
-2. `xuanwu-jobs` scheduler polls for due schedules
-3. Scheduler claims due schedules and calculates next execution time
-4. Scheduler enqueues a job into Redis
-5. A worker consumes the job
-6. Worker executes the local platform task or forwards to another executor contract later
-7. Worker reports execution result back to `xuanwu-management-server`
+2. `xuanwu-jobs` polls for due schedules
+3. `xuanwu-jobs` claims a due schedule
+4. `xuanwu-jobs` dispatches the claimed job to the target service API
+5. The target service executes the job in its own domain
+6. `xuanwu-jobs` reports execution result back to `xuanwu-management-server`
 
 ## Job Types
 
-This phase only executes `platform` jobs locally. Supported examples:
+This phase executes these local classes:
 
-- `telemetry_rollup`
-- `alarm_escalation`
-- `ota_campaign_tick`
+- `platform`
+  - `telemetry_rollup`
+  - `alarm_escalation`
+  - `ota_campaign_tick`
+- `gateway`
+  - `device_command`
+- `device`
+  - `runtime_config_refresh`
+  - `runtime_session_unregister`
 
 Reserved but not executed locally in this phase:
 
-- `agent_run`
-- `workflow_run`
-- `device_command`
+- `agent`
+  - `agent_run`
+  - `workflow_run`
 
 ## Contracts
 
@@ -129,9 +130,9 @@ Minimum schedule shape returned by management:
 }
 ```
 
-### Queue Message
+### Claimed Job Payload
 
-Minimum enqueued message:
+Minimum claimed job payload:
 
 ```json
 {
@@ -146,62 +147,39 @@ Minimum enqueued message:
 }
 ```
 
-### Management APIs Needed
+### APIs Needed
 
-This phase assumes these endpoints in `xuanwu-management-server`:
+`xuanwu-jobs` depends on these control-plane APIs:
 
 - `GET /control-plane/v1/jobs/schedules:due`
 - `POST /control-plane/v1/jobs/schedules/{schedule_id}:claim`
-- `POST /control-plane/v1/jobs/runs`
 - `POST /control-plane/v1/jobs/runs/{job_run_id}:complete`
 - `POST /control-plane/v1/jobs/runs/{job_run_id}:fail`
 
-If they do not exist yet, this phase adds local placeholder implementations in `xuanwu-management-server`.
+This phase also adds direct execution endpoints for local dispatch:
 
-## Horizontal Scaling Model
+- `POST /control-plane/v1/jobs:execute`
+- `POST /gateway/v1/jobs:execute`
+- `POST /runtime/v1/jobs:execute`
 
-### Scheduler
+Future upstream contract:
 
-For this first phase, keep one active scheduler container by default in Docker Compose.
-
-Reason:
-
-- simplest safe rollout
-- avoids duplicate schedule claims before we add stronger distributed claim verification
-
-Later scaling can add multiple scheduler replicas once claim semantics are hardened.
-
-### Workers
-
-Workers are the main horizontal scaling unit.
-
-Scale pattern:
-
-- one queue
-- many worker replicas
-- shared Redis backend
-
-The first Docker target is:
-
-- `xuanwu-jobs-platform-worker=1`
-
-and the supported scale path is:
-
-- `xuanwu-jobs-platform-worker=N`
+- `POST /xuanwu/v1/jobs:execute`
 
 ## Implementation Notes
 
-- use ARQ because the current repository is already async Python heavy
 - keep code layout parallel to the other Python services
 - do not embed schedule truth into `xuanwu-jobs`
 - do not add fake local `XuanWu` execution
+- keep `xuanwu-jobs` lightweight and non-authoritative
+- do not design `xuanwu-jobs` as the main horizontal scaling surface
 
 ## Verification Target
 
 The completion bar for this phase is:
 
 - `xuanwu-jobs` starts locally
-- scheduler can enqueue a due platform job
-- worker can consume the queued platform job
-- Docker Compose includes Redis and jobs services
-- worker replica count can be increased without code changes
+- scheduler can claim and dispatch a due platform job
+- local services expose execution endpoints for `platform`, `gateway`, and `device`
+- Docker Compose includes a single `xuanwu-jobs` service
+- no Redis or `xuanwu-jobs-worker` dependency remains in the local path

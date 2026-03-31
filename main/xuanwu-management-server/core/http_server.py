@@ -355,6 +355,14 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/jobs/schedules/{schedule_id}:claim",
                 control_plane_handler.handle_options,
             ),
+            web.post(
+                "/control-plane/v1/jobs:execute",
+                control_plane_handler.handle_execute_job,
+            ),
+            web.options(
+                "/control-plane/v1/jobs:execute",
+                control_plane_handler.handle_options,
+            ),
             web.get(
                 "/control-plane/v1/jobs/runs",
                 control_plane_handler.handle_list_job_runs,

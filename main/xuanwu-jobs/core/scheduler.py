@@ -4,8 +4,10 @@ import asyncio
 from datetime import datetime, timezone
 
 from config.settings import load_runtime_config
+from core.clients.device_client import DeviceRuntimeClient
+from core.clients.gateway_client import GatewayClient
 from core.clients.management_client import ManagementClient
-from core.queue import create_redis_queue, enqueue_message, get_queue_name
+from core.dispatcher import JobDispatcher
 
 
 def parse_timestamp(value: str) -> datetime:
@@ -20,9 +22,9 @@ def format_timestamp(value: datetime) -> str:
 
 
 class JobScheduler:
-    def __init__(self, *, client, redis_queue, config: dict):
+    def __init__(self, *, client, dispatcher, config: dict):
         self.client = client
-        self.redis_queue = redis_queue
+        self.dispatcher = dispatcher
         self.config = config
 
     async def run_once(self, *, now: datetime | None = None):
@@ -35,38 +37,49 @@ class JobScheduler:
                 schedule["schedule_id"],
                 scheduled_for=schedule.get("next_run_at", now_iso),
             )
-            queue_name = get_queue_name(self.config, claimed["executor_type"])
-            function_name = self._resolve_function_name(claimed["executor_type"])
-            await enqueue_message(self.redis_queue, function_name, queue_name, claimed)
-
-    @staticmethod
-    def _resolve_function_name(executor_type: str) -> str:
-        normalized = str(executor_type or "").strip().lower()
-        if normalized in {"platform", "management"}:
-            return "run_management_job"
-        if normalized == "gateway":
-            return "run_gateway_job"
-        if normalized == "device":
-            return "run_device_job"
-        return "run_external_job"
+            result = await self.dispatcher.dispatch(claimed)
+            normalized = str(claimed.get("executor_type", "")).strip().lower()
+            if normalized not in {"platform", "management"}:
+                if str(result.get("status", "")).lower() in {"accepted", "completed", "ok"}:
+                    complete = getattr(self.client, "complete_job_run", None)
+                    if callable(complete):
+                        await complete(
+                            claimed["job_run_id"],
+                            {
+                                "status": "completed",
+                                "result": result,
+                            },
+                        )
+                else:
+                    fail = getattr(self.client, "fail_job_run", None)
+                    if callable(fail):
+                        await fail(
+                            claimed["job_run_id"],
+                            {
+                                "status": "failed",
+                                "error": result.get("error", "job_dispatch_failed"),
+                                "result": result,
+                            },
+                        )
 
 
 async def run_scheduler_forever():
     config = load_runtime_config()
     client = ManagementClient(config)
-    redis_queue = await create_redis_queue(config["jobs"]["redis_url"])
-    scheduler = JobScheduler(client=client, redis_queue=redis_queue, config=config)
+    dispatcher = JobDispatcher(
+        management_client=client,
+        gateway_client=GatewayClient(config),
+        device_client=DeviceRuntimeClient(config),
+    )
+    scheduler = JobScheduler(client=client, dispatcher=dispatcher, config=config)
     try:
         while True:
             await scheduler.run_once()
             await asyncio.sleep(config["jobs"]["poll_interval_seconds"])
     finally:
         await client.close()
-        close = getattr(redis_queue, "close", None)
-        if callable(close):
-            result = close()
-            if asyncio.iscoroutine(result):
-                await result
+        await dispatcher.gateway_client.close()
+        await dispatcher.device_client.close()
 
 
 def main():

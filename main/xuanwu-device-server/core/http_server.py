@@ -63,6 +63,10 @@ class SimpleHttpServer:
                             "/runtime/v1/sessions/{runtime_session_id}/speak",
                             self.runtime_handler.handle_speak,
                         ),
+                        web.post(
+                            "/runtime/v1/jobs:execute",
+                            self.runtime_handler.handle_execute_job,
+                        ),
                         web.options(
                             "/runtime/v1/sessions/{runtime_session_id}/context",
                             self.runtime_handler.handle_options,
@@ -77,6 +81,10 @@ class SimpleHttpServer:
                         ),
                         web.options(
                             "/runtime/v1/sessions/{runtime_session_id}/speak",
+                            self.runtime_handler.handle_options,
+                        ),
+                        web.options(
+                            "/runtime/v1/jobs:execute",
                             self.runtime_handler.handle_options,
                         ),
                         web.get("/mcp/vision/explain", self.vision_handler.handle_get),

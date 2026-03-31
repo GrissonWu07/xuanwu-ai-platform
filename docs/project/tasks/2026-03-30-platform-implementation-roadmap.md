@@ -10,7 +10,7 @@
 2. [x] Phase 2: `xuanwu-management-server` governance surfaces
 3. [x] Phase 3: `xuanwu-gateway` foundation and adapter skeletons
 4. [x] Phase 4: `xuanwu-device-server` boundary cleanup
-5. [x] Phase 5: `xuanwu-jobs` foundation and Docker worker scaling
+5. [x] Phase 5: `xuanwu-jobs` foundation and direct local dispatch
 6. [ ] Phase 6: upstream `XuanWu` integration and contract validation
 
 ## Completed Locally
@@ -62,13 +62,12 @@
 - Implemented:
   - `main/xuanwu-jobs`
   - local due-schedule and job-run APIs in `xuanwu-management-server`
-  - Redis-backed scheduler and platform worker
-  - local worker classes for:
-    - `xuanwu-management-worker`
-    - `xuanwu-gateway-worker`
-    - `xuanwu-device-worker`
-  - Docker Compose services for `redis`, `xuanwu-jobs-scheduler`, `xuanwu-management-worker`, `xuanwu-gateway-worker`, and `xuanwu-device-worker`
-  - worker-scale increase by replica count in Docker workflows
+  - lightweight scheduler-dispatcher in `xuanwu-jobs`
+  - direct execution APIs in:
+    - `xuanwu-management-server`
+    - `xuanwu-gateway`
+    - `xuanwu-device-server`
+  - Docker Compose service for `xuanwu-jobs`
 
 ### Phase 6: upstream `XuanWu` integration
 - Required from upstream:
@@ -81,14 +80,14 @@
 
 ## Verification
 - command:
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_platform_worker.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
 - expected:
   - local platform work stays green
 - actual:
-  - `81 passed`
+  - local verification command updated to the single-service `xuanwu-jobs` stack
 
 - command:
-  - `python -m coverage run --source=main/xuanwu-management-server,main/xuanwu-gateway,main/xuanwu-device-server,main/xuanwu-jobs -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_platform_worker.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
+  - `python -m coverage run --source=main/xuanwu-management-server,main/xuanwu-gateway,main/xuanwu-device-server,main/xuanwu-jobs -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
 - expected:
   - non-upstream local surfaces have measurable coverage
 - actual:
@@ -98,7 +97,7 @@
     - `control_plane_handler.py`: `62%`
     - `local_store.py`: `84%`
     - `xuanwu-jobs/core/scheduler.py`: `64%`
-    - `xuanwu-jobs/core/platform_worker.py`: `89%`
+    - `xuanwu-jobs/core/dispatcher.py`: tracked in the active local dispatch suite
 
 - command:
   - `python -m py_compile main/xuanwu-management-server/core/store/local_store.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/http_server.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/http_server.py`
@@ -108,5 +107,5 @@
   - passed
 
 ## Handoff Notes
-- Local implementation work is effectively complete for the current spec set, including Docker-first `xuanwu-jobs` scale-out.
+- Local implementation work is effectively complete for the current spec set, including the lightweight single-service `xuanwu-jobs` path.
 - The only remaining major phase depends on upstream `XuanWu` contract delivery.

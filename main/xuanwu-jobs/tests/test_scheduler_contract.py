@@ -1,14 +1,13 @@
 import asyncio
 from datetime import datetime, timezone
-from importlib.util import module_from_spec, spec_from_file_location
+import importlib
 from pathlib import Path
 import sys
 
 
 def _load_scheduler_module():
     root = Path(__file__).resolve().parents[3]
-    module_path = root / "main" / "xuanwu-jobs" / "core" / "scheduler.py"
-    service_root = module_path.parents[1]
+    service_root = root / "main" / "xuanwu-jobs"
 
     while str(service_root) in sys.path:
         sys.path.remove(str(service_root))
@@ -19,11 +18,7 @@ def _load_scheduler_module():
         if module_name == "core" or module_name.startswith("core."):
             sys.modules.pop(module_name, None)
 
-    spec = spec_from_file_location("xuanwu_jobs_scheduler", module_path)
-    module = module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("core.scheduler")
 
 
 class _FakeManagementClient:
@@ -56,22 +51,21 @@ class _FakeManagementClient:
             "payload": {"site_id": "site-a"},
         }
 
-
-class _FakeRedisQueue:
+class _FakeDispatcher:
     def __init__(self):
         self.calls = []
 
-    async def enqueue_job(self, function_name: str, message: dict, *, _queue_name: str):
-        self.calls.append((function_name, _queue_name, message))
-        return {"job_id": "redis-job-001"}
+    async def dispatch(self, claimed_job: dict):
+        self.calls.append(claimed_job)
+        return {"status": "completed", "executor_type": claimed_job["executor_type"]}
 
 
-def test_scheduler_claims_due_schedule_and_enqueues_platform_job():
+def test_scheduler_claims_due_schedule_and_dispatches_platform_job():
     module = _load_scheduler_module()
     scheduler = module.JobScheduler(
         client=_FakeManagementClient(),
-        redis_queue=_FakeRedisQueue(),
-        config={"jobs": {"queue_names": {"platform": "platform"}, "schedule_batch_size": 50}},
+        dispatcher=_FakeDispatcher(),
+        config={"jobs": {"schedule_batch_size": 50}},
     )
 
     asyncio.run(
@@ -81,17 +75,13 @@ def test_scheduler_claims_due_schedule_and_enqueues_platform_job():
     assert scheduler.client.claim_calls == [
         ("sched-telemetry-001", "2026-03-31T10:00:00Z")
     ]
-    assert scheduler.redis_queue.calls == [
-        (
-            "run_management_job",
-            "platform",
-            {
-                "job_run_id": "run-sched-telemetry-001-20260331T100000Z",
-                "schedule_id": "sched-telemetry-001",
-                "job_type": "telemetry_rollup",
-                "executor_type": "platform",
-                "scheduled_for": "2026-03-31T10:00:00Z",
-                "payload": {"site_id": "site-a"},
-            },
-        )
+    assert scheduler.dispatcher.calls == [
+        {
+            "job_run_id": "run-sched-telemetry-001-20260331T100000Z",
+            "schedule_id": "sched-telemetry-001",
+            "job_type": "telemetry_rollup",
+            "executor_type": "platform",
+            "scheduled_for": "2026-03-31T10:00:00Z",
+            "payload": {"site_id": "site-a"},
+        }
     ]

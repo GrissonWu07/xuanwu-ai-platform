@@ -1,14 +1,13 @@
 import asyncio
 from datetime import datetime, timezone
-from importlib.util import module_from_spec, spec_from_file_location
+import importlib
 from pathlib import Path
 import sys
 
 
 def _load_scheduler_module():
     root = Path(__file__).resolve().parents[3]
-    module_path = root / "main" / "xuanwu-jobs" / "core" / "scheduler.py"
-    service_root = module_path.parents[1]
+    service_root = root / "main" / "xuanwu-jobs"
 
     while str(service_root) in sys.path:
         sys.path.remove(str(service_root))
@@ -19,11 +18,7 @@ def _load_scheduler_module():
         if module_name == "core" or module_name.startswith("core."):
             sys.modules.pop(module_name, None)
 
-    spec = spec_from_file_location("xuanwu_jobs_scheduler_routing", module_path)
-    module = module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("core.scheduler")
 
 
 class _FakeManagementClient:
@@ -87,28 +82,22 @@ class _FakeManagementClient:
         return payloads[schedule_id]
 
 
-class _FakeRedisQueue:
+class _FakeDispatcher:
     def __init__(self):
         self.calls = []
 
-    async def enqueue_job(self, function_name: str, message: dict, *, _queue_name: str):
-        self.calls.append((function_name, _queue_name, message["job_run_id"]))
-        return {"job_id": f"redis-{message['job_run_id']}"}
+    async def dispatch(self, message: dict):
+        self.calls.append((message["executor_type"], message["job_run_id"]))
+        return {"status": "completed", "job_run_id": message["job_run_id"]}
 
 
-def test_scheduler_routes_management_gateway_and_device_jobs_to_correct_queues():
+def test_scheduler_routes_jobs_gateway_and_device_jobs_to_correct_dispatch_targets():
     module = _load_scheduler_module()
     scheduler = module.JobScheduler(
         client=_FakeManagementClient(),
-        redis_queue=_FakeRedisQueue(),
+        dispatcher=_FakeDispatcher(),
         config={
             "jobs": {
-                "queue_names": {
-                    "platform": "management",
-                    "management": "management",
-                    "gateway": "gateway",
-                    "device": "device",
-                },
                 "schedule_batch_size": 50,
             }
         },
@@ -118,8 +107,8 @@ def test_scheduler_routes_management_gateway_and_device_jobs_to_correct_queues()
         scheduler.run_once(now=datetime(2026, 3, 31, 10, 0, 0, tzinfo=timezone.utc))
     )
 
-    assert scheduler.redis_queue.calls == [
-        ("run_management_job", "management", "run-mgmt-001"),
-        ("run_gateway_job", "gateway", "run-gateway-001"),
-        ("run_device_job", "device", "run-device-001"),
+    assert scheduler.dispatcher.calls == [
+        ("management", "run-mgmt-001"),
+        ("gateway", "run-gateway-001"),
+        ("device", "run-device-001"),
     ]

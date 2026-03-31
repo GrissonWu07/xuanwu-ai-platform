@@ -6,7 +6,7 @@
 >
 > The current `XuanWu` AI endpoint is fixed to `http://xuanwu-ai:8000`, and management-domain requests are proxied through `xuanwu-management-server`.
 >
-> The local job stack is now `xuanwu-jobs + Redis`, and Docker deployments can scale worker replicas to support more platform jobs.
+> The local job stack now uses a lightweight `xuanwu-jobs` scheduler-dispatcher that calls local execution APIs directly.
 
 **Table of Contents:**
 

@@ -22,7 +22,7 @@ class JobsHandler:
         return self._json_response(
             {
                 "jobs": {
-                    "queue_names": jobs_config.get("queue_names", {}),
+                    "dispatch_targets": jobs_config.get("dispatch_targets", {}),
                     "schedule_batch_size": jobs_config.get("schedule_batch_size"),
                     "poll_interval_seconds": jobs_config.get("poll_interval_seconds"),
                 }

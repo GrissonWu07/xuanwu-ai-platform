@@ -31,6 +31,13 @@ class ManagementClient:
         ) as response:
             return await response.json()
 
+    async def execute_job(self, job_message: dict):
+        async with self.session.post(
+            f"{self.base_url}/control-plane/v1/jobs:execute",
+            json=job_message,
+        ) as response:
+            return await response.json()
+
     async def complete_job_run(self, job_run_id: str, payload: dict):
         async with self.session.post(
             f"{self.base_url}/control-plane/v1/jobs/runs/{job_run_id}:complete",

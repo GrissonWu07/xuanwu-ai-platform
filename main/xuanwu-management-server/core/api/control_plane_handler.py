@@ -698,6 +698,46 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_job_runs()})
 
+    async def handle_execute_job(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+
+        job_run_id = str(payload.get("job_run_id", "")).strip()
+        job_type = str(payload.get("job_type", "")).strip()
+        if not job_run_id:
+            return self._json_response({"error": "job_run_id_required"}, status=400)
+        if not job_type:
+            return self._json_response({"error": "job_type_required"}, status=400)
+
+        result_payload = {"job_type": job_type}
+        if job_type == "telemetry_rollup":
+            result_payload["aggregated_records"] = len(self.store.list_telemetry())
+        elif job_type == "alarm_escalation":
+            result_payload["open_alarm_count"] = len(self.store.list_alarms())
+        elif job_type == "ota_campaign_tick":
+            result_payload["campaign_count"] = len(self.store.list_ota_campaigns())
+
+        try:
+            completed = self.store.complete_job_run(
+                job_run_id,
+                {
+                    "status": "completed",
+                    "result": {
+                        "status": "completed",
+                        "executor_type": "platform",
+                        "details": result_payload,
+                    },
+                },
+            )
+        except ValueError as exc:
+            status = 404 if str(exc) == "job_run_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(completed)
+
     async def handle_complete_job_run(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
