@@ -59,6 +59,7 @@ Current repository-local implementation is complete for the active spec set. The
 
 Recommended current documentation:
 
+- [Platform Delivery Overview](./docs/platform-delivery-overview.md)
 - [Current Platform Capabilities](./docs/current-platform-capabilities.md)
 - [Current API Surfaces](./docs/current-api-surfaces.md)
 - [Device Ingress and Management Guide](./docs/device-ingress-and-management-guide.md)
