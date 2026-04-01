@@ -12,7 +12,7 @@ def test_docker_compose_is_python_primary_only():
     compose_text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
     assert "xuanwu-management-server" in compose_text
-    assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in compose_text
+    assert "XUANWU_BASE_URL=${XUANWU_BASE_URL:-http://xuanwu-ai:8000}" in compose_text
     assert "xuanwu-device-gateway-web" not in compose_text
     assert "xuanwu-device-gateway-db" not in compose_text
     assert "xuanwu-device-gateway-redis" not in compose_text

@@ -39,6 +39,14 @@ def test_root_setup_script_bootstraps_repo_root() -> None:
     assert 'DATA_DIR="$PROJECT_ROOT/deploy/data"' in setup_script
     assert 'MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"' in setup_script
     assert "git clone https://github.com/GrissonWu07/xuanwu-ai-platform.git" in setup_script
+    assert 'ENV_PATH="$PROJECT_ROOT/.env"' in setup_script
+
+
+def test_root_env_example_exposes_xuanwu_endpoint() -> None:
+    env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
+
+    assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in env_example
+    assert "XUANWU_CONTROL_PLANE_SECRET=" in env_example
 
 
 def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:

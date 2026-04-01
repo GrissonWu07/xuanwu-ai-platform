@@ -53,7 +53,29 @@ deploy/models/SenseVoiceSmall/model.pt
 
 - [ModelScope - SenseVoiceSmall model.pt](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
 
-### 4. 按需准备本地覆盖配置
+### 4. 准备根目录环境配置
+
+根目录部署现在推荐通过：
+
+```text
+.env
+```
+
+管理上游地址和部署密钥。
+
+第一次启动前，先复制：
+
+```bash
+cp .env.example .env
+```
+
+至少确认：
+
+```text
+XUANWU_BASE_URL=http://你的-xuanwu-地址
+```
+
+### 5. 按需准备本地覆盖配置
 
 如果你需要覆盖默认配置，请在根目录创建：
 
@@ -70,20 +92,6 @@ deploy/data/.config.yaml
 - 这样你不需要直接修改服务内默认配置文件
 
 如果你只是先把整套平台拉起来做联通验证，`deploy/data/.config.yaml` 可以先留空文件。
-
-### 5. 确认 `XuanWu` 地址
-
-当前根目录 `docker-compose.yml` 默认假设：
-
-```text
-XUANWU_BASE_URL=http://xuanwu-ai:8000
-```
-
-如果你的 `XuanWu` 不在这个地址，请先修改根目录：
-
-```text
-docker-compose.yml
-```
 
 ### 6. 启动
 

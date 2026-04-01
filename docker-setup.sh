@@ -8,6 +8,7 @@ MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
 COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"
 CONFIG_PATH="$DATA_DIR/.config.yaml"
+ENV_PATH="$PROJECT_ROOT/.env"
 
 download_if_missing() {
     filepath=$1
@@ -71,6 +72,10 @@ if [ ! -f "$CONFIG_PATH" ]; then
     : > "$CONFIG_PATH"
 fi
 
+if [ ! -f "$ENV_PATH" ] && [ -f "$PROJECT_ROOT/.env.example" ]; then
+    cp "$PROJECT_ROOT/.env.example" "$ENV_PATH"
+fi
+
 download_if_missing \
     "$MODEL_PATH" \
     "https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt"
@@ -94,5 +99,6 @@ XuanWu AI Python stack is up:
 You can edit local runtime overrides in:
 - $CONFIG_PATH
 
-Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL in docker-compose.yml.
+If needed, update XUANWU_BASE_URL and secrets in:
+- $ENV_PATH
 EOF

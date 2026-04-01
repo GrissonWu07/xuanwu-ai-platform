@@ -34,6 +34,7 @@
 - `SenseVoiceSmall` 的 `model.pt`
 - 一个可选但推荐的 `deploy/data/.config.yaml`
 - 一个可访问的 `XuanWu` 上游地址
+- 根目录 `.env`
 
 ## 第一步：获取源码
 
@@ -90,7 +91,30 @@ deploy/models/SenseVoiceSmall/model.pt
 
 - [ModelScope - SenseVoiceSmall model.pt](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
 
-## 第四步：准备本地覆盖配置
+## 第四步：准备根目录环境配置
+
+根目录部署推荐通过：
+
+```text
+.env
+```
+
+管理上游地址和关键密钥。
+
+第一次部署前，先复制：
+
+```bash
+cp .env.example .env
+```
+
+至少确认下面这些值：
+
+```text
+XUANWU_BASE_URL=http://你的-xuanwu-地址
+XUANWU_CONTROL_PLANE_SECRET=你的-control-plane-secret
+```
+
+## 第五步：准备本地覆盖配置
 
 如果你需要做本地覆盖，请创建：
 
@@ -117,19 +141,6 @@ deploy/data/.config.yaml
 也不需要再进入服务目录操作。
 
 如果你只想先把整套平台拉起来做联通验证，`deploy/data/.config.yaml` 可以先留空文件。
-
-## 第五步：确认上游 `XuanWu` 地址
-
-根目录 `docker-compose.yml` 默认使用：
-
-```text
-XUANWU_BASE_URL=http://xuanwu-ai:8000
-```
-
-如果你的 `XuanWu` 不在这个地址，请修改根目录 `docker-compose.yml` 里的这两个环境变量：
-
-- `XUANWU_BASE_URL`
-- `XUANWU_CONTROL_PLANE_SECRET`
 
 如果暂时没有 `XuanWu`，本地平台层大部分服务仍然可以启动，但以下能力会受影响：
 
@@ -189,7 +200,7 @@ docker logs -f xuanwu-portal
 因为当前 Compose 不包含 `XuanWu` 本体。你还需要：
 
 - 单独部署 `XuanWu`
-- 把 `XUANWU_BASE_URL` 指向它
+- 把 `.env` 里的 `XUANWU_BASE_URL` 指向它
 - 对齐管理密钥和执行密钥
 
 ### 2. 为什么 `xuanwu-device-gateway` 启动失败

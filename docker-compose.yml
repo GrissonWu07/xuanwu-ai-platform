@@ -20,7 +20,7 @@ services:
     ports:
       - "18081:80"
     environment:
-      - XUANWU_PORTAL_CONTROL_SECRET=xuanwu-management-local-secret
+      - XUANWU_PORTAL_CONTROL_SECRET=${XUANWU_PORTAL_CONTROL_SECRET:-xuanwu-management-local-secret}
     depends_on:
       - xuanwu-management-server
       - xuanwu-iot-gateway
@@ -41,7 +41,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
-      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_MANAGEMENT_SERVER_SECRET=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_MANAGEMENT_SERVER_ENABLED=true
     volumes:
       - ./deploy/data:/opt/xuanwu-device-gateway/data
@@ -64,9 +64,9 @@ services:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_HOST=0.0.0.0
       - XUANWU_MANAGEMENT_SERVER_PORT=18082
-      - XUANWU_MANAGEMENT_SERVER_AUTH_KEY=xuanwu-management-local-secret
-      - XUANWU_BASE_URL=http://xuanwu-ai:8000
-      - XUANWU_CONTROL_PLANE_SECRET=xuanwu-management-to-xuanwu
+      - XUANWU_MANAGEMENT_SERVER_AUTH_KEY=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
+      - XUANWU_BASE_URL=${XUANWU_BASE_URL:-http://xuanwu-ai:8000}
+      - XUANWU_CONTROL_PLANE_SECRET=${XUANWU_CONTROL_PLANE_SECRET:-xuanwu-management-to-xuanwu}
     volumes:
       - ./main/xuanwu-management-server:/opt/xuanwu-management-server
 
@@ -83,7 +83,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
-      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_MANAGEMENT_SERVER_SECRET=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_GATEWAY_HOST=0.0.0.0
       - XUANWU_GATEWAY_PORT=18084
     depends_on:
@@ -106,11 +106,11 @@ services:
       - XUANWU_JOBS_HOST=0.0.0.0
       - XUANWU_JOBS_PORT=18083
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
-      - XUANWU_MANAGEMENT_SERVER_SECRET=xuanwu-management-local-secret
+      - XUANWU_MANAGEMENT_SERVER_SECRET=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_GATEWAY_URL=http://xuanwu-iot-gateway:18084
-      - XUANWU_GATEWAY_SECRET=xuanwu-management-local-secret
+      - XUANWU_GATEWAY_SECRET=${XUANWU_GATEWAY_SECRET:-xuanwu-management-local-secret}
       - XUANWU_DEVICE_RUNTIME_URL=http://xuanwu-device-gateway:8003
-      - XUANWU_DEVICE_RUNTIME_SECRET=xuanwu-management-local-secret
+      - XUANWU_DEVICE_RUNTIME_SECRET=${XUANWU_DEVICE_RUNTIME_SECRET:-xuanwu-management-local-secret}
       - XUANWU_JOBS_BATCH_SIZE=100
       - XUANWU_JOBS_POLL_INTERVAL_SECONDS=2
     volumes:
