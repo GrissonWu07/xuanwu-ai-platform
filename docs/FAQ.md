@@ -60,11 +60,12 @@ VAD:
 ```
 
 ### 7、部署相关教程
+0、[快速开始](./quick-start.md)<br/>
 1、[如何进行最简化部署](./Deployment.md)<br/>
 2、[如何进行全模块部署](./Deployment_all.md)<br/>
 3、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
 4、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
-5、[如何与Nginx集成](https://github.com/GrissonWu07/ai-assist-deviceserver/issues/791)<br/>
+5、[如何与Nginx集成](https://github.com/GrissonWu07/xuanwu-ai-platform/issues/791)<br/>
 
 ### 9、编译固件相关教程
 1、[如何自己编译玄武AI固件](./firmware-build.md)<br/>
@@ -96,5 +97,5 @@ VAD:
 
 ### 13、更多问题，可联系我们反馈 💬
 
-可以在[issues](https://github.com/GrissonWu07/ai-assist-deviceserver/issues)提交您的问题。
+可以在[issues](https://github.com/GrissonWu07/xuanwu-ai-platform/issues)提交您的问题。
 

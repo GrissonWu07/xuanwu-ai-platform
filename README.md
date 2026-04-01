@@ -305,6 +305,9 @@ flowchart TB
 
 建议按以下顺序阅读：
 
+- [快速开始](./docs/quick-start.md)
+- [全模块部署指南](./docs/Deployment_all.md)
+- [最简部署指南](./docs/Deployment.md)
 - [平台交付总览](./docs/platform-delivery-overview.md)
 - [当前平台能力说明](./docs/current-platform-capabilities.md)
 - [当前 API 总览](./docs/current-api-surfaces.md)

@@ -174,6 +174,9 @@ The remaining major blocker is upstream integration:
 
 ## Recommended Reading
 
+- [Quick Start](./quick-start.md)
+- [Full Deployment Guide](./Deployment_all.md)
+- [Minimal Deployment Guide](./Deployment.md)
 - [Current Platform Capabilities](./current-platform-capabilities.md)
 - [Current API Surfaces](./current-api-surfaces.md)
 - [Device Ingress and Management Guide](./device-ingress-and-management-guide.md)

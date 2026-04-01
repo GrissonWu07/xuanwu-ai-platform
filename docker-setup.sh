@@ -47,7 +47,7 @@ mkdir -p "$DATA_DIR" "$MODEL_DIR"
 
 download_if_missing \
     "$COMPOSE_PATH" \
-    "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-gateway/docker-compose_all.yml"
+    "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/xuanwu-ai-platform/refs/heads/main/main/xuanwu-device-gateway/docker-compose_all.yml"
 
 if [ ! -f "$CONFIG_PATH" ]; then
     : > "$CONFIG_PATH"

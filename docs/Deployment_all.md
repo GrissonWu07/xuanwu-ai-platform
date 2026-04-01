@@ -1,506 +1,226 @@
-# 部署架构图
-![请参考-全模块安装架构图](../docs/images/deploy2.png)
-# 方式一：Docker运行全模块
-`0.8.2`版本开始，本项目发行的docker镜像只支持`x86架构`，如果需要在`arm64架构`的CPU上部署，可按照[这个教程](docker-build.md)在本机编译`arm64的镜像`。
+# 全模块部署指南
 
-> 当前 Docker 全模块部署里的默认主管理宿主已经是 `xuanwu-management-server`，它会再把智能体配置相关请求转发到 `XuanWu`。
->
-> `manager-api` / `manager-web` 现在只作为 legacy 兼容模式保留，不再是推荐的新部署主路径。
->
-> 如果你确实还需要旧 Java 管理链路，请显式使用 `docker compose --profile legacy-java -f docker-compose_all.yml up -d`。
+本文档描述当前仓库里“本地平台层”的完整 Docker 部署方式。
 
-## 1. 安装docker
+这条部署路径会启动：
 
-如果您的电脑还没安装docker，可以按照这里的教程安装：[docker安装](https://www.runoob.com/docker/ubuntu-docker-install.html)
+- `xuanwu-portal`
+- `xuanwu-management-server`
+- `xuanwu-jobs`
+- `xuanwu-device-gateway`
+- `xuanwu-iot-gateway`
+- `mosquitto`
 
-docker 安装全模块有两种方式，你可以[使用懒人脚本](./Deployment_all.md#11-懒人脚本)（作者[@VanillaNahida](https://github.com/VanillaNahida)）  
-脚本会自动帮你下载所需的文件和配置文件，你也可以使用[手动部署](./Deployment_all.md#12-手动部署)从零搭建。
+注意：
 
+- 这套 Compose 启动的是本仓库内的本地平台服务，不包含 `XuanWu` 本体。
+- 如果你希望 `Agents`、`AI Config Proxy`、上游智能体管理与执行能力真正可用，还需要一个可访问的 `XuanWu` 服务，并正确设置 `XUANWU_BASE_URL`。
 
+## 适用场景
 
-### 1.1 懒人脚本
-部署简便，可以参考[视频教程](https://www.bilibili.com/video/BV17bbvzHExd/) ，文字版教程如下：
-> [!NOTE]  
-> 暂且只支持Ubuntu服务器一键部署，其他系统未尝试，可能会有一些奇怪的bug
+推荐在这些场景使用全模块部署：
 
-使用SSH工具连接到服务器，以root权限执行如下脚本
+- 需要统一门户 `xuanwu-portal`
+- 需要设备纳管、发现设备、告警、任务调度等管理能力
+- 需要同时运行会话型设备接入和 IoT 设备接入
+- 需要验证本地平台层的完整数据闭环
+
+如果你只想快速跑一个会话型设备入口，请看 [最简部署指南](./Deployment.md)。
+
+## 部署前准备
+
+你需要准备：
+
+- 一台已安装 Docker 和 Docker Compose Plugin 的 Linux 主机，或支持 Docker 的开发机
+- 本仓库源码
+- `SenseVoiceSmall` 的 `model.pt`
+- 一个可选但推荐的 `data/.config.yaml`
+- 一个可访问的 `XuanWu` 上游地址
+
+## 第一步：获取源码
+
 ```bash
-sudo bash -c "$(wget -qO- https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/main/docker-setup.sh)"
+git clone https://github.com/GrissonWu07/xuanwu-ai-platform.git
+cd xuanwu-ai-platform
 ```
 
-脚本会自动完成以下操作：
-> 1. 安装Docker
-> 2. 配置镜像源
-> 3. 下载/拉取镜像
-> 4. 下载语音识别模型文件
-> 5. 引导配置服务端
->
+如果你不是用 `git clone`，也可以直接下载仓库压缩包，然后进入：
 
-执行完成后简单配置后，再参照[4. 运行程序](#4. 运行程序)和[5.重启xuanwu-device-gateway](#5.重启xuanwu-device-gateway)里提到的最重要的3件事情，完成3这三项配置后即可使用。
-
-### 1.2 手动部署
-
-#### 1.2.1 创建目录
-
-安装完后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xuanwu-device-gateway`。
-
-创建好目录后，你需要在`xuanwu-device-gateway`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
-
-最终目录结构如下所示：
-
-```
-xuanwu-device-gateway
-  ├─ data
-  ├─ models
-     ├─ SenseVoiceSmall
+```text
+main/xuanwu-device-gateway
 ```
 
-#### 1.2.2 下载语音识别模型文件
+## 第二步：准备目录和模型
 
-本项目语音识别模型，默认使用`SenseVoiceSmall`模型，进行语音转文字。因为模型较大，需要独立下载，下载后把`model.pt`
-文件放在`models/SenseVoiceSmall`
-目录下。下面两个下载路线任选一个。
+进入部署目录：
 
-- 线路一：阿里魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
-- 线路二：百度网盘下载[SenseVoiceSmall](https://pan.baidu.com/share/init?surl=QlgM58FHhYv1tFnUT_A8Sg&pwd=qvna) 提取码:
-  `qvna`
-
-
-#### 1.2.3 下载配置文件
-
-你需要下载两个配置文件：`docker-compose_all.yaml` 和 `config_from_api.yaml`。需要从项目仓库下载这两个文件。
-
-##### 1.2.3.1 下载 docker-compose_all.yaml
-
-用浏览器打开[这个链接](../main/xuanwu-device-gateway/docker-compose_all.yml)。
-
-在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`docker-compose_all.yml`文件。 把文件下载到你的
-`xuanwu-device-gateway`中。
-
-或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-gateway/docker-compose_all.yml` 下载。
-
-下载完后，回到本教程继续往下。
-
-##### 1.2.3.2 下载 config_from_api.yaml
-
-用浏览器打开[这个链接](../main/xuanwu-device-gateway/config_from_api.yaml)。
-
-在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`config_from_api.yaml`文件。 把文件下载到你的
-`xuanwu-device-gateway`下面的`data`文件夹中，然后把`config_from_api.yaml`文件重命名为`.config.yaml`。
-
-或者直接执行 `wget https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-gateway/config_from_api.yaml` 下载保存。
-
-下载完配置文件后，我们确认一下整个`xuanwu-device-gateway`里面的文件如下所示：
-
-```
-xuanwu-device-gateway
-  ├─ docker-compose_all.yml
-  ├─ data
-    ├─ .config.yaml
-  ├─ models
-     ├─ SenseVoiceSmall
-       ├─ model.pt
+```bash
+cd main/xuanwu-device-gateway
 ```
 
-如果你的文件目录结构也是上面的，就继续往下。如果不是，你就再仔细看看是不是漏操作了什么。
+确保以下目录存在：
 
-## 2. 备份数据
-
-如果你之前已经成功运行智控台，如果上面保存有你的密钥信息，请先从智控台上拷贝重要数据下来。因为升级过程中，有可能会覆盖原来的数据。
-
-## 3. 清除历史版本镜像和容器
-接下来打开命令行工具，使用`终端`或`命令行`工具 进入到你的`xuanwu-device-gateway`，执行以下命令
-
-```
-docker compose -f docker-compose_all.yml down
-
-docker stop xuanwu-device-gateway
-docker rm xuanwu-device-gateway
-
-docker stop xuanwu-device-gateway-web
-docker rm xuanwu-device-gateway-web
-
-docker stop xuanwu-device-gateway-db
-docker rm xuanwu-device-gateway-db
-
-docker stop xuanwu-device-gateway-redis
-docker rm xuanwu-device-gateway-redis
-
-docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
-docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
+```text
+main/xuanwu-device-gateway
+├─ data
+├─ models
+│  └─ SenseVoiceSmall
+│     └─ model.pt
+└─ docker-compose_all.yml
 ```
 
-## 4. 运行程序
-执行以下命令启动新版本容器
+创建目录：
 
+```bash
+mkdir -p data models/SenseVoiceSmall
 ```
+
+下载模型文件并放到：
+
+```text
+main/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt
+```
+
+可用下载地址：
+
+- [ModelScope - SenseVoiceSmall model.pt](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
+
+## 第三步：准备配置
+
+当前 `xuanwu-device-gateway` 的配置加载顺序是：
+
+1. `main/xuanwu-device-gateway/config.yaml`
+2. `main/xuanwu-device-gateway/data/.config.yaml`
+3. 环境变量覆盖
+
+如果你想做本地覆盖，建议把默认配置复制一份：
+
+```bash
+cp config.yaml data/.config.yaml
+```
+
+最常见的本地覆盖是：
+
+- `server.websocket`
+- `server.http_port`
+- `xuanwu-management-server`
+- 语音、模型、工具链相关 provider 配置
+
+如果你只想先把整套平台拉起来做联通验证，`data/.config.yaml` 可以先留空文件。
+
+## 第四步：确认上游 `XuanWu` 地址
+
+当前 Compose 默认会让 `xuanwu-management-server` 使用：
+
+```text
+XUANWU_BASE_URL=http://xuanwu-ai:8000
+```
+
+如果你的 `XuanWu` 不在这个地址，请先改 `docker-compose_all.yml` 里的这两个环境变量：
+
+- `XUANWU_BASE_URL`
+- `XUANWU_CONTROL_PLANE_SECRET`
+
+如果暂时没有 `XuanWu`，本地平台层大部分服务仍然可以启动，但以下能力会受影响：
+
+- `Agents` 页面真实数据
+- `AI Config Proxy`
+- 智能体执行与设备调用闭环
+
+## 第五步：启动全模块
+
+```bash
 docker compose -f docker-compose_all.yml up -d
 ```
 
-如果你需要同时启动 legacy `manager-api` / `manager-web` 兼容模块，请改用：
+查看容器状态：
 
-```
-docker compose --profile legacy-java -f docker-compose_all.yml up -d
-```
-
-执行完后，再执行以下命令，查看日志信息。
-
-```
-docker logs -f xuanwu-device-gateway-web
+```bash
+docker compose -f docker-compose_all.yml ps
 ```
 
-当你看到输出日志时，说明你的`智控台`启动成功了。
+查看关键日志：
 
-```
-2025-xx-xx 22:11:12.445 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
-2025-xx-xx 21:28:53.873 [main] INFO  xuanwu.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
-http://localhost:8002/xuanwu/doc.html
-```
-
-请注意此刻仅是`智控台`能运行，如果8000端口`xuanwu-device-gateway`报错，先不要理会。
-
-这时，你需要使用浏览器，打开`智控台`，链接：http://127.0.0.1:8002 ，注册第一个用户。第一个用户即是超级管理员，以后的用户都是普通用户。普通用户只能绑定设备和配置智能体;超级管理员可以进行模型管理、用户管理、参数配置等功能。
-
-接下来要做三件重要的事情：
-
-### 第一件重要的事情
-
-使用超级管理员账号，登录智控台，在顶部菜单找到`参数管理`，找到列表中第一条数据，参数编码是`server.secret`，复制它到`参数值`。
-
-`server.secret`需要说明一下，这个`参数值`很重要，作用是让我们的`Server`端连接`manager-api`。`server.secret`是每次从零部署manager模块时，会自动随机生成的密钥。
-
-复制`参数值`后，打开`xuanwu-device-gateway`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
-
-```
-manager-api:
-  url:  http://127.0.0.1:8002/xuanwu
-  secret: 你的server.secret值
-```
-1、把你刚才从`智控台`复制过来的`server.secret`的`参数值`复制到`.config.yaml`文件里的`secret`里。
-
-2、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-gateway-web:8002/xuanwu`
-
-3、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-gateway-web:8002/xuanwu`
-
-4、因为你是docker部署，把`url`改成下面的`http://xuanwu-device-gateway-web:8002/xuanwu`
-
-类似这样的效果
-```
-manager-api:
-  url: http://xuanwu-device-gateway-web:8002/xuanwu
-  secret: 12345678-xxxx-xxxx-xxxx-123456789000
-```
-
-保存好后，继续往下做第二件重要的事情
-
-### 第二件重要的事情
-
-使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
-弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
-
-## 5.重启xuanwu-device-gateway
-
-接下来打开命令行工具，使用`终端`或`命令行`工具 输入
-```
-docker restart xuanwu-device-gateway
+```bash
+docker logs -f xuanwu-management-server
 docker logs -f xuanwu-device-gateway
-```
-如果你能看到，类似以下日志,则是Server启动成功的标志。
-
-```
-25-02-23 12:01:09[core.websocket_server] - INFO - Websocket地址是      ws://xxx.xx.xx.xx:8000/xuanwu/v1/
-25-02-23 12:01:09[core.websocket_server] - INFO - =======上面的地址是websocket协议地址，请勿用浏览器访问=======
-25-02-23 12:01:09[core.websocket_server] - INFO - 如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
-25-02-23 12:01:09[core.websocket_server] - INFO - =======================================================
+docker logs -f xuanwu-iot-gateway
+docker logs -f xuanwu-jobs
+docker logs -f xuanwu-portal
 ```
 
-由于你是全模块部署，因此你有两个重要的接口需要写入到esp32中。
+## 默认端口
 
-OTA接口：
-```
-http://你宿主机局域网的ip:8002/xuanwu/ota/
-```
+默认会暴露这些入口：
 
-Websocket接口：
-```
-ws://你宿主机的ip:8000/xuanwu/v1/
-```
+- `xuanwu-portal`: `http://127.0.0.1:18081`
+- `xuanwu-management-server`: `http://127.0.0.1:18082`
+- `xuanwu-jobs`: `http://127.0.0.1:18083/jobs/v1/health`
+- `xuanwu-iot-gateway`: `http://127.0.0.1:18084/gateway/v1/health`
+- `xuanwu-device-gateway` WebSocket: `ws://127.0.0.1:8000/xuanwu/v1/`
+- `xuanwu-device-gateway` OTA: `http://127.0.0.1:8003/xuanwu/ota/`
+- `xuanwu-device-gateway` Vision: `http://127.0.0.1:8003/mcp/vision/explain`
+- `mosquitto`: `127.0.0.1:1883`
 
-### 第三件重要的事情
+## 启动后如何验证
 
-使用超级管理员账号，登录智控台，在顶部菜单找到`参数管理`，找到参数编码是`server.websocket`，输入你的`Websocket接口`。
+推荐按下面顺序检查：
 
-使用超级管理员账号，登录智控台，在顶部菜单找到`参数管理`，找到数编码是`server.ota`，输入你的`OTA接口`。
+1. 打开 `http://127.0.0.1:18081`
+2. 确认 `xuanwu-portal` 静态页面能正常加载
+3. 确认 `http://127.0.0.1:18084/gateway/v1/health` 返回网关健康信息
+4. 确认 `http://127.0.0.1:18083/jobs/v1/health` 返回调度服务健康信息
+5. 用设备或模拟上报验证 `xuanwu-device-gateway` / `xuanwu-iot-gateway` 能回写 management
 
-接下来，你就可以开始操作你的esp32设备了，你可以`自行编译esp32固件`也可以配置使用`虾哥编译好的1.6.1以上版本的固件`。两个任选一个
+## 常见问题
 
-1、 [编译自己的esp32固件](firmware-build.md)了。
+### 1. 为什么全模块已经启动，但 Agents 页面没有真实数据？
 
-2、 [基于虾哥编译好的固件配置自定义服务器](firmware-setting.md)了。
+因为当前 Compose 不包含 `XuanWu` 本体。你还需要：
 
+- 单独部署 `XuanWu`
+- 把 `XUANWU_BASE_URL` 指向它
+- 对齐管理密钥和执行密钥
 
-# 方式二：本地源码运行全模块
+### 2. 为什么 `xuanwu-device-gateway` 启动失败？
 
-## 1.安装MySQL数据库
+最常见原因是：
 
-如果本机已经安装了MySQL，可以直接在数据库中创建名为`xuanwu_esp32_server`的数据库。
+- `models/SenseVoiceSmall/model.pt` 不存在
+- `data/.config.yaml` 里有错误配置
+- 挂载目录权限不正确
 
-```sql
-CREATE DATABASE xuanwu_esp32_server CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+### 3. 为什么 `xuanwu-portal` 能打开，但部分页面没有数据？
 
-如果还没有MySQL，你可以通过docker安装mysql
+常见原因有：
 
-```
-docker run --name xuanwu-device-gateway-db -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -e MYSQL_DATABASE=xuanwu_esp32_server -e MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci" -e TZ=Asia/Shanghai -d mysql:latest
-```
+- `xuanwu-management-server` 没起来
+- `xuanwu-management-server` 没法访问 `XuanWu`
+- 还没有真实设备、发现设备或调度记录
 
-## 2.安装redis
+## 停止与重启
 
-如果还没有Redis，你可以通过docker安装redis
+停止：
 
-```
-docker run --name xuanwu-device-gateway-redis -d -p 6379:6379 redis
-```
-
-## 3.运行manager-api程序
-
-3.1 安装JDK21，设置JDK环境变量
-
-3.2 安装Maven，设置Maven环境变量
-
-3.3 使用Vscode编程工具，安装好Java环境相关插件
-
-3.4 使用Vscode编程工具加载manager-api模块
-
-在`src/main/resources/application-dev.yml`中配置数据库连接信息
-
-```
-spring:
-  datasource:
-    username: root
-    password: 123456
-```
-在`src/main/resources/application-dev.yml`中配置Redis连接信息
-```
-spring:
-    data:
-      redis:
-        host: localhost
-        port: 6379
-        password:
-        database: 0
+```bash
+docker compose -f docker-compose_all.yml down
 ```
 
-3.5 运行主程序
+重启：
 
-本项目为SpringBoot项目，启动方式为：
-打开`Application.java`运行`Main`方法启动
-
-```
-路径地址：
-src/main/java/xuanwu/AdminApplication.java
+```bash
+docker compose -f docker-compose_all.yml up -d
 ```
 
-当你看到输出日志时，说明你的`manager-api`启动成功了。
+强制重建：
 
-```
-2025-xx-xx 22:11:12.445 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
-2025-xx-xx 21:28:53.873 [main] INFO  xuanwu.AdminApplication - Started AdminApplication in 16.057 seconds (process running for 17.941)
-http://localhost:8002/xuanwu/doc.html
+```bash
+docker compose -f docker-compose_all.yml up -d --build
 ```
 
-## 4.运行manager-web程序
+## 相关阅读
 
-4.1 安装nodejs
-
-4.2 使用Vscode编程工具加载manager-web模块
-
-终端命令进入manager-web目录下
-
-```
-npm install
-```
-然后启动
-```
-npm run serve
-```
-
-请注意，如果你的manager-api的接口不在`http://localhost:8002`，请在开发时，修改
-`main/manager-web/.env.development`中的路径
-
-运行成功后，你需要使用浏览器，打开`智控台`，链接：http://127.0.0.1:8001 ，注册第一个用户。第一个用户即是超级管理员，以后的用户都是普通用户。普通用户只能绑定设备和配置智能体;超级管理员可以进行模型管理、用户管理、参数配置等功能。
-
-
-重要：注册成功后，使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
-弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
-
-重要：注册成功后，使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
-弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
-
-重要：注册成功后，使用超级管理员账号，登录智控台，在顶部菜单找到`模型配置`，然后在左侧栏点击`大语言模型`，找到第一条数据`智谱AI`，点击`修改`按钮，
-弹出修改框后，将你注册到的`智谱AI`的密钥填写到`API密钥`中。然后点击保存。
-
-## 5.安装Python环境
-
-本项目使用`conda`管理依赖环境。如果不方便安装`conda`，需要根据实际的操作系统安装好`libopus`和`ffmpeg`。
-如果确定使用`conda`，则安装好后，开始执行以下命令。
-
-重要提示！windows 用户，可以通过安装`Anaconda`来管理环境。安装好`Anaconda`后，在`开始`那里搜索`anaconda`相关的关键词，
-找到`Anaconda Prpmpt`，使用管理员身份运行它。如下图。
-
-![conda_prompt](./images/conda_env_1.png)
-
-运行之后，如果你能看到命令行窗口前面有一个(base)字样，说明你成功进入了`conda`环境。那么你就可以执行以下命令了。
-
-![conda_env](./images/conda_env_2.png)
-
-```
-conda remove -n xuanwu-device-gateway --all -y
-conda create -n xuanwu-device-gateway python=3.10 -y
-conda activate xuanwu-device-gateway
-
-# 添加清华源通道
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-
-conda install libopus -y
-conda install ffmpeg -y
-
-# 在 Linux 环境下进行部署时,如出现类似缺失 libiconv.so.2 动态库的报错 请通过以下命令进行安装
-conda install libiconv -y
-```
-
-请注意，以上命令，不是一股脑执行就成功的，你需要一步步执行，每一步执行完后，都检查一下输出的日志，查看是否成功。
-
-## 6.安装本项目依赖
-
-你先要下载本项目源码，源码可以通过`git clone`命令下载，如果你不熟悉`git clone`命令。
-
-你可以用浏览器打开这个地址`https://github.com/GrissonWu07/ai-assist-deviceserver.git`
-
-打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
-
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xuanwu-device-gateway-main`
-你需要把它重命名成`xuanwu-device-gateway`，在这个文件里，进入到`main`文件夹，再进入到`xuanwu-device-gateway`，好了请记住这个目录`xuanwu-device-gateway`。
-
-```
-# 继续使用conda环境
-conda activate xuanwu-device-gateway
-# 进入到你的项目根目录，再进入main/xuanwu-device-gateway
-cd main/xuanwu-device-gateway
-pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-pip install -r requirements.txt
-```
-
-### 7.下载语音识别模型文件
-
-本项目语音识别模型，默认使用`SenseVoiceSmall`模型，进行语音转文字。因为模型较大，需要独立下载，下载后把`model.pt`
-文件放在`models/SenseVoiceSmall`
-目录下。下面两个下载路线任选一个。
-
-- 线路一：阿里魔搭下载[SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
-- 线路二：百度网盘下载[SenseVoiceSmall](https://pan.baidu.com/share/init?surl=QlgM58FHhYv1tFnUT_A8Sg&pwd=qvna) 提取码:
-  `qvna`
-
-## 8.配置项目文件
-
-使用超级管理员账号，登录智控台 ，在顶部菜单找到`参数管理`，找到列表中第一条数据，参数编码是`server.secret`，复制它到`参数值`。
-
-`server.secret`需要说明一下，这个`参数值`很重要，作用是让我们的`Server`端连接`manager-api`。`server.secret`是每次从零部署manager模块时，会自动随机生成的密钥。
-
-如果你的`xuanwu-device-gateway`目录没有`data`，你需要创建`data`目录。
-如果你的`data`下面没有`.config.yaml`文件，你可以把`xuanwu-device-gateway`目录下的`config_from_api.yaml`文件复制到`data`，并重命名为`.config.yaml`
-
-复制`参数值`后，打开`xuanwu-device-gateway`下的`data`目录的`.config.yaml`文件。此刻你的配置文件内容应该是这样的：
-
-```
-manager-api:
-  url: http://127.0.0.1:8002/xuanwu
-  secret: 你的server.secret值
-```
-
-把你刚才从`智控台`复制过来的`server.secret`的`参数值`复制到`.config.yaml`文件里的`secret`里。
-
-类似这样的效果
-```
-manager-api:
-  url: http://127.0.0.1:8002/xuanwu
-  secret: 12345678-xxxx-xxxx-xxxx-123456789000
-```
-
-## 5.运行项目
-
-```
-# 确保在xuanwu-device-gateway目录下执行
-conda activate xuanwu-device-gateway
-python app.py
-```
-
-如果你能看到，类似以下日志,则是本项目服务启动成功的标志。
-
-```
-25-02-23 12:01:09[core.websocket_server] - INFO - Server is running at ws://xxx.xx.xx.xx:8000/xuanwu/v1/
-25-02-23 12:01:09[core.websocket_server] - INFO - =======上面的地址是websocket协议地址，请勿用浏览器访问=======
-25-02-23 12:01:09[core.websocket_server] - INFO - 如想测试websocket请用谷歌浏览器打开test目录下的test_page.html
-25-02-23 12:01:09[core.websocket_server] - INFO - =======================================================
-```
-
-由于你是全模块部署，因此你有两个重要的接口。
-
-OTA接口：
-```
-http://你电脑局域网的ip:8002/xuanwu/ota/
-```
-
-Websocket接口：
-```
-ws://你电脑局域网的ip:8000/xuanwu/v1/
-```
-
-请你务必把以上两个接口地址写入到智控台中：他们将会影响websocket地址发放和自动升级功能。
-
-1、使用超级管理员账号，登录智控台，在顶部菜单找到`参数管理`，找到参数编码是`server.websocket`，输入你的`Websocket接口`。
-
-2、使用超级管理员账号，登录智控台，在顶部菜单找到`参数管理`，找到数编码是`server.ota`，输入你的`OTA接口`。
-
-
-接下来，你就可以开始操作你的esp32设备了，你可以`自行编译esp32固件`也可以配置使用`虾哥编译好的1.6.1以上版本的固件`。两个任选一个
-
-1、 [编译自己的esp32固件](firmware-build.md)了。
-
-2、 [基于虾哥编译好的固件配置自定义服务器](firmware-setting.md)了。
-
-# 常见问题
-以下是一些常见问题，供参考：
-
-1、[为什么我说的话，玄武AI识别出来很多韩文、日文、英文](./FAQ.md)<br/>
-2、[为什么会出现“TTS 任务出错 文件不存在”？](./FAQ.md)<br/>
-3、[TTS 经常失败，经常超时](./FAQ.md)<br/>
-4、[使用Wifi能连接自建服务器，但是4G模式却接不上](./FAQ.md)<br/>
-5、[如何提高玄武AI对话响应速度？](./FAQ.md)<br/>
-6、[我说话很慢，停顿时玄武AI老是抢话](./FAQ.md)<br/>
-## 部署相关教程
-1、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
-2、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
-3、[如何与Nginx集成](https://github.com/GrissonWu07/ai-assist-deviceserver/issues/791)<br/>
-## 拓展相关教程
-1、[如何开启手机号码注册智控台](./ali-sms-integration.md)<br/>
-2、[如何集成HomeAssistant实现智能家居控制](./homeassistant-integration.md)<br/>
-3、[如何开启视觉模型实现拍照识物](./mcp-vision-integration.md)<br/>
-4、[如何部署MCP接入点](./mcp-endpoint-enable.md)<br/>
-5、[如何接入MCP接入点](./mcp-endpoint-integration.md)<br/>
-6、[如何开启声纹识别](./voiceprint-integration.md)<br/>
-7、[新闻插件源配置指南](./newsnow_plugin_config.md)<br/>
-8、[天气插件使用指南](./weather-integration.md)<br/>
-## 语音克隆、本地语音部署相关教程
-1、[如何在智控台克隆音色](./huoshan-streamTTS-voice-cloning.md)<br/>
-2、[如何部署集成index-tts本地语音](./index-stream-integration.md)<br/>
-3、[如何部署集成fish-speech本地语音](./fish-speech-integration.md)<br/>
-4、[如何部署集成PaddleSpeech本地语音](./paddlespeech-deploy.md)<br/>
-## 性能测试教程
-1、[各组件速度测试指南](./performance_tester.md)<br/>
-2、[定期公开测试结果](https://github.com/xinnan-tech/xuanwu-performance-research)<br/>
-
-
+- [快速开始](./quick-start.md)
+- [最简部署指南](./Deployment.md)
+- [平台交付总览](./platform-delivery-overview.md)
+- [设备接入与纳管指南](./device-ingress-and-management-guide.md)
