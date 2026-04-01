@@ -1,403 +1,295 @@
-[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
+# 玄武AI智能设备平台
 
-<h1 align="center">玄武AI后端服务xuanwu-device-gateway</h1><p align="center"><code>xuanwu-device-gateway</code> for conversational devices, <code>xuanwu-iot-gateway</code> for IoT and industrial devices.</p>
+[English](./README_en.md) | [Deutsch](./README_de.md) | [Português (Brasil)](./README_pt_BR.md) | [Tiếng Việt](./README_vi.md)
 
-<p align="center">
-本项目基于人机共生智能理论和技术研发智能终端软硬件体系<br/>为开源智能硬件项目
-<a href="https://github.com/78/xuanwu-esp32">xuanwu-esp32</a>提供后端服务<br/>
-根据<a href="https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh">玄武AI通信协议</a>使用Python、Java、Vue实现<br/>
-支持MQTT+UDP协议、Websocket协议、MCP接入点、声纹识别、知识库
-</p>
+玄武AI智能设备平台，是一套面向智能终端、IoT 设备、工业设备与无线边缘设备的统一平台底座。它不是某一个设备后端的简单集合，而是围绕“设备接入、设备管理、设备执行、任务调度、统一运营入口、智能体协同”建立起来的平台体系。这个仓库承接的是本地平台层，目标是把复杂的设备世界收敛成清晰、统一、可扩展的服务边界。
 
-<p align="center">
-<a href="./docs/FAQ.md">常见问题</a>
-· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/issues">反馈问题</a>
-· <a href="./README.md#%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3">部署文档</a>
-· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">更新日志</a>
-</p>
+## 平台愿景图
 
-<p align="center">
-  <a href="./README.md"><img alt="简体中文版自述文件" src="https://img.shields.io/badge/简体中文-DBEDFA"></a>
-  <a href="./README_en.md"><img alt="README in English" src="https://img.shields.io/badge/English-DFE0E5"></a>
-  <a href="./README_vi.md"><img alt="Tiếng Việt" src="https://img.shields.io/badge/Tiếng Việt-DFE0E5"></a>
-  <a href="./README_de.md"><img alt="Deutsch" src="https://img.shields.io/badge/Deutsch-DFE0E5"></a>
-  <a href="./README_pt_BR.md"><img alt="Português (Brasil)" src="https://img.shields.io/badge/Português (Brasil)-DFE0E5"></a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">
-    <img alt="GitHub Contributors" src="https://img.shields.io/github/v/release/xinnan-tech/device-server?logo=docker" />
-  </a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/LICENSE">
-    <img alt="GitHub pull requests" src="https://img.shields.io/badge/license-MIT-white?labelColor=black" />
-  </a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver">
-    <img alt="stars" src="https://img.shields.io/github/stars/xinnan-tech/device-server?color=ffcb47&labelColor=black" />
-  </a>
-</p>
+```mermaid
+flowchart TB
+    subgraph UX["统一运营入口"]
+        Portal["xuanwu-portal"]
+    end
 
-<p align="center">
-Spearheaded by Professor Siyuan Liu's Team (South China University of Technology)
-</br>
-刘思源教授团队主导研发（华南理工大学）
-</br>
-<img src="./docs/images/hnlg.jpg" alt="华南理工大学" width="50%">
-</p>
+    subgraph Control["控制面与调度面"]
+        Mgmt["xuanwu-management-server"]
+        Jobs["xuanwu-jobs"]
+    end
 
----
+    subgraph Ingress["设备接入与执行面"]
+        Device["xuanwu-device-gateway"]
+        IoT["xuanwu-iot-gateway"]
+        BT["xuanwu-bluetooth-bridge"]
+        NL["xuanwu-nearlink-bridge"]
+    end
 
-## Current Platform Status
+    subgraph Devices["设备世界"]
+        Conv["会话型设备"]
+        IoTDev["IoT / 工业设备"]
+        Wireless["蓝牙 / 星闪设备"]
+    end
 
-The active local platform now consists of:
+    subgraph Agent["智能体域"]
+        XW["XuanWu"]
+    end
 
-- `xuanwu-management-server`
-- `xuanwu-device-gateway`
-- `xuanwu-iot-gateway`
-- `xuanwu-jobs`
-- `xuanwu-portal`
-- `xuanwu-bluetooth-bridge`
-- `xuanwu-nearlink-bridge`
+    subgraph Truth["统一平台真源"]
+        Domain["用户 / 设备 / 通道 / 映射 / 遥测 / 事件 / 告警 / Jobs"]
+    end
 
-Current repository-local implementation is complete for the active spec set. The remaining major blocker is upstream `XuanWu` integration.
+    Portal --> Mgmt
+    Portal --> Jobs
 
-Recommended current documentation:
+    Jobs --> Mgmt
+    Jobs --> Device
+    Jobs --> IoT
 
-- [Platform Delivery Overview](./docs/platform-delivery-overview.md)
-- [Current Platform Capabilities](./docs/current-platform-capabilities.md)
-- [Current API Surfaces](./docs/current-api-surfaces.md)
-- [Device Ingress and Management Guide](./docs/device-ingress-and-management-guide.md)
-- [Current State](./docs/project/state/current.md)
+    Conv --> Device
+    IoTDev --> IoT
+    Wireless --> BT
+    Wireless --> NL
+    BT --> IoT
+    NL --> IoT
 
----
+    Device --> Mgmt
+    IoT --> Mgmt
+    Mgmt --> Domain
+    Mgmt --> XW
+    XW --> IoT
 
-## 适用人群 👥
+    classDef ux fill:#f8f5ff,stroke:#7c58d6,color:#221a3b,stroke-width:1.5px;
+    classDef control fill:#eef7ff,stroke:#2f6fed,color:#16315f,stroke-width:1.5px;
+    classDef ingress fill:#eefaf3,stroke:#2e9b62,color:#163f2a,stroke-width:1.5px;
+    classDef devices fill:#fff8eb,stroke:#c68a1f,color:#5b3a06,stroke-width:1.5px;
+    classDef agent fill:#fff0f3,stroke:#d4577f,color:#5b1830,stroke-width:1.5px;
+    classDef truth fill:#f6f7fb,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
 
-本项目需要配合 ESP32 硬件设备使用。如果您已经购买了 ESP32 相关硬件，且成功对接过虾哥部署的后端服务，并希望独立搭建自己的
-`xuanwu-esp32` 后端服务，那么本项目非常适合您。
-
-想看使用效果？请猛戳视频 🎥
-
-<table>
-  <tr>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1FMFyejExX" target="_blank">
-         <picture>
-           <img alt="响应速度感受" src="docs/images/demo9.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1vchQzaEse" target="_blank">
-         <picture>
-           <img alt="速度优化秘诀" src="docs/images/demo6.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1C1tCzUEZh" target="_blank">
-         <picture>
-           <img alt="复杂医疗场景" src="docs/images/demo1.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1zUW5zJEkq" target="_blank">
-         <picture>
-           <img alt="MQTT指令下发" src="docs/images/demo4.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1Exu3zqEDe" target="_blank">
-         <picture>
-           <img alt="声纹识别" src="docs/images/demo14.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1pNXWYGEx1" target="_blank">
-         <picture>
-           <img alt="控制家电开关" src="docs/images/demo5.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1ZQKUzYExM" target="_blank">
-         <picture>
-           <img alt="MCP接入点" src="docs/images/demo13.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-      <a href="https://www.bilibili.com/video/BV1TJ7WzzEo6" target="_blank">
-         <picture>
-           <img alt="多指令任务" src="docs/images/demo11.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1VC96Y5EMH" target="_blank">
-         <picture>
-           <img alt="播放音乐" src="docs/images/demo7.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1Z8XuYZEAS" target="_blank">
-         <picture>
-           <img alt="天气插件" src="docs/images/demo8.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://www.bilibili.com/video/BV12J7WzBEaH" target="_blank">
-         <picture>
-           <img alt="实时打断" src="docs/images/demo10.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-      <a href="https://www.bilibili.com/video/BV1Co76z7EvK" target="_blank">
-         <picture>
-           <img alt="拍照识物品" src="docs/images/demo12.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1CDKWemEU6" target="_blank">
-         <picture>
-           <img alt="自定义音色" src="docs/images/demo2.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV12yA2egEaC" target="_blank">
-         <picture>
-           <img alt="使用粤语交流" src="docs/images/demo3.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV17LXWYvENb" target="_blank">
-         <picture>
-           <img alt="播报新闻" src="docs/images/demo0.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-</table>
-
----
-
-## 警告 ⚠️
-
-1、本项目为开源软件，本软件与对接的任何第三方API服务商（包括但不限于语音识别、大模型、语音合成等平台）均不存在商业合作关系，不为其服务质量及资金安全提供任何形式的担保。
-建议使用者优先选择持有相关业务牌照的服务商，并仔细阅读其服务协议及隐私政策。本软件不托管任何账户密钥、不参与资金流转、不承担充值资金损失风险。
-
-2、本项目功能未完善，且未通过网络安全测评，请勿在生产环境中使用。 如果您在公网环境中部署学习本项目，请务必做好必要的防护。
-
----
-
-## 部署文档
-
-![Banners](docs/images/banner2.png)
-
-本项目提供两种部署方式，请根据您的具体需求选择：
-
-#### 🚀 部署方式选择
-| 部署方式 | 特点 | 适用场景 | 部署文档 | 配置要求 | 视频教程 | 
-|---------|------|---------|---------|---------|---------|
-| **最简化安装** | 智能对话、单智能体管理 | 低配置环境，数据存储在配置文件，无需数据库 | [①Docker版](./docs/Deployment.md#%E6%96%B9%E5%BC%8F%E4%B8%80docker%E5%8F%AA%E8%BF%90%E8%A1%8Cserver) / [②源码部署](./docs/Deployment.md#%E6%96%B9%E5%BC%8F%E4%BA%8C%E6%9C%AC%E5%9C%B0%E6%BA%90%E7%A0%81%E5%8F%AA%E8%BF%90%E8%A1%8Cserver)| 如果使用`FunASR`要2核4G，如果全API，要2核2G | - | 
-| **全模块安装** | 智能对话、多用户管理、多智能体管理、智控台界面操作 | 完整功能体验，数据存储在数据库 |[①Docker版](./docs/Deployment_all.md#%E6%96%B9%E5%BC%8F%E4%B8%80docker%E8%BF%90%E8%A1%8C%E5%85%A8%E6%A8%A1%E5%9D%97) / [②源码部署](./docs/Deployment_all.md#%E6%96%B9%E5%BC%8F%E4%BA%8C%E6%9C%AC%E5%9C%B0%E6%BA%90%E7%A0%81%E8%BF%90%E8%A1%8C%E5%85%A8%E6%A8%A1%E5%9D%97) / [③源码部署自动更新教程](./docs/dev-ops-integration.md) | 如果使用`FunASR`要4核8G，如果全API，要2核4G| [本地源码启动视频教程](https://www.bilibili.com/video/BV1wBJhz4Ewe) | 
-
-常见问题及相关教程，可参考[这个链接](./docs/FAQ.md)
-
-> 💡 提示：以下是按最新代码部署后的测试平台，有需要可烧录测试，并发为6个，每天会清空数据，
-
-```
-智控台地址: https://2662r3426b.vicp.fun
-智控台(h5版): https://2662r3426b.vicp.fun/h5/index.html
-
-服务测试工具： https://2662r3426b.vicp.fun/test/
-OTA接口地址: https://2662r3426b.vicp.fun/xuanwu/ota/
-Websocket接口地址: wss://2662r3426b.vicp.fun/xuanwu/v1/
+    class Portal ux;
+    class Mgmt,Jobs control;
+    class Device,IoT,BT,NL ingress;
+    class Conv,IoTDev,Wireless devices;
+    class XW agent;
+    class Domain truth;
 ```
 
-#### 🚩 配置说明和推荐
-> [!Note]
-> 本项目提供两种配置方案：
-> 
-> 1. `入门全免费`配置：适合个人家庭使用，所有组件均采用免费方案，无需额外付费。
-> 
-> 2. `流式配置`：适合演示、培训、超过2个并发等场景，采用流式处理技术，响应速度更快，体验更佳。
-> 
-> 自`0.5.2`版本起，项目支持流式配置，相比早期版本，响应速度提升约`2.5秒`，显著改善用户体验。
+## 项目是什么
 
-| 模块名称 | 入门全免费设置 | 流式配置 |
-|:---:|:---:|:---:|
-| ASR(语音识别) | FunASR(本地) | 👍XunfeiStreamASR(讯飞流式) |
-| LLM(大模型) | glm-4-flash(智谱) | 👍qwen-flash(阿里百炼) |
-| VLLM(视觉大模型) | glm-4v-flash(智谱) | 👍qwen2.5-vl-3b-instructh(阿里百炼) |
-| TTS(语音合成) | ✅LinkeraiTTS(灵犀流式) | 👍HuoshanDoubleStreamTTS(火山流式) |
-| Intent(意图识别) | function_call(函数调用) | function_call(函数调用) |
-| Memory(记忆功能) | mem_local_short(本地短期记忆） | mem_local_short（本地短期记忆） |
+这个项目是玄武设备生态中的本地平台层。它负责把不同类型的设备、不同协议的接入能力、统一设备管理、统一运营入口以及调度编排能力，收敛到一套一致的架构里。你可以把它理解成一套设备平台基础设施：
 
-如果您关心各组件的耗时，请查阅[玄武AI各组件性能测试报告](https://github.com/xinnan-tech/xuanwu-performance-research)，可按报告中的测试方法在您的环境中实际测试。
+- 用 `xuanwu-device-gateway` 承接会话型设备与运行时终端
+- 用 `xuanwu-iot-gateway` 承接 IoT、工业与无线桥接设备
+- 用 `xuanwu-management-server` 维护统一设备真源与运营真源
+- 用 `xuanwu-jobs` 负责平台任务调度与分发
+- 用 `xuanwu-portal` 提供单一运营入口
+- 用 `XuanWu` 承接 Agent 域真源与执行决策
 
-#### 🔧 测试工具
-本项目提供以下测试工具，帮助您验证系统和选择合适的模型：
+这意味着，本仓库真正提供的不是某一条单点能力，而是一整套面向平台化的设备底座。
 
-| 工具名称 | 位置 | 使用方法 | 功能说明 |
-|:---:|:---|:---:|:---:|
-| 音频交互测试工具 | main》xuanwu-device-gateway》test》test_page.html | 使用谷歌浏览器直接打开 | 测试音频播放和接收功能，验证Python端音频处理是否正常 |
-| 模型响应测试工具 | main》xuanwu-device-gateway》performance_tester.py | 执行 `python performance_tester.py` | 测试ASR(语音识别)、LLM(大模型)、VLLM(视觉模型)、TTS(语音合成)三个核心模块的响应速度 |
+## 核心价值
 
-> 💡 提示：测试模型速度时，只会测试配置了密钥的模型。
+### 统一设备接入
 
----
-## 功能清单 ✨
-### 已实现 ✅
-![请参考-全模块安装架构图](docs/images/deploy2.png)
-| 功能模块 | 描述 |
-|:---:|:---|
-| 核心架构 | 基于[MQTT+UDP网关](https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/mqtt-gateway-integration.md)、WebSocket、HTTP服务器，提供完整的控制台管理和认证系统 |
-| 语音交互 | 支持流式ASR(语音识别)、流式TTS(语音合成)、VAD(语音活动检测)，支持多语言识别和语音处理 |
-| 声纹识别 | 支持多用户声纹注册、管理和识别，与ASR并行处理，实时识别说话人身份并传递给LLM进行个性化回应 |
-| 智能对话 | 支持多种LLM(大语言模型)，实现智能对话 |
-| 视觉感知 | 支持多种VLLM(视觉大模型)，实现多模态交互 |
-| 意图识别 | 支持外挂的大模型意图识别、大模型自主函数调用，提供插件化意图处理机制 |
-| 记忆系统 | 支持本地短期记忆、mem0ai接口记忆、PowerMem智能记忆，具备记忆总结功能 |
-| 知识库 | 支持RAGFlow知识库，让大模型判断需要调度知识库后再回答 |
-| 工具调用 | 支持客户端IOT协议、客户MCP协议、服务端MCP协议、MCP接入点协议、自定义工具函数 |
-| 指令下发 | 依托MQTT协议，支持从智控台将MCP指令下发到ESP32设备 |
-| 管理后台 | 提供Web管理界面，支持用户管理、系统配置和设备管理；界面支持中文简体、中文繁体、英文显示 |
-| 测试工具 | 提供性能测试工具、视觉模型测试工具和音频交互测试工具 |
-| 部署支持 | 支持Docker部署和本地部署，提供完整的配置文件管理 |
-| 插件系统 | 支持功能插件扩展、自定义插件开发和插件热加载 |
+平台统一承接多类设备，而不是把不同设备类型分散到各自独立的小系统里：
 
-### 正在开发 🚧
+- 会话型设备
+- 执行型设备
+- 传感器设备
+- 工业设备
+- 蓝牙与星闪等无线边缘设备
 
-想了解具体开发计划进度，[请点击这里](https://github.com/users/xinnan-tech/projects/3)。常见问题及相关教程，可参考[这个链接](./docs/FAQ.md)
+### 统一设备管理
 
-如果你是一名软件开发者，这里有一份[《致开发者的公开信》](docs/contributor_open_letter.md)，欢迎加入！
+平台把设备归属、发现、纳管、生命周期、通道映射、能力路由等能力放进统一管理面，而不是散落在不同接入服务里。设备不是协议里的临时标识，而是平台中的正式对象。
 
----
+### 中心化智能体协同
 
-## 产品生态 👬
-玄武AI是一个生态，当你使用这个产品时，也可以看看其他在这个生态圈的[优秀项目](https://github.com/78/xuanwu-esp32/blob/main/README_zh.md#%E7%9B%B8%E5%85%B3%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE)
+`XuanWu` 负责 Agent、Workflow、Knowledge、Model 等智能体域能力；本仓库负责设备、网关、调度、可观测性和运营管理。这样的分层，让中心化 Agent 能力和本地设备平台能力协同起来，而不是互相污染边界。
 
----
+### 多协议与多网关扩展
 
-## 本项目支持的平台/组件列表 📋
-### LLM 语言模型
+平台通过 `xuanwu-device-gateway`、`xuanwu-iot-gateway`、蓝牙桥接、星闪桥接等模块，向不同协议和不同设备形态扩展。新的设备类型不需要重做整个平台，只需要在统一边界内补齐接入能力。
 
-| 使用方式 | 支持平台 | 免费平台 |
-|:---:|:---:|:---:|
-| openai 接口调用 | 阿里百炼、火山引擎、DeepSeek、智谱、Gemini、科大讯飞 | 智谱、Gemini |
-| ollama 接口调用 | Ollama | - |
-| dify 接口调用 | Dify | - |
-| fastgpt 接口调用 | Fastgpt | - |
-| coze 接口调用 | Coze | - |
-| xinference 接口调用 | Xinference | - |
-| homeassistant 接口调用 | HomeAssistant | - |
+### 平台化运营能力
 
-实际上，任何支持 openai 接口调用的 LLM 均可接入使用。
+平台提供统一前端入口、统一设备视图、统一遥测与事件、统一告警、统一任务调度与统一运营读模型，使系统能够从“可接设备”进一步走向“可运营、可治理、可扩展”。
 
----
+## 目标能力
 
-### VLLM 视觉模型
+本项目的目标不是只覆盖某一种硬件，而是形成完整的智能设备与 IoT 平台能力。
 
-| 使用方式 | 支持平台 | 免费平台 |
-|:---:|:---:|:---:|
-| openai 接口调用 | 阿里百炼、智谱ChatGLMVLLM | 智谱ChatGLMVLLM |
+### 会话型设备平台
 
-实际上，任何支持 openai 接口调用的 VLLM 均可接入使用。
+- 会话型设备接入
+- 运行时会话管理
+- OTA 与运行时配置下发
+- 语音与多模态终端支持
+- 会话设备纳管
 
----
+### IoT 与工业设备平台
 
-### TTS 语音合成
+- 执行器控制
+- 传感器上报
+- 工业协议接入
+- 无线边缘设备桥接
+- 网关统一执行
 
-| 使用方式 | 支持平台 | 免费平台 |
-|:---:|:---:|:---:|
-| 接口调用 | EdgeTTS、科大讯飞、火山引擎、腾讯云、阿里云及百炼、CosyVoiceSiliconflow、TTS302AI、CozeCnTTS、GizwitsTTS、ACGNTTS、OpenAITTS、灵犀流式TTS、MinimaxTTS | 灵犀流式TTS、EdgeTTS、CosyVoiceSiliconflow(部分) |
-| 本地服务 | FishSpeech、GPT_SOVITS_V2、GPT_SOVITS_V3、Index-TTS、PaddleSpeech | Index-TTS、PaddleSpeech、FishSpeech、GPT_SOVITS_V2、GPT_SOVITS_V3 |
+### 统一管理平台
 
----
+- 用户
+- 通道
+- 正式设备
+- 发现设备
+- 生命周期与绑定
+- Agent / Model / Knowledge / Workflow 映射
+- 遥测、事件、告警、OTA
+- Jobs、Schedules 与运营读模型
 
-### VAD 语音活动检测
+### 统一运营入口
 
-| 类型  |   平台名称    | 使用方式 | 收费模式 | 备注 |
-|:---:|:---------:|:----:|:----:|:--:|
-| VAD | SileroVAD | 本地使用 |  免费  |    |
+- 单一门户入口
+- Overview Dashboard
+- Devices / Agents / Jobs / Alerts 主工作区
+- 用户、通道、网关、AI 配置代理、遥测与告警等运营页面
 
----
+## 总体架构
 
-### ASR 语音识别
+```mermaid
+flowchart TB
+    Portal["xuanwu-portal"]
 
-| 使用方式 | 支持平台 | 免费平台 |
-|:---:|:---:|:---:|
-| 本地使用 | FunASR、SherpaASR | FunASR、SherpaASR |
-| 接口调用 | FunASRServer、火山引擎、科大讯飞、腾讯云、阿里云、百度云、OpenAI ASR | FunASRServer |
+    Mgmt["xuanwu-management-server"]
+    Jobs["xuanwu-jobs"]
+    Device["xuanwu-device-gateway"]
+    IoT["xuanwu-iot-gateway"]
+    BT["xuanwu-bluetooth-bridge"]
+    NL["xuanwu-nearlink-bridge"]
+    XW["XuanWu"]
 
----
+    Conv["会话型设备"]
+    IoTDev["IoT / 工业设备"]
+    Wireless["蓝牙 / 星闪设备"]
 
-### Voiceprint 声纹识别
+    Portal --> Mgmt
+    Portal --> Jobs
 
-| 使用方式 | 支持平台 | 免费平台 |
-|:---:|:---:|:---:|
-| 本地使用 | 3D-Speaker | 3D-Speaker |
+    Jobs --> Mgmt
+    Jobs --> Device
+    Jobs --> IoT
 
----
+    Conv --> Device
+    IoTDev --> IoT
+    Wireless --> BT
+    Wireless --> NL
 
-### Memory 记忆存储
+    BT --> IoT
+    NL --> IoT
 
-|   类型   |      平台名称       | 使用方式 |   收费模式    | 备注 |
-|:------:|:---------------:|:----:|:---------:|:--:|
-| Memory |     mem0ai      | 接口调用 | 1000次/月额度 |    |
-| Memory |     [powermem](./docs/powermem-integration.md)    | 本地总结 | 取决于LLM和DB |  OceanBase开源，支持智能检索  |
-| Memory | mem_local_short | 本地总结 |    免费     |    |
-| Memory |     nomem       | 无记忆模式 |    免费     |    |
+    Device --> Mgmt
+    IoT --> Mgmt
+    Mgmt --> XW
+    XW --> IoT
+```
 
----
+## 服务边界
 
-### Intent 意图识别
+### `xuanwu-management-server`
 
-|   类型   |     平台名称      | 使用方式 |  收费模式   |          备注           |
-|:------:|:-------------:|:----:|:-------:|:---------------------:|
-| Intent |  intent_llm   | 接口调用 | 根据LLM收费 |    通过大模型识别意图，通用性强     |
-| Intent | function_call | 接口调用 | 根据LLM收费 | 通过大模型函数调用完成意图，速度快，效果好 |
-| Intent |    nointent   | 无意图模式 |    免费     |    不进行意图识别，直接返回对话结果     |
+统一真源，负责平台里的核心业务事实与运营读模型，包括：
 
----
+- 用户
+- 通道
+- 正式设备
+- 发现设备
+- 映射关系
+- 遥测、事件、告警
+- OTA
+- 调度与运行记录
+- 门户读模型
 
-### Rag 检索增强生成
+### `xuanwu-device-gateway`
 
-|   类型   |     平台名称      | 使用方式 |  收费模式   |          备注           |
-|:------:|:-------------:|:----:|:-------:|:---------------------:|
-| Rag |  ragflow   | 接口调用 | 根据切片、分词消耗的token收费 |    借助RagFlow的检索增强生成功能，提供更准确的对话回复     |
+会话型设备接入层，负责承接智能终端的运行时连接与会话入口，包括：
 
----
+- 会话型设备连接
+- 会话型主连接入口 `/xuanwu/v1/`
+- 运行时会话处理
+- OTA 接入，关键入口为 `/xuanwu/ota/`
+- 运行时 discovery 与 heartbeat
+- 运行时任务执行入口
 
-## 鸣谢 🙏
+### `xuanwu-iot-gateway`
 
-| Logo | 项目/公司 | 说明 |
-|:---:|:---:|:---|
-| <img src="./docs/images/logo_bailing.png" width="160"> | [百聆语音对话机器人](https://github.com/wwbin2017/bailing) | 本项目受[百聆语音对话机器人](https://github.com/wwbin2017/bailing)启发，并在其基础上实现 |
-| <img src="./docs/images/logo_tenclass.png" width="160"> | [十方融海](https://www.tenclass.com/) | 感谢[十方融海](https://www.tenclass.com/)为玄武AI生态制定了标准的通讯协议、多设备兼容性方案及高并发场景实践示范；为本项目提供了全链路技术文档支持 |
-| <img src="./docs/images/logo_xuanfeng.png" width="160"> | [玄凤科技](https://github.com/Eric0308) | 感谢[玄凤科技](https://github.com/Eric0308)贡献函数调用框架、MCP通信协议及插件化调用机制的实现代码，通过标准化的指令调度体系与动态扩展能力，显著提升了前端设备(IoT)的交互效率和功能延展性 |
-| <img src="./docs/images/logo_junsen.png" width="160"> | [huangjunsen](https://github.com/huangjunsen0406) | 感谢[huangjunsen](https://github.com/huangjunsen0406) 贡献`智控台移动端`模块，实现了跨平台移动设备的高效控制与实时交互，大幅提升了系统在移动场景下的操作便捷性和管理效率 |
-| <img src="./docs/images/logo_huiyuan.png" width="160"> | [汇远设计](http://ui.kwd988.net/) | 感谢[汇远设计](http://ui.kwd988.net/)为本项目提供专业视觉解决方案，用其服务超千家企业的设计实战经验，赋能本项目产品用户体验 |
-| <img src="./docs/images/logo_qinren.png" width="160"> | [西安勤人信息科技](https://www.029app.com/) | 感谢[西安勤人信息科技](https://www.029app.com/)深化本项目视觉体系，确保整体设计风格在多场景应用中的一致性和扩展性 |
-| <img src="./docs/images/logo_contributors.png" width="160"> | [代码贡献者](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors) | 感谢[所有代码贡献者](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors)贡献者，你们的付出让项目更加健壮和强大。 |
+IoT / 工业设备接入与执行层，负责把复杂协议、现场设备和统一平台能力之间的边界收敛起来，包括：
 
+- 协议适配
+- 设备命令执行
+- 上报归一化
+- 网关侧 discovery 与 heartbeat
+- 工业、传感器、执行器、无线桥接设备统一接入
 
-<a href="https://star-history.com/#xinnan-tech/device-server&Date">
+### `xuanwu-jobs`
 
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
- </picture>
-</a>
+轻量调度与分发服务，负责把平台里的周期任务、延迟任务和运行记录串起来，包括：
 
+- 到期任务轮询
+- claim 与 dispatch
+- cron 推进
+- retry 与 queued run 流程
+
+### `xuanwu-portal`
+
+统一前端入口，负责把平台里的关键运营能力收敛成一个统一的工作台，包括：
+
+- Overview
+- Devices
+- Agents
+- Jobs
+- Alerts
+- 用户与角色
+- 通道与网关
+- AI Config Proxy
+- 遥测与告警
+- 设置
+
+### `xuanwu-bluetooth-bridge` 与 `xuanwu-nearlink-bridge`
+
+独立桥接服务，负责无线设备连接、系统级打包以及向 `xuanwu-iot-gateway` 的回调集成。它们的意义，是把蓝牙与星闪这类更贴近现场和系统环境的能力，从主网关进程中解耦出来。
+
+## 当前仓库状态
+
+当前主线代码已经完成了本仓范围内绝大部分平台实现工作。换句话说，设备管理、设备接入、协议适配、调度、门户与桥接这几条主线，在本仓内部已经基本成形。现阶段主要剩余阻塞集中在 `XuanWu` 上游集成，包括：
+
+- 稳定的上游管理 API
+- 稳定的上游执行 API
+- `XuanWu -> xuanwu-iot-gateway` 的设备调用链联调
+
+这也意味着，本仓已经基本具备平台底座能力，剩余核心工作主要是与 `XuanWu` 完成最终协同闭环。
+
+## 文档导航
+
+建议优先阅读以下文档：
+
+- [平台交付总览](./docs/platform-delivery-overview.md)
+- [当前平台能力说明](./docs/current-platform-capabilities.md)
+- [当前 API 总览](./docs/current-api-surfaces.md)
+- [设备接入与纳管指南](./docs/device-ingress-and-management-guide.md)
+- [当前项目状态](./docs/project/state/current.md)
+- [Spec 索引](./docs/superpowers/specs/README.md)
+
+核心设计参考：
+
+- [平台蓝图](./docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
+- [设备管理、设备网关与 IoT 网关集成设计](./docs/superpowers/specs/2026-04-01-device-management-gateway-device-server-integration-spec.md)
+- [XuanWu 上游统一需求](./docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
+
+## 方向
+
+本项目后续的方向是：
+
+- 用统一平台承接设备管理与运营
+- 用统一网关体系承接设备能力调用
+- 用统一门户承接运营视图
+- 用 `XuanWu` 承接 Agent 域真源与执行决策
+
+本仓库就是这套玄武AI智能设备平台架构的本地平台基础。
