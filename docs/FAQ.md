@@ -2,8 +2,8 @@
 
 ### 1、为什么我说的话，玄武AI识别出来很多韩文、日文、英文？🇰🇷
 
-建议：检查一下`models/SenseVoiceSmall`是否已经有`model.pt`
-文件，如果没有就要下载，查看这里[下载语音识别模型文件](Deployment.md#模型文件)
+建议：检查一下 `models/SenseVoiceSmall` 是否已经有 `model.pt`
+文件，如果没有就要下载，查看这里 [快速开始](./quick-start.md)。
 
 ### 2、为什么会出现"TTS 任务出错 文件不存在"？📁
 
@@ -61,8 +61,7 @@ VAD:
 
 ### 7、部署相关教程
 0、[快速开始](./quick-start.md)<br/>
-1、[如何进行最简化部署](./Deployment.md)<br/>
-2、[如何进行全模块部署](./Deployment_all.md)<br/>
+1、[如何进行部署](./Deployment.md)<br/>
 3、[如何部署MQTT网关开启MQTT+UDP协议](./mqtt-gateway-integration.md)<br/>
 4、[如何自动拉取本项目最新代码自动编译和启动](./dev-ops-integration.md)<br/>
 5、[如何与Nginx集成](https://github.com/GrissonWu07/xuanwu-ai-platform/issues/791)<br/>

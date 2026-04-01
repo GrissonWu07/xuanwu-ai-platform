@@ -306,8 +306,7 @@ This repository focuses on the local platform layer:
 Recommended reading order:
 
 - [Quick Start](./docs/quick-start.md)
-- [Full Deployment Guide](./docs/Deployment_all.md)
-- [Minimal Deployment Guide](./docs/Deployment.md)
+- [Deployment Guide](./docs/Deployment.md)
 - [Platform Delivery Overview](./docs/platform-delivery-overview.md)
 - [Current Platform Capabilities](./docs/current-platform-capabilities.md)
 - [Current API Surfaces](./docs/current-api-surfaces.md)
