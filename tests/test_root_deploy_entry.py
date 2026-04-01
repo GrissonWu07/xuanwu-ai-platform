@@ -10,6 +10,7 @@ def test_root_compose_exists_and_hosts_platform_stack() -> None:
 
     content = compose_file.read_text(encoding="utf-8")
     for service_name in [
+        "postgres:",
         "xuanwu-portal:",
         "xuanwu-management-server:",
         "xuanwu-jobs:",
@@ -25,10 +26,14 @@ def test_root_compose_uses_root_deploy_mounts() -> None:
     content = compose_file.read_text(encoding="utf-8")
 
     assert "./deploy/data/device-gateway:/opt/xuanwu-device-gateway/data" in content
+    assert "./deploy/postgres:/var/lib/postgresql/data" in content
     assert (
         "./deploy/models/SenseVoiceSmall/model.pt:"
         "/opt/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt"
     ) in content
+    assert "XUANWU_PG_DB=" in content
+    assert "XUANWU_MGMT_PG_SCHEMA=" in content
+    assert "XUANWU_IOT_PG_SCHEMA=" in content
 
 
 def test_root_setup_script_bootstraps_repo_root() -> None:
@@ -37,6 +42,7 @@ def test_root_setup_script_bootstraps_repo_root() -> None:
     assert "/opt/xuanwu-ai-platform" in setup_script
     assert 'COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"' in setup_script
     assert 'DATA_DIR="$PROJECT_ROOT/deploy/data/device-gateway"' in setup_script
+    assert 'POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/postgres"' in setup_script
     assert 'MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"' in setup_script
     assert "git clone https://github.com/GrissonWu07/xuanwu-ai-platform.git" in setup_script
     assert 'ENV_PATH="$PROJECT_ROOT/.env"' in setup_script
@@ -47,6 +53,9 @@ def test_root_env_example_exposes_xuanwu_endpoint() -> None:
 
     assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in env_example
     assert "XUANWU_CONTROL_PLANE_SECRET=" in env_example
+    assert "XUANWU_PG_DB=" in env_example
+    assert "XUANWU_MGMT_PG_SCHEMA=xw_mgmt" in env_example
+    assert "XUANWU_IOT_PG_SCHEMA=xw_iot" in env_example
 
 
 def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:
@@ -55,4 +64,6 @@ def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:
     assert "deploy/data/" in gitignore_text
     assert "!deploy/data/device-gateway/" in gitignore_text
     assert "!deploy/data/device-gateway/.gitkeep" in gitignore_text
+    assert "deploy/postgres/" in gitignore_text
+    assert "!deploy/postgres/.gitkeep" in gitignore_text
     assert "deploy/models/SenseVoiceSmall/model.pt" in gitignore_text

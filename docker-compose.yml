@@ -1,5 +1,20 @@
 version: "3"
 services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    networks:
+      - default
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_DB=${XUANWU_PG_DB:-xuanwu_platform}
+      - POSTGRES_USER=${XUANWU_PG_USER:-xuanwu}
+      - POSTGRES_PASSWORD=${XUANWU_PG_PASSWORD:-xuanwu_local_password}
+    volumes:
+      - ./deploy/postgres:/var/lib/postgresql/data
+
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: mosquitto
@@ -59,7 +74,7 @@ services:
       - "18082:18082"
     working_dir: /opt/xuanwu-management-server
     command: >
-      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx && python app.py"
+      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx sqlalchemy psycopg[binary] && python app.py"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_HOST=0.0.0.0
@@ -67,8 +82,16 @@ services:
       - XUANWU_MANAGEMENT_SERVER_AUTH_KEY=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_BASE_URL=${XUANWU_BASE_URL:-http://xuanwu-ai:8000}
       - XUANWU_CONTROL_PLANE_SECRET=${XUANWU_CONTROL_PLANE_SECRET:-xuanwu-management-to-xuanwu}
+      - XUANWU_PG_HOST=${XUANWU_PG_HOST:-postgres}
+      - XUANWU_PG_PORT=${XUANWU_PG_PORT:-5432}
+      - XUANWU_PG_DB=${XUANWU_PG_DB:-xuanwu_platform}
+      - XUANWU_PG_USER=${XUANWU_PG_USER:-xuanwu}
+      - XUANWU_PG_PASSWORD=${XUANWU_PG_PASSWORD:-xuanwu_local_password}
+      - XUANWU_MGMT_PG_SCHEMA=${XUANWU_MGMT_PG_SCHEMA:-xw_mgmt}
     volumes:
       - ./main/xuanwu-management-server:/opt/xuanwu-management-server
+    depends_on:
+      - postgres
 
   xuanwu-iot-gateway:
     build:
@@ -86,7 +109,14 @@ services:
       - XUANWU_MANAGEMENT_SERVER_SECRET=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_GATEWAY_HOST=0.0.0.0
       - XUANWU_GATEWAY_PORT=18084
+      - XUANWU_PG_HOST=${XUANWU_PG_HOST:-postgres}
+      - XUANWU_PG_PORT=${XUANWU_PG_PORT:-5432}
+      - XUANWU_PG_DB=${XUANWU_PG_DB:-xuanwu_platform}
+      - XUANWU_PG_USER=${XUANWU_PG_USER:-xuanwu}
+      - XUANWU_PG_PASSWORD=${XUANWU_PG_PASSWORD:-xuanwu_local_password}
+      - XUANWU_IOT_PG_SCHEMA=${XUANWU_IOT_PG_SCHEMA:-xw_iot}
     depends_on:
+      - postgres
       - xuanwu-management-server
       - mosquitto
 
