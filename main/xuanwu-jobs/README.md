@@ -18,8 +18,8 @@ Default Docker wiring includes:
 
 - `xuanwu-jobs`
 - `xuanwu-management-server`
-- `xuanwu-gateway`
-- `xuanwu-device-server`
+- `xuanwu-iot-gateway`
+- `xuanwu-device-gateway`
 
 Execution paths:
 

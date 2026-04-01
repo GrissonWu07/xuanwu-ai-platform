@@ -1,6 +1,6 @@
 [![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Serviço Backend Xuanwu xuanwu-device-server</h1>
+<h1 align="center">Serviço Backend Xuanwu xuanwu-device-gateway</h1>
 
 <p align="center">
 Este projeto é baseado na teoria e tecnologia de inteligência simbiótica humano-máquina para desenvolver sistemas inteligentes de hardware e software para terminais<br/>fornecendo serviços de backend para o projeto de hardware inteligente de código aberto
@@ -224,8 +224,8 @@ Este projeto fornece as seguintes ferramentas de teste para ajudá-lo a verifica
 
 | Nome da Ferramenta | Localização | Método de Uso | Descrição da Função |
 |:---:|:---|:---:|:---:|
-| Ferramenta de Teste de Interação por Áudio | main》xuanwu-device-server》test》test_page.html | Abrir diretamente com Google Chrome | Testa as funções de reprodução e recepção de áudio, verifica se o processamento de áudio no lado Python está normal |
-| Ferramenta de Teste de Resposta de Modelo | main》xuanwu-device-server》performance_tester.py | Execute `python performance_tester.py` | Testa a velocidade de resposta dos três módulos principais: ASR(reconhecimento de fala), LLM(modelo de linguagem), VLLM(modelo de visão), TTS(síntese de voz) |
+| Ferramenta de Teste de Interação por Áudio | main》xuanwu-device-gateway》test》test_page.html | Abrir diretamente com Google Chrome | Testa as funções de reprodução e recepção de áudio, verifica se o processamento de áudio no lado Python está normal |
+| Ferramenta de Teste de Resposta de Modelo | main》xuanwu-device-gateway》performance_tester.py | Execute `python performance_tester.py` | Testa a velocidade de resposta dos três módulos principais: ASR(reconhecimento de fala), LLM(modelo de linguagem), VLLM(modelo de visão), TTS(síntese de voz) |
 
 > 💡 Nota: Ao testar a velocidade dos modelos, apenas os modelos com chaves configuradas serão testados.
 

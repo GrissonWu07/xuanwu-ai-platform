@@ -158,7 +158,7 @@
 
 这些视图供：
 
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
 - `XuanWu`
 - 后续管理前端
 
@@ -166,7 +166,7 @@
 
 ## 6. 与其他模块的关系
 
-### 6.1 与 `xuanwu-device-server`
+### 6.1 与 `xuanwu-device-gateway`
 
 - 提供设备配置解析
 - 提供设备绑定视图
@@ -179,7 +179,7 @@
 - 提供设备目录、映射、能力、路由聚合结果
 - 接收 `XuanWu` 消费后的事件、执行结果回执需求
 
-### 6.3 与 `xuanwu-gateway`
+### 6.3 与 `xuanwu-iot-gateway`
 
 - 下发网关配置
 - 接收网关上报的标准事件、遥测、命令结果

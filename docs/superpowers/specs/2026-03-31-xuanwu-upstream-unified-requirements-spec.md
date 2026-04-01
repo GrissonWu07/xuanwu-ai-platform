@@ -180,7 +180,7 @@ The required path is:
 
 1. `XuanWu` decides what should happen
 2. `XuanWu` emits a standard device-command plan
-3. local platform routes that plan to `xuanwu-gateway`
+3. local platform routes that plan to `xuanwu-iot-gateway`
 4. execution result flows back into the local platform
 5. platform-standard events and telemetry are optionally re-ingested by `XuanWu`
 

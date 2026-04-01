@@ -7,8 +7,8 @@ Date: 2026-03-31
 `xuanwu-portal` is the single frontend entry for the platform. It replaces the old multi-entry admin experience with one Vue 3 application that presents a calmer, more product-led control surface for:
 
 - `xuanwu-management-server`
-- `xuanwu-gateway`
-- `xuanwu-device-server`
+- `xuanwu-iot-gateway`
+- `xuanwu-device-gateway`
 - `XuanWu` configuration proxy surfaces
 
 The portal should feel like an AI operations product, not a traditional left-nav enterprise console.

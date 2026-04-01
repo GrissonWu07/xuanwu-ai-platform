@@ -8,8 +8,8 @@
 ## Status
 1. [x] Phase 1: `xuanwu-management-server` foundation
 2. [x] Phase 2: `xuanwu-management-server` governance surfaces
-3. [x] Phase 3: `xuanwu-gateway` foundation and adapter skeletons
-4. [x] Phase 4: `xuanwu-device-server` boundary cleanup
+3. [x] Phase 3: `xuanwu-iot-gateway` foundation and adapter skeletons
+4. [x] Phase 4: `xuanwu-device-gateway` boundary cleanup
 5. [x] Phase 5: `xuanwu-jobs` foundation and direct local dispatch
 6. [x] Phase 6: `xuanwu-portal` Phase 1 and Phase 2 shell delivery
 7. [ ] Phase 7: upstream `XuanWu` integration and contract validation
@@ -39,7 +39,7 @@
   - mirrored `command.result` event creation
 - Verified with store, handler, and HTTP route tests.
 
-### Phase 3: `xuanwu-gateway` foundation
+### Phase 3: `xuanwu-iot-gateway` foundation
 - Implemented:
   - standalone app bootstrap
   - adapter registry
@@ -62,7 +62,7 @@
     - `nearlink`
 - Verified with bootstrap, registry, and dispatch tests.
 
-### Phase 3a: `xuanwu-gateway` protocol depth and wireless bridges
+### Phase 3a: `xuanwu-iot-gateway` protocol depth and wireless bridges
 - Implemented:
   - MQTT broker-message normalization
   - Home Assistant state ingest
@@ -76,7 +76,7 @@
   - Windows Service packaging assets for both bridge services
 - Verified with gateway, bridge, and bridge-callback test suites.
 
-### Phase 4: `xuanwu-device-server` boundary cleanup
+### Phase 4: `xuanwu-device-gateway` boundary cleanup
 - Implemented:
   - runtime naming cleanup to `XuanWu`
   - `xuanwu_session_key`
@@ -101,8 +101,8 @@
   - lightweight scheduler-dispatcher in `xuanwu-jobs`
   - direct execution APIs in:
     - `xuanwu-management-server`
-    - `xuanwu-gateway`
-    - `xuanwu-device-server`
+    - `xuanwu-iot-gateway`
+    - `xuanwu-device-gateway`
   - Docker Compose service for `xuanwu-jobs`
   - cron progression
   - dispatchable queued run polling
@@ -151,11 +151,11 @@
 ### Phase 7: upstream `XuanWu` integration
 - Required from upstream:
   - stable `XuanWu` management APIs by contract
-  - stable northbound command contract from `XuanWu` to `xuanwu-gateway`
+  - stable northbound command contract from `XuanWu` to `xuanwu-iot-gateway`
   - integration validation for device capability invocation
 - Repository-local follow-up after upstream is ready:
-  - remove remaining local IoT/Home Assistant compatibility paths from `xuanwu-device-server`
-  - switch final device-action execution fully onto `XuanWu -> xuanwu-gateway`
+  - remove remaining local IoT/Home Assistant compatibility paths from `xuanwu-device-gateway`
+  - switch final device-action execution fully onto `XuanWu -> xuanwu-iot-gateway`
 
 ## Local Completion Status
 
@@ -165,7 +165,7 @@ The only remaining roadmap item is upstream `XuanWu` integration and the final c
 
 ## Verification
 - command:
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-gateway/tests/test_sensor_ingest.py main/xuanwu-gateway/tests/test_bridge_callbacks.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-bluetooth-bridge/tests main/xuanwu-nearlink-bridge/tests tests/test_wireless_bridge_layout.py -q`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-iot-gateway/tests/test_sensor_ingest.py main/xuanwu-iot-gateway/tests/test_bridge_callbacks.py main/xuanwu-device-gateway/tests/test_local_control_plane.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-bluetooth-bridge/tests main/xuanwu-nearlink-bridge/tests tests/test_wireless_bridge_layout.py -q`
 - expected:
   - local platform work stays green
 - actual:
@@ -183,7 +183,7 @@ The only remaining roadmap item is upstream `XuanWu` integration and the final c
   - `vite` production build green
 
 - command:
-  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/store/local_store.py main/xuanwu-gateway/app.py main/xuanwu-gateway/core/http_server.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/clients/management_client.py main/xuanwu-gateway/core/adapters/bluetooth_adapter.py main/xuanwu-gateway/core/adapters/nearlink_adapter.py main/xuanwu-jobs/app.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/clients/management_client.py main/xuanwu-device-server/app.py main/xuanwu-device-server/config/xuanwu_management_client.py main/xuanwu-bluetooth-bridge/app.py main/xuanwu-bluetooth-bridge/core/http_server.py main/xuanwu-bluetooth-bridge/core/api/bridge_handler.py main/xuanwu-nearlink-bridge/app.py main/xuanwu-nearlink-bridge/core/http_server.py main/xuanwu-nearlink-bridge/core/api/bridge_handler.py`
+  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/store/local_store.py main/xuanwu-iot-gateway/app.py main/xuanwu-iot-gateway/core/http_server.py main/xuanwu-iot-gateway/core/api/gateway_handler.py main/xuanwu-iot-gateway/core/clients/management_client.py main/xuanwu-iot-gateway/core/adapters/bluetooth_adapter.py main/xuanwu-iot-gateway/core/adapters/nearlink_adapter.py main/xuanwu-jobs/app.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/clients/management_client.py main/xuanwu-device-gateway/app.py main/xuanwu-device-gateway/config/xuanwu_management_client.py main/xuanwu-bluetooth-bridge/app.py main/xuanwu-bluetooth-bridge/core/http_server.py main/xuanwu-bluetooth-bridge/core/api/bridge_handler.py main/xuanwu-nearlink-bridge/app.py main/xuanwu-nearlink-bridge/core/http_server.py main/xuanwu-nearlink-bridge/core/api/bridge_handler.py`
 - expected:
   - syntax validation passes
 - actual:

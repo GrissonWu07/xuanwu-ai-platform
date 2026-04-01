@@ -1,6 +1,6 @@
 [![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">玄武AI后端服务xuanwu-device-server</h1>
+<h1 align="center">玄武AI后端服务xuanwu-device-gateway</h1><p align="center"><code>xuanwu-device-gateway</code> for conversational devices, <code>xuanwu-iot-gateway</code> for IoT and industrial devices.</p>
 
 <p align="center">
 本项目基于人机共生智能理论和技术研发智能终端软硬件体系<br/>为开源智能硬件项目
@@ -226,8 +226,8 @@ Websocket接口地址: wss://2662r3426b.vicp.fun/xuanwu/v1/
 
 | 工具名称 | 位置 | 使用方法 | 功能说明 |
 |:---:|:---|:---:|:---:|
-| 音频交互测试工具 | main》xuanwu-device-server》test》test_page.html | 使用谷歌浏览器直接打开 | 测试音频播放和接收功能，验证Python端音频处理是否正常 |
-| 模型响应测试工具 | main》xuanwu-device-server》performance_tester.py | 执行 `python performance_tester.py` | 测试ASR(语音识别)、LLM(大模型)、VLLM(视觉模型)、TTS(语音合成)三个核心模块的响应速度 |
+| 音频交互测试工具 | main》xuanwu-device-gateway》test》test_page.html | 使用谷歌浏览器直接打开 | 测试音频播放和接收功能，验证Python端音频处理是否正常 |
+| 模型响应测试工具 | main》xuanwu-device-gateway》performance_tester.py | 执行 `python performance_tester.py` | 测试ASR(语音识别)、LLM(大模型)、VLLM(视觉模型)、TTS(语音合成)三个核心模块的响应速度 |
 
 > 💡 提示：测试模型速度时，只会测试配置了密钥的模型。
 

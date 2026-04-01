@@ -14,7 +14,7 @@ def load_runtime_config() -> dict:
     auth_token = os.environ.get("XUANWU_BLUETOOTH_BRIDGE_TOKEN", "xuanwu-bluetooth-bridge-secret").strip()
     callback_base_url = (
         os.environ.get("XUANWU_GATEWAY_URL", "").strip()
-        or "http://xuanwu-gateway:18084"
+        or "http://xuanwu-iot-gateway:18084"
     )
     callback_token = (
         os.environ.get("XUANWU_GATEWAY_SECRET", "").strip()

@@ -336,7 +336,7 @@ runtime_overrides: {}
 
 这个视图应由 `xuanwu-management-server` 生成并返回给：
 
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
 - `XuanWu`
 
 ### 5.2 DeviceCapabilityRoutingView
@@ -358,7 +358,7 @@ command_route:
 这个视图用于：
 
 - `XuanWu` 决定要调用哪个设备能力
-- `xuanwu-gateway` 知道如何路由到实际设备
+- `xuanwu-iot-gateway` 知道如何路由到实际设备
 
 ## 6. 优先级与覆盖规则
 
@@ -401,7 +401,7 @@ command_route:
 - Agent / Model Provider / Model Config 真源 API
 - 基于聚合视图的设备调用执行逻辑
 
-### 7.3 xuanwu-gateway
+### 7.3 xuanwu-iot-gateway
 
 负责提供：
 
@@ -454,8 +454,8 @@ command_route:
 - 设备首先直接归属到用户；没有用户时归属匿名用户
 - `channel` 是用户名下的控制入口，一个用户可以有多个 `channel`
 - 这些 `channel` 只管理、操作、控制该用户自己的设备
-- `xuanwu-device-server` 消费聚合后的运行时关系结果
+- `xuanwu-device-gateway` 消费聚合后的运行时关系结果
 - `XuanWu` 基于这些关系结果完成 Agent 决策和设备调用
-- `xuanwu-gateway` 负责完成实际协议执行
+- `xuanwu-iot-gateway` 负责完成实际协议执行
 
 这套关系映射模型，是后续建设完整中心化 Agent 物联网平台的必要基础。

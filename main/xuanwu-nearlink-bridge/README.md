@@ -2,7 +2,7 @@
 
 `xuanwu-nearlink-bridge` is the standalone NearLink bridge service for the local XuanWu platform stack.
 
-It isolates NearLink radio integration, vendor runtime access, and device session handling from `xuanwu-gateway`.
+It isolates NearLink radio integration, vendor runtime access, and device session handling from `xuanwu-iot-gateway`.
 
 ## Implemented APIs
 

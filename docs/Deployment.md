@@ -14,14 +14,14 @@
 
 #### 1.1.1 创建目录
 
-安装完docker后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xuanwu-device-server`。
+安装完docker后，你需要为这个项目找一个安放配置文件的目录，例如我们可以新建一个文件夹叫`xuanwu-device-gateway`。
 
-创建好目录后，你需要在`xuanwu-device-server`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
+创建好目录后，你需要在`xuanwu-device-gateway`下面创建`data`文件夹和`models`文件夹，`models`下面还要再创建`SenseVoiceSmall`文件夹。
 
 最终目录结构如下所示：
 
 ```
-xuanwu-device-server
+xuanwu-device-gateway
   ├─ data
   ├─ models
      ├─ SenseVoiceSmall
@@ -40,24 +40,24 @@ xuanwu-device-server
 
 ##### 1.1.3.1 下载 docker-compose.yaml
 
-用浏览器打开[这个链接](../main/xuanwu-device-server/docker-compose.yml)。
+用浏览器打开[这个链接](../main/xuanwu-device-gateway/docker-compose.yml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`docker-compose.yml`文件。 把文件下载到你的
-`xuanwu-device-server`中。
+`xuanwu-device-gateway`中。
 
 下载完后，回到本教程继续往下。
 
 ##### 1.1.3.2 创建 config.yaml
 
-用浏览器打开[这个链接](../main/xuanwu-device-server/config.yaml)。
+用浏览器打开[这个链接](../main/xuanwu-device-gateway/config.yaml)。
 
 在页面的右侧找到名称为`RAW`按钮，在`RAW`按钮的旁边，找到下载的图标，点击下载按钮，下载`config.yaml`文件。 把文件下载到你的
-`xuanwu-device-server`下面的`data`文件夹中，然后把`config.yaml`文件重命名为`.config.yaml`。
+`xuanwu-device-gateway`下面的`data`文件夹中，然后把`config.yaml`文件重命名为`.config.yaml`。
 
-下载完配置文件后，我们确认一下整个`xuanwu-device-server`里面的文件如下所示：
+下载完配置文件后，我们确认一下整个`xuanwu-device-gateway`里面的文件如下所示：
 
 ```
-xuanwu-device-server
+xuanwu-device-gateway
   ├─ docker-compose.yml
   ├─ data
     ├─ .config.yaml
@@ -77,7 +77,7 @@ xuanwu-device-server
 
 ## 3. 执行docker命令
 
-打开命令行工具，使用`终端`或`命令行`工具 进入到你的`xuanwu-device-server`，执行以下命令
+打开命令行工具，使用`终端`或`命令行`工具 进入到你的`xuanwu-device-gateway`，执行以下命令
 
 ```
 docker compose up -d
@@ -86,7 +86,7 @@ docker compose up -d
 执行完后，再执行以下命令，查看日志信息。
 
 ```
-docker logs -f xuanwu-device-server
+docker logs -f xuanwu-device-gateway
 ```
 
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -101,10 +101,10 @@ docker logs -f xuanwu-device-server
 5.2、执行以下命令
 
 ```
-docker stop xuanwu-device-server
-docker rm xuanwu-device-server
-docker stop xuanwu-device-server-web
-docker rm xuanwu-device-server-web
+docker stop xuanwu-device-gateway
+docker rm xuanwu-device-gateway
+docker stop xuanwu-device-gateway-web
+docker rm xuanwu-device-gateway-web
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:server_latest
 docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ```
@@ -128,9 +128,9 @@ docker rmi ghcr.nju.edu.cn/GrissonWu07/ai-assist-deviceserver:web_latest
 ![conda_env](./images/conda_env_2.png)
 
 ```
-conda remove -n xuanwu-device-server --all -y
-conda create -n xuanwu-device-server python=3.10 -y
-conda activate xuanwu-device-server
+conda remove -n xuanwu-device-gateway --all -y
+conda create -n xuanwu-device-gateway python=3.10 -y
+conda activate xuanwu-device-gateway
 
 # 添加清华源通道
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
@@ -154,14 +154,14 @@ conda install libiconv -y
 
 打开完，找到页面中一个绿色的按钮，写着`Code`的按钮，点开它，然后你就看到`Download ZIP`的按钮。
 
-点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xuanwu-device-server-main`
-你需要把它重命名成`xuanwu-device-server`，在这个文件里，进入到`main`文件夹，再进入到`xuanwu-device-server`，好了请记住这个目录`xuanwu-device-server`。
+点击它，下载本项目源码压缩包。下载到你电脑后，解压它，此时它的名字可能叫`xuanwu-device-gateway-main`
+你需要把它重命名成`xuanwu-device-gateway`，在这个文件里，进入到`main`文件夹，再进入到`xuanwu-device-gateway`，好了请记住这个目录`xuanwu-device-gateway`。
 
 ```
 # 继续使用conda环境
-conda activate xuanwu-device-server
-# 进入到你的项目根目录，再进入main/xuanwu-device-server
-cd main/xuanwu-device-server
+conda activate xuanwu-device-gateway
+# 进入到你的项目根目录，再进入main/xuanwu-device-gateway
+cd main/xuanwu-device-gateway
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 pip install -r requirements.txt
 ```
@@ -181,8 +181,8 @@ pip install -r requirements.txt
 ## 5.运行项目
 
 ```
-# 确保在xuanwu-device-server目录下执行
-conda activate xuanwu-device-server
+# 确保在xuanwu-device-gateway目录下执行
+conda activate xuanwu-device-gateway
 python app.py
 ```
 这时，你就要留意日志信息，可以根据这个教程，判断是否成功了。[跳转到运行状态确认](#运行状态确认)
@@ -192,12 +192,12 @@ python app.py
 
 ## 配置项目
 
-如果你的`xuanwu-device-server`目录没有`data`，你需要创建`data`目录。
+如果你的`xuanwu-device-gateway`目录没有`data`，你需要创建`data`目录。
 如果你的`data`下面没有`.config.yaml`文件，有两个方式，任选一种：
 
-第一个方式：你可以把`xuanwu-device-server`目录下的`config.yaml`文件复制到`data`，并重命名为`.config.yaml`。在此文件上修改
+第一个方式：你可以把`xuanwu-device-gateway`目录下的`config.yaml`文件复制到`data`，并重命名为`.config.yaml`。在此文件上修改
 
-第二个方式：你也可以创建在`data`目录下手动创建`.config.yaml`空文件，然后在这个文件中增加必要的配置信息，系统会优先读取`.config.yaml`文件的配置，如果`.config.yaml`没有配置的，系统会自动去加载`xuanwu-device-server`目录下的`config.yaml`的配置。推荐使用这种方式，这种方式是最简洁的方式。
+第二个方式：你也可以创建在`data`目录下手动创建`.config.yaml`空文件，然后在这个文件中增加必要的配置信息，系统会优先读取`.config.yaml`文件的配置，如果`.config.yaml`没有配置的，系统会自动去加载`xuanwu-device-gateway`目录下的`config.yaml`的配置。推荐使用这种方式，这种方式是最简洁的方式。
 
 - 默认的LLM使用的是`ChatGLMLLM`，你需要配置密钥，因为他们的模型，虽然有免费的，但是仍要去[官网](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)注册密钥，才能启动。
 

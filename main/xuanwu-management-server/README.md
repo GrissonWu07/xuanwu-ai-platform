@@ -57,10 +57,10 @@ python app.py
   - 网关目录和能力路由
   - OTA 管理
   - `XuanWu` 管理代理
-- `xuanwu-device-server`：
+- `xuanwu-device-gateway`：
   - 会话设备运行时接入
 
 ## 下一步
 
-- 进入 `xuanwu-gateway` 模块实现
+- 进入 `xuanwu-iot-gateway` 模块实现
 - 把南向协议和设备能力适配从管理面拆成独立模块

@@ -4,7 +4,7 @@
 
 This document defines the standalone `xuanwu-nearlink-bridge` service.
 
-The bridge exists to isolate NearLink or star-flash class hardware integration, vendor SDKs, dongles, and low-latency local wireless operations from the main `xuanwu-gateway` process.
+The bridge exists to isolate NearLink or star-flash class hardware integration, vendor SDKs, dongles, and low-latency local wireless operations from the main `xuanwu-iot-gateway` process.
 
 ## Goal
 
@@ -12,7 +12,7 @@ The bridge exists to isolate NearLink or star-flash class hardware integration, 
 
 - run as an independent service on common operating systems
 - manage local NearLink-capable hardware or vendor bridge SDKs
-- expose a stable HTTP API to `xuanwu-gateway`
+- expose a stable HTTP API to `xuanwu-iot-gateway`
 - normalize device discovery, addressing, command execution, state query, and event callbacks
 - support production packaging as:
   - Linux RPM service
@@ -28,12 +28,12 @@ The bridge exists to isolate NearLink or star-flash class hardware integration, 
 - device addressing and session lifecycle
 - command dispatch
 - state query
-- event and telemetry callback to `xuanwu-gateway`
+- event and telemetry callback to `xuanwu-iot-gateway`
 - OS service packaging and deployment guidance
 
 ### Out of scope
 
-- vendor-independent RF stack implementation inside `xuanwu-gateway`
+- vendor-independent RF stack implementation inside `xuanwu-iot-gateway`
 - platform source-of-truth device ownership
 - `XuanWu` domain logic
 
@@ -56,7 +56,7 @@ Does not own:
 - user/channel/device truth
 - agent decision logic
 
-### `xuanwu-gateway`
+### `xuanwu-iot-gateway`
 
 Owns:
 
@@ -75,11 +75,11 @@ This is the expected production model.
 
 ### Same-host sidecar
 
-Allowed for smaller deployments where `xuanwu-gateway` and the NearLink bridge share the same host.
+Allowed for smaller deployments where `xuanwu-iot-gateway` and the NearLink bridge share the same host.
 
 ### Embedded mode, deferred
 
-Embedding the NearLink bridge inside `xuanwu-gateway` is explicitly deferred.
+Embedding the NearLink bridge inside `xuanwu-iot-gateway` is explicitly deferred.
 
 ## Supported Operating Systems
 
@@ -153,7 +153,7 @@ sessions:
   idle_disconnect_seconds: 60
   max_active_devices: 100
 gateway:
-  callback_base_url: http://xuanwu-gateway:9510
+  callback_base_url: http://xuanwu-iot-gateway:9510
   callback_token: change-me
 platform:
   site_id: site-shanghai-01
@@ -232,16 +232,16 @@ Request example:
 
 - `POST /nearlink/v1/devices/{device_key}:query-state`
 
-## Callback Contract To xuanwu-gateway
+## Callback Contract To xuanwu-iot-gateway
 
-The bridge must support callback to `xuanwu-gateway` for:
+The bridge must support callback to `xuanwu-iot-gateway` for:
 
 - command result notifications
 - device online/offline state changes
 - telemetry
 - asynchronous events
 
-Suggested callback endpoints in `xuanwu-gateway`:
+Suggested callback endpoints in `xuanwu-iot-gateway`:
 
 - `POST /gateway/v1/ingest/http-push`
 - `POST /gateway/v1/bridge/events`
@@ -268,7 +268,7 @@ Asynchronous event example:
 
 `xuanwu-nearlink-bridge` does not own platform capability routing.
 
-`xuanwu-gateway` maps platform routes into bridge-native calls and sends normalized command/query payloads.
+`xuanwu-iot-gateway` maps platform routes into bridge-native calls and sends normalized command/query payloads.
 
 The bridge must execute the request and return a bridge-local normalized result.
 
@@ -377,7 +377,7 @@ Completion requires:
 - Linux RPM service packaging spec present
 - Windows service packaging spec present
 - discovery, connect, command, query, disconnect APIs defined
-- callback contract to `xuanwu-gateway` defined
+- callback contract to `xuanwu-iot-gateway` defined
 - normalized error model defined
 - realistic integration test plan defined
 

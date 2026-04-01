@@ -18,7 +18,7 @@ server {
   }
 
   location /gateway/ {
-    proxy_pass http://xuanwu-gateway:18084;
+    proxy_pass http://xuanwu-iot-gateway:18084;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -26,7 +26,7 @@ server {
   }
 
   location /runtime/ {
-    proxy_pass http://xuanwu-device-server:8003;
+    proxy_pass http://xuanwu-device-gateway:8003;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;

@@ -32,7 +32,7 @@
 
 最终平台由四个核心模块组成：
 
-### 3.1 `xuanwu-device-server`
+### 3.1 `xuanwu-device-gateway`
 
 负责设备运行时与会话接入：
 
@@ -75,7 +75,7 @@
 
 它不负责设备注册真源与设备目录真源。
 
-### 3.4 `xuanwu-gateway`
+### 3.4 `xuanwu-iot-gateway`
 
 负责南向协议和能力适配：
 
@@ -86,7 +86,7 @@
 - 工业协议桥接
 - 对接第三方平台和网关
 
-它是独立模块，不内嵌在 `xuanwu-management-server` 或 `xuanwu-device-server` 中。
+它是独立模块，不内嵌在 `xuanwu-management-server` 或 `xuanwu-device-gateway` 中。
 
 ## 4. 关键边界
 
@@ -125,7 +125,7 @@
 1. `xuanwu-management-server` 维护设备目录、能力、路由、映射
 2. `XuanWu` 读取聚合后的映射与能力信息
 3. `XuanWu` 发起标准能力调用
-4. `xuanwu-gateway` 转换为具体协议动作
+4. `xuanwu-iot-gateway` 转换为具体协议动作
 5. 执行结果、事件、遥测统一回流到 `xuanwu-management-server`
 
 ## 5. 设备分类模型
@@ -240,7 +240,7 @@
 
 ### 7.2 网关原则
 
-所有南向适配统一由 `xuanwu-gateway` 承担：
+所有南向适配统一由 `xuanwu-iot-gateway` 承担：
 
 - 每种协议可独立适配
 - 每种设备类型可独立建目录
@@ -251,10 +251,10 @@
 
 平台必须支持分布式部署：
 
-- `xuanwu-device-server` 可横向扩展
+- `xuanwu-device-gateway` 可横向扩展
 - `xuanwu-management-server` 可多实例部署
 - `XuanWu` 可多实例部署
-- `xuanwu-gateway` 可按协议、区域、站点独立扩展
+- `xuanwu-iot-gateway` 可按协议、区域、站点独立扩展
 
 统一要求：
 
@@ -278,8 +278,8 @@
 
 ### 9.3 网关与合同
 
-- [xuanwu-gateway 合同规范 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-contract-spec.md)
-- [xuanwu-gateway 模块蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-gateway-module-blueprint.md)
+- [xuanwu-iot-gateway 合同规范 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-contract-spec.md)
+- [xuanwu-iot-gateway 模块蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-module-blueprint.md)
 
 ### 9.4 平台治理与运行
 
@@ -287,7 +287,7 @@
 - [设备生命周期与注册开通 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-device-lifecycle-and-provisioning-spec.md)
 - [分布式部署与扩展 Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
 - [xuanwu-management-server API 蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
-- [xuanwu-device-server 边界蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-server-boundary-blueprint.md)
+- [xuanwu-device-gateway 边界蓝图](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-gateway-boundary-blueprint.md)
 
 ## 10. 推荐阅读顺序
 
@@ -299,9 +299,9 @@
 4. 统一设备能力模型 Spec
 5. XuanWu Agent 域 API 合同 Spec
 6. xuanwu-management-server API 蓝图
-7. xuanwu-device-server 边界蓝图
-8. xuanwu-gateway 合同规范 Spec
-9. xuanwu-gateway 模块蓝图
+7. xuanwu-device-gateway 边界蓝图
+8. xuanwu-iot-gateway 合同规范 Spec
+9. xuanwu-iot-gateway 模块蓝图
 10. 遥测与事件模型 Spec
 11. 设备生命周期与注册开通 Spec
 12. 分布式部署与扩展 Spec

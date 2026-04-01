@@ -23,7 +23,7 @@
 - 统一订阅
 - 统一告警和规则输入
 
-### 2.2 `xuanwu-gateway`
+### 2.2 `xuanwu-iot-gateway`
 
 负责：
 

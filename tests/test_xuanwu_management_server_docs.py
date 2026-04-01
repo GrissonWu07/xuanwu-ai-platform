@@ -10,19 +10,19 @@ def test_management_server_directory_exists():
 
 def test_docker_compose_is_python_primary_only():
     compose_text = (
-        ROOT / "main" / "xuanwu-device-server" / "docker-compose_all.yml"
+        ROOT / "main" / "xuanwu-device-gateway" / "docker-compose_all.yml"
     ).read_text(encoding="utf-8")
 
     assert "xuanwu-management-server" in compose_text
     assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in compose_text
-    assert "xuanwu-device-server-web" not in compose_text
-    assert "xuanwu-device-server-db" not in compose_text
-    assert "xuanwu-device-server-redis" not in compose_text
+    assert "xuanwu-device-gateway-web" not in compose_text
+    assert "xuanwu-device-gateway-db" not in compose_text
+    assert "xuanwu-device-gateway-redis" not in compose_text
     assert "legacy-java" not in compose_text
 
 
 def test_device_server_config_mentions_management_server_only():
-    config_text = (ROOT / "main" / "xuanwu-device-server" / "config.yaml").read_text(
+    config_text = (ROOT / "main" / "xuanwu-device-gateway" / "config.yaml").read_text(
         encoding="utf-8"
     )
 
@@ -32,7 +32,7 @@ def test_device_server_config_mentions_management_server_only():
 
 
 def test_manager_api_template_is_removed():
-    assert not (ROOT / "main" / "xuanwu-device-server" / "config_from_api.yaml").exists()
+    assert not (ROOT / "main" / "xuanwu-device-gateway" / "config_from_api.yaml").exists()
 
 
 def test_docker_setup_bootstraps_python_management_path_only():

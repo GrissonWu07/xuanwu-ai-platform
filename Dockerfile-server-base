@@ -1,4 +1,4 @@
-﻿# Dockerfile-server-base
+# Dockerfile-server-base
 # 基础镜像，包含系统依赖和Python包
 FROM python:3.10-slim
 
@@ -22,10 +22,10 @@ ENV LANG=zh_CN.UTF-8 \
     LANGUAGE=zh_CN:zh \
     PYTHONIOENCODING=utf-8
 
-WORKDIR /opt/xuanwu-device-server
+WORKDIR /opt/xuanwu-device-gateway
 
 # 复制requirements.txt
-COPY main/xuanwu-device-server/requirements.txt .
+COPY main/xuanwu-device-gateway/requirements.txt .
 
 # 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \

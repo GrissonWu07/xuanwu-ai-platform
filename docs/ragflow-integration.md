@@ -5,7 +5,7 @@
 - 一、如何部署ragflow
 - 二、如何在智控台配置ragflow接口
 
-如果您对ragflow很熟悉，且已经部署了ragflow，可直接跳过第一部分，直接进入第二部分。但是如果你希望有人指导你部署ragflow，让它能够和`xuanwu-device-server`共同使用`mysql`、`redis`基础服务，以减少资源成本，你需要从第一部分开始。
+如果您对ragflow很熟悉，且已经部署了ragflow，可直接跳过第一部分，直接进入第二部分。但是如果你希望有人指导你部署ragflow，让它能够和`xuanwu-device-gateway`共同使用`mysql`、`redis`基础服务，以减少资源成本，你需要从第一部分开始。
 
 # 第一部分 如何部署ragflow
 ## 第一步， 确认mysql、redis是否可用
@@ -28,13 +28,13 @@ telnet 127.0.0.1 6379
 
 修改前
 ``` yaml
-  xuanwu-device-server-db:
+  xuanwu-device-gateway-db:
     ...
     networks:
       - default
     expose:
       - "3306:3306"
-  xuanwu-device-server-redis:
+  xuanwu-device-gateway-redis:
     ...
     expose:
       - 6379
@@ -42,23 +42,23 @@ telnet 127.0.0.1 6379
 
 修改后
 ``` yaml
-  xuanwu-device-server-db:
+  xuanwu-device-gateway-db:
     ...
     networks:
       - default
     ports:
       - "3306:3306"
-  xuanwu-device-server-redis:
+  xuanwu-device-gateway-redis:
     ...
     ports:
       - "6379:6379"
 ```
 
-注意是将`xuanwu-device-server-db`和`xuanwu-device-server-redis`下面的`expose`改成`ports`。改完后，需要重新启动。以下是重启mysql的命令：
+注意是将`xuanwu-device-gateway-db`和`xuanwu-device-gateway-redis`下面的`expose`改成`ports`。改完后，需要重新启动。以下是重启mysql的命令：
 
 ``` shell
-# 进入你docker-compose_all.yml所在的文件夹，例如我的是xuanwu-device-server
-cd xuanwu-device-server
+# 进入你docker-compose_all.yml所在的文件夹，例如我的是xuanwu-device-gateway
+cd xuanwu-device-gateway
 docker compose -f docker-compose_all.yml down
 docker compose -f docker-compose.yml up -d
 ```

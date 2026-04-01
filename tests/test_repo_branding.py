@@ -50,7 +50,7 @@ def _iter_repo_text_files(root: Path):
 
 
 def test_runtime_branding_uses_xuanwu_ai():
-    root = Path(__file__).resolve().parents[1] / "main" / "xuanwu-device-server"
+    root = Path(__file__).resolve().parents[1] / "main" / "xuanwu-device-gateway"
     config_text = (root / "config.yaml").read_text(encoding="utf-8")
     util_text = (root / "core" / "utils" / "util.py").read_text(encoding="utf-8")
 

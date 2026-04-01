@@ -2,7 +2,7 @@
 
 set -eu
 
-PROJECT_ROOT="/opt/xuanwu-device-server"
+PROJECT_ROOT="/opt/xuanwu-device-gateway"
 DATA_DIR="$PROJECT_ROOT/data"
 MODEL_DIR="$PROJECT_ROOT/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
@@ -47,7 +47,7 @@ mkdir -p "$DATA_DIR" "$MODEL_DIR"
 
 download_if_missing \
     "$COMPOSE_PATH" \
-    "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-server/docker-compose_all.yml"
+    "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/ai-assist-deviceserver/refs/heads/main/main/xuanwu-device-gateway/docker-compose_all.yml"
 
 if [ ! -f "$CONFIG_PATH" ]; then
     : > "$CONFIG_PATH"
@@ -67,7 +67,7 @@ XuanWu AI Python stack is up:
 
 - unified portal xuanwu-portal: http://$LOCAL_IP:18081
 - management host xuanwu-management-server: http://$LOCAL_IP:18082
-- gateway host xuanwu-gateway: http://$LOCAL_IP:18084/gateway/v1/health
+- gateway host xuanwu-iot-gateway: http://$LOCAL_IP:18084/gateway/v1/health
 - jobs scheduler-dispatcher xuanwu-jobs: http://$LOCAL_IP:18083/jobs/v1/health
 - OTA endpoint: http://$LOCAL_IP:8003/xuanwu/ota/
 - vision endpoint: http://$LOCAL_IP:8003/mcp/vision/explain

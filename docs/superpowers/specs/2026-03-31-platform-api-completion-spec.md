@@ -9,8 +9,8 @@ This spec defines the backend API work still required inside this repository to 
 It covers only local services:
 
 - `xuanwu-management-server`
-- `xuanwu-gateway`
-- `xuanwu-device-server`
+- `xuanwu-iot-gateway`
+- `xuanwu-device-gateway`
 - `xuanwu-jobs`
 
 All `XuanWu` requirements are intentionally split into a dedicated upstream spec.
@@ -51,7 +51,7 @@ Owns:
 - runtime resolve views
 - `XuanWu` management proxy
 
-### `xuanwu-gateway`
+### `xuanwu-iot-gateway`
 
 Owns:
 
@@ -60,7 +60,7 @@ Owns:
 - device command execution
 - gateway-side device state lookup
 
-### `xuanwu-device-server`
+### `xuanwu-device-gateway`
 
 Owns:
 

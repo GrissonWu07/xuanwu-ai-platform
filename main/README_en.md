@@ -1,4 +1,4 @@
-# Technical Documentation: `xuanwu-device-server`
+# Technical Documentation: `xuanwu-device-gateway`
 
 > Migration note (2026-03-28)
 >
@@ -7,13 +7,15 @@
 > The current `XuanWu` AI endpoint is fixed to `http://xuanwu-ai:8000`, and management-domain requests are proxied through `xuanwu-management-server`.
 >
 > The local job stack now uses a lightweight `xuanwu-jobs` scheduler-dispatcher that calls local execution APIs directly.
+>
+> Runtime ingress is now split between xuanwu-device-gateway for conversational devices and xuanwu-iot-gateway for IoT / industrial device protocols.
 
 **Table of Contents:**
 
 1.  [Introduction](#1-introduction)
 2.  [Overall Architecture](#2-overall-architecture)
 3.  [Component Deep Dive](#3-component-deep-dive)
-    *   [3.1. `xuanwu-device-server` (Core AI Engine - Python Implementation)](#31-xuanwu-device-server-core-ai-engine---python-implementation)
+    *   [3.1. `xuanwu-device-gateway` (Core AI Engine - Python Implementation)](#31-xuanwu-device-gateway-core-ai-engine---python-implementation)
     *   [3.2. `xuanwu-management-server` (Default Primary Management Host - Python Implementation)](#32-xuanwu-management-server-default-primary-management-host---python-implementation)
     *   [3.3. `manager-api` / `manager-web` (Java compatibility reference implementation)](#33-manager-api--manager-web-java-compatibility-reference-implementation)
 4.  [Data Flow and Interaction Mechanisms](#4-data-flow-and-interaction-mechanisms)
@@ -24,22 +26,22 @@
 
 ## 1. Introduction
 
-The `xuanwu-device-server` project is a **comprehensive backend system** designed to support intelligent hardware based on ESP32. Its core goal is to enable developers to quickly build a robust server infrastructure that can understand natural language commands, interact efficiently with various AI services (for speech recognition, natural language understanding, and speech synthesis), manage IoT devices, and provide a web-based user interface for system configuration and management. By integrating multiple cutting-edge technologies into a cohesive and extensible platform, this project aims to simplify and accelerate the development process of customizable voice assistants and intelligent control systems. It is not just a simple server, but a bridge connecting hardware, AI capabilities, and user management.
+The `xuanwu-device-gateway` project is a **comprehensive backend system** designed to support intelligent hardware based on ESP32. Its core goal is to enable developers to quickly build a robust server infrastructure that can understand natural language commands, interact efficiently with various AI services (for speech recognition, natural language understanding, and speech synthesis), manage IoT devices, and provide a web-based user interface for system configuration and management. By integrating multiple cutting-edge technologies into a cohesive and extensible platform, this project aims to simplify and accelerate the development process of customizable voice assistants and intelligent control systems. It is not just a simple server, but a bridge connecting hardware, AI capabilities, and user management.
 
 ---
 
 ## 2. Overall Architecture
 
-The `xuanwu-device-server` system adopts a **distributed, multi-component collaborative** architectural design, ensuring modularity, maintainability, and scalability. Each core component has its specific role and works in coordination. The main components include:
+The `xuanwu-device-gateway` system adopts a **distributed, multi-component collaborative** architectural design, ensuring modularity, maintainability, and scalability. Each core component has its specific role and works in coordination. The main components include:
 
 1.  **ESP32 Hardware (Client Device):**
     This is the physical smart hardware device that end-users directly interact with. Its main responsibilities include:
     *   Capturing user voice commands.
-    *   Securely sending captured raw audio data to `xuanwu-device-server` for processing.
-    *   Receiving synthesized voice responses from `xuanwu-device-server` and playing them through speakers.
-    *   Controlling other connected peripherals or IoT devices (such as smart bulbs, sensors, etc.) based on instructions received from `xuanwu-device-server`.
+    *   Securely sending captured raw audio data to `xuanwu-device-gateway` for processing.
+    *   Receiving synthesized voice responses from `xuanwu-device-gateway` and playing them through speakers.
+    *   Controlling other connected peripherals or IoT devices (such as smart bulbs, sensors, etc.) based on instructions received from `xuanwu-device-gateway`.
 
-2.  **`xuanwu-device-server` (Core AI Engine - Python Implementation):**
+2.  **`xuanwu-device-gateway` (Core AI Engine - Python Implementation):**
     This Python-based server is the "brain" of the entire system, responsible for handling all voice-related logic and AI interactions. Its key responsibilities are detailed as follows:
     *   Establishing **stable, low-latency real-time bidirectional communication links** with ESP32 devices through the WebSocket protocol.
     *   Receiving audio streams from ESP32 and using Voice Activity Detection (VAD) technology to precisely segment valid speech segments.
@@ -51,26 +53,26 @@ The `xuanwu-device-server` system adopts a **distributed, multi-component collab
     *   Obtaining its detailed runtime operation configuration from the `manager-api` service.
 
 3.  **`xuanwu-management-server` (Default Primary Management Host - Python Implementation):**
-    This is the recommended Python management host for the current architecture. It owns the control-plane and management-domain entrypoints and serves as the preferred runtime configuration source for `xuanwu-device-server`. Its core responsibilities include:
+    This is the recommended Python management host for the current architecture. It owns the control-plane and management-domain entrypoints and serves as the preferred runtime configuration source for `xuanwu-device-gateway`. Its core responsibilities include:
     *   Exposing the new `/control-plane/v1/*` management and control-plane APIs.
-    *   Acting as the default runtime configuration source for `xuanwu-device-server`.
+    *   Acting as the default runtime configuration source for `xuanwu-device-gateway`.
     *   Proxying agent-configuration requests to `XuanWu` through `/control-plane/v1/xuanwu/*`.
     *   Gradually absorbing the management responsibilities previously held by `manager-api` / `manager-web`.
 
 4.  **`manager-api` / `manager-web` (Java compatibility reference implementation):**
-    These modules remain in the repository for migration compatibility, deployment reference, and feature inventory only. They are no longer the recommended default path. `xuanwu-device-server` falls back to this Java management chain only when legacy compatibility mode is explicitly enabled.
+    These modules remain in the repository for migration compatibility, deployment reference, and feature inventory only. They are no longer the recommended default path. `xuanwu-device-gateway` falls back to this Java management chain only when legacy compatibility mode is explicitly enabled.
 
 **High-Level Interaction Flow Overview:**
 
-*   **Voice Interaction Main Line:** After the **ESP32 device** captures user voice, it transmits audio data in real-time to **`xuanwu-device-server`** through **WebSocket**. After `xuanwu-device-server` completes a series of AI processing (VAD, ASR, LLM interaction, TTS), it sends the synthesized voice response back to the ESP32 device for playback through WebSocket. All real-time interactions directly related to voice are completed in this link.
+*   **Voice Interaction Main Line:** After the **ESP32 device** captures user voice, it transmits audio data in real-time to **`xuanwu-device-gateway`** through **WebSocket**. After `xuanwu-device-gateway` completes a series of AI processing (VAD, ASR, LLM interaction, TTS), it sends the synthesized voice response back to the ESP32 device for playback through WebSocket. All real-time interactions directly related to voice are completed in this link.
 *   **Management Configuration Main Line:** Administrators enter the new Python management path through **`xuanwu-management-server`**; agent-configuration requests then continue through `xuanwu-management-server -> XuanWu` for proxying and persistence.
-*   **Configuration Synchronization:** **`xuanwu-device-server`** actively pulls its preferred runtime configuration from **`xuanwu-management-server`**. It only falls back to `manager-api` when legacy compatibility mode is explicitly enabled.
+*   **Configuration Synchronization:** **`xuanwu-device-gateway`** actively pulls its preferred runtime configuration from **`xuanwu-management-server`**. It only falls back to `manager-api` when legacy compatibility mode is explicitly enabled.
 
-This layered architecture lets `xuanwu-device-server` focus on real-time runtime processing, `xuanwu-management-server` focus on management and control-plane responsibilities, and `XuanWu` own the agent/configuration domain. The legacy Java management modules are retained only as compatibility references.
+This layered architecture lets `xuanwu-device-gateway` focus on real-time runtime processing, `xuanwu-management-server` focus on management and control-plane responsibilities, and `XuanWu` own the agent/configuration domain. The legacy Java management modules are retained only as compatibility references.
 
 ```
-xuanwu-device-server
-  ├─ xuanwu-device-server Port 8000 Python development Responsible for ESP32 communication
+xuanwu-device-gateway
+  ├─ xuanwu-device-gateway Port 8000 Python development Responsible for ESP32 communication
   ├─ xuanwu-management-server Port 18082 Python development Responsible for the default primary management host
   ├─ manager-web Port 8001 Node.js+Vue development Java compatibility reference implementation
   ├─ manager-api Port 8002 Java development Java compatibility reference implementation
@@ -81,9 +83,9 @@ xuanwu-device-server
 
 ## 3. Component Deep Dive
 
-### 3.1. `xuanwu-device-server` (Core AI Engine - Python Implementation)
+### 3.1. `xuanwu-device-gateway` (Core AI Engine - Python Implementation)
 
-The `xuanwu-device-server` is the intelligent core of the system, responsible for processing voice interactions, interfacing with AI services, and managing communication with ESP32 devices.
+The `xuanwu-device-gateway` is the intelligent core of the system, responsible for processing voice interactions, interfacing with AI services, and managing communication with ESP32 devices.
 
 *   **Purpose:**
     *   To provide real-time processing of voice commands from ESP32 devices.
@@ -132,7 +134,7 @@ The `manager-api` component is a backend server built using Java and the Spring 
 
 *   **Purpose:**
     *   Provide a secure RESTful API for the `manager-web` frontend.
-    *   Act as a centralized configuration provider for `xuanwu-device-server`.
+    *   Act as a centralized configuration provider for `xuanwu-device-gateway`.
     *   Manage persistent data (users, devices, AI configurations, voice timbres, OTA firmware).
 
 *   **Core Technologies:**
@@ -150,7 +152,7 @@ The `manager-api` component is a backend server built using Java and the Spring 
 *   **Key Implementation Aspects:**
 
     1.  **Modular Architecture (`modules/` package):**
-        *   Business logic is organized into distinct modules (e.g., `sys` for users/roles, `agent` for assistant configs, `device` for ESP32s, `config` for `xuanwu-device-server` settings, `security`, `timbre`, `ota`).
+        *   Business logic is organized into distinct modules (e.g., `sys` for users/roles, `agent` for assistant configs, `device` for ESP32s, `config` for `xuanwu-device-gateway` settings, `security`, `timbre`, `ota`).
         *   Each module typically follows a layered pattern: Controller, Service, DAO (Mapper), Entity, DTO.
 
     2.  **Layered Architecture:**
@@ -173,7 +175,7 @@ The `manager-web` is a Single Page Application (SPA) providing the administrativ
 
 *   **Purpose:**
     *   Offer a web-based control panel for system configuration and management.
-    *   Enable administrators to configure `xuanwu-device-server`'s AI services, manage users and devices, customize voice timbres, and handle OTA updates.
+    *   Enable administrators to configure `xuanwu-device-gateway`'s AI services, manage users and devices, customize voice timbres, and handle OTA updates.
 
 *   **Core Technologies:**
     *   **Vue.js 2 & Vue CLI:** Core JavaScript framework and build tools.
@@ -196,19 +198,19 @@ The `manager-web` is a Single Page Application (SPA) providing the administrativ
     7.  **Environment Configuration (`.env` files):**
         *   The `.env` (and `.env.development`, `.env.production`, etc.) files in the project root directory are used to define environment variables. These variables (such as `VUE_APP_API_BASE_URL` to specify the base URL of `manager-api`) can be accessed in the application code through `process.env.VUE_APP_XXX`, allowing configuration of different parameters for different build environments (development, testing, production).
 
-`manager-web` constructs a powerful, maintainable, and user-friendly management interface through the comprehensive application of these technologies, providing solid frontend support for the configuration and monitoring of the `xuanwu-device-server` system.
+`manager-web` constructs a powerful, maintainable, and user-friendly management interface through the comprehensive application of these technologies, providing solid frontend support for the configuration and monitoring of the `xuanwu-device-gateway` system.
 
 ## 4. Data Flow and Interaction Mechanisms
 
-The `xuanwu-device-server` system coordinates work through well-defined data flows and interaction protocols between components. The main communication methods rely on WebSocket protocol optimized for real-time interaction and RESTful API suitable for client-server requests.
+The `xuanwu-device-gateway` system coordinates work through well-defined data flows and interaction protocols between components. The main communication methods rely on WebSocket protocol optimized for real-time interaction and RESTful API suitable for client-server requests.
 
-**4.1. Core Voice Interaction Flow (ESP32 Device <-> `xuanwu-device-server`)**
+**4.1. Core Voice Interaction Flow (ESP32 Device <-> `xuanwu-device-gateway`)**
 
 This flow is real-time, primarily using WebSocket for low-latency, bidirectional data exchange.
 
 *   **Communication Protocol Documentation:**
     *   Detailed communication protocol documentation can be accessed at: https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh
-    *   This document details the WebSocket communication protocol between ESP32 devices and `xuanwu-device-server`, including:
+    *   This document details the WebSocket communication protocol between ESP32 devices and `xuanwu-device-gateway`, including:
         *   Connection establishment and handshake process
         *   Audio data transmission format
         *   Control command format
@@ -216,16 +218,16 @@ This flow is real-time, primarily using WebSocket for low-latency, bidirectional
         *   Error handling mechanism
 
 *   **Connection Establishment and Handshake:**
-    *   The ESP32 device, as a client, actively initiates a WebSocket connection request to the specified endpoint of `xuanwu-device-server` (e.g., `ws://<server-IP>:<WebSocket-port>/xuanwu/v1/`).
-    *   `xuanwu-device-server` (`core/websocket_server.py`) receives the connection and instantiates an independent `ConnectionHandler` object for each successfully connected ESP32 device to manage the entire lifecycle of that session.
+    *   The ESP32 device, as a client, actively initiates a WebSocket connection request to the specified endpoint of `xuanwu-device-gateway` (e.g., `ws://<server-IP>:<WebSocket-port>/xuanwu/v1/`).
+    *   `xuanwu-device-gateway` (`core/websocket_server.py`) receives the connection and instantiates an independent `ConnectionHandler` object for each successfully connected ESP32 device to manage the entire lifecycle of that session.
     *   After the connection is established, an initial handshake process may be executed (handled by `core/handle/helloHandle.py`) to exchange device identification, authentication information, protocol version, or basic status.
 
-*   **Audio Uplink Transmission (ESP32 -> `xuanwu-device-server`):**
+*   **Audio Uplink Transmission (ESP32 -> `xuanwu-device-gateway`):**
     *   After a user speaks to the ESP32 device, the device's microphone captures raw audio data (usually in PCM or compressed formats like Opus).
-    *   The ESP32 pushes these audio data chunks as WebSocket **binary messages** in real-time to the corresponding `ConnectionHandler` in `xuanwu-device-server`.
+    *   The ESP32 pushes these audio data chunks as WebSocket **binary messages** in real-time to the corresponding `ConnectionHandler` in `xuanwu-device-gateway`.
     *   The server-side `core/handle/receiveAudioHandle.py` module is responsible for receiving, buffering, and processing these audio data.
 
-*   **AI Core Processing (within `xuanwu-device-server`):**
+*   **AI Core Processing (within `xuanwu-device-gateway`):**
     *   **VAD (Voice Activity Detection):** `receiveAudioHandle.py` uses the configured VAD provider (such as SileroVAD) to analyze the audio stream, accurately identifying the start and end points of speech, filtering out silent or noise segments.
     *   **ASR (Automatic Speech Recognition):** Detected valid speech segments are sent to the configured ASR provider (local such as FunASR, or cloud services). The ASR engine converts audio signals into text strings.
     *   **NLU/LLM (Natural Language Understanding/Large Language Model):** The ASR output text, along with the current dialogue context history obtained from the Memory provider, and the description schemas of available functions (tools) loaded from `plugins_func/`, are passed to the configured LLM provider.
@@ -234,17 +236,17 @@ This flow is real-time, primarily using WebSocket for low-latency, bidirectional
     *   **Memory Update:** The current round of interaction (user question, LLM response, possible function calls) is processed by the Memory provider to update the dialogue history for subsequent interactions.
     *   **TTS (Text-to-Speech):** The final text response generated by the LLM is sent to the configured TTS provider, which synthesizes the text into a speech data stream (e.g., MP3 or WAV format).
 
-*   **Audio Downlink Response (`xuanwu-device-server` -> ESP32):**
+*   **Audio Downlink Response (`xuanwu-device-gateway` -> ESP32):**
     *   The speech data stream synthesized by the TTS provider is sent in real-time as WebSocket **binary messages** back to the ESP32 device through the `core/handle/sendAudioHandle.py` module.
     *   The ESP32 device receives these audio data chunks and immediately plays them to the user through the speaker.
 
 *   **Control and Status Messages (Bidirectional):**
-    *   In addition to audio streams, ESP32 and `xuanwu-device-server` also exchange **text messages** through WebSocket, these messages are usually encapsulated in JSON format.
+    *   In addition to audio streams, ESP32 and `xuanwu-device-gateway` also exchange **text messages** through WebSocket, these messages are usually encapsulated in JSON format.
     *   **ESP32 -> Server:** The device may send status reports (such as network conditions, microphone status), error codes, or specific control commands (e.g., "stop TTS playback" triggered by user button press).
     *   **Server -> ESP32:** The server may send control instructions to the device (such as "start listening", "stop listening", adjust sensitivity, send specific configuration parameters).
     *   Modules like `core/handle/abortHandle.py` (handling interrupt requests), `core/handle/reportHandle.py` (handling device reports) are responsible for parsing and responding to these control/status messages.
 
-**4.2. Management and Configuration Flow (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-server`)**
+**4.2. Management and Configuration Flow (`xuanwu-management-server` <-> `XuanWu` <-> `xuanwu-device-gateway`)**
 
 This flow primarily relies on HTTP/HTTPS-based RESTful API for request-response interactions.
 
@@ -252,20 +254,20 @@ This flow primarily relies on HTTP/HTTPS-based RESTful API for request-response 
     *   The recommended management entrypoint is now `xuanwu-management-server`. Requests first enter the Python management host, which owns control-plane responsibilities, management-domain logic, and upstream proxying.
     *   Requests related to agent configuration continue through `xuanwu-management-server -> XuanWu` for proxying, validation, and persistence.
 
-*   **Runtime Configuration Synchronization (`xuanwu-management-server` -> `xuanwu-device-server`):**
-    *   `xuanwu-device-server` now prefers dynamic runtime configuration from `xuanwu-management-server`.
+*   **Runtime Configuration Synchronization (`xuanwu-management-server` -> `xuanwu-device-gateway`):**
+    *   `xuanwu-device-gateway` now prefers dynamic runtime configuration from `xuanwu-management-server`.
     *   This path is implemented by modules such as `config/config_loader.py` and `config/xuanwu_management_client.py`.
     *   `manager-api` is used only when legacy compatibility mode is explicitly enabled.
 
 *   **OTA and control-plane data:**
     *   In the default primary path, OTA metadata and control-plane configuration should be owned by the Python management host.
-    *   Devices still receive OTA download URLs or control instructions through the runtime path of `xuanwu-device-server`.
+    *   Devices still receive OTA download URLs or control instructions through the runtime path of `xuanwu-device-gateway`.
     *   If the old Java management chain is still used, it is now documented as compatibility behavior rather than the default path.
 
 **4.3. Main Protocol Summary:**
 
-*   **WebSocket:** Selected for the communication link between ESP32 and `xuanwu-device-server` because it is very suitable for real-time, low-latency, bidirectional data stream transmission (especially audio), as well as asynchronous control message delivery.
-*   **RESTful APIs (based on HTTP/HTTPS, usually using JSON as the data exchange format):** This is the standard service-to-service communication model. It is now used primarily between `xuanwu-management-server` and `XuanWu`, and between `xuanwu-device-server` and `xuanwu-management-server`. `manager-api` remains only as a compatibility-path dependency.
+*   **WebSocket:** Selected for the communication link between ESP32 and `xuanwu-device-gateway` because it is very suitable for real-time, low-latency, bidirectional data stream transmission (especially audio), as well as asynchronous control message delivery.
+*   **RESTful APIs (based on HTTP/HTTPS, usually using JSON as the data exchange format):** This is the standard service-to-service communication model. It is now used primarily between `xuanwu-management-server` and `XuanWu`, and between `xuanwu-device-gateway` and `xuanwu-management-server`. `manager-api` remains only as a compatibility-path dependency.
 
 This multi-protocol communication strategy ensures that different types of interaction requirements within the system can be handled efficiently and appropriately, balancing real-time performance and standardized request-response patterns.
 
@@ -273,7 +275,7 @@ This multi-protocol communication strategy ensures that different types of inter
 
 ## 5. Key Features Summary
 
-The `xuanwu-device-server` system provides a series of rich features aimed at supporting developers in building advanced voice control applications:
+The `xuanwu-device-gateway` system provides a series of rich features aimed at supporting developers in building advanced voice control applications:
 
 1.  **Comprehensive Voice Interaction Backend:** Provides an end-to-end solution from voice capture guidance to response generation and action execution.
 2.  **Modular and Pluggable AI Services:**
@@ -302,7 +304,7 @@ The `xuanwu-device-server` system provides a series of rich features aimed at su
 8.  **Flexible Deployment Options:**
     *   Supports deployment through Docker containers (for simplified server-only or full-stack setup) and directly from source code, adapting to various environments and user expertise.
 9.  **Dynamic Remote Configuration:**
-    *   `xuanwu-device-server` can obtain its configuration from `manager-api`, allowing real-time updates of AI providers and settings without restarting the server.
+    *   `xuanwu-device-gateway` can obtain its configuration from `manager-api`, allowing real-time updates of AI providers and settings without restarting the server.
 10. **Open Source and Community-Driven:**
     *   Licensed under MIT License, encouraging transparency, collaboration, and community contribution.
 11. **Cost-Effective Solution:**
@@ -312,26 +314,26 @@ The `xuanwu-device-server` system provides a series of rich features aimed at su
 13. **Detailed API Documentation:**
     *   `manager-api` provides OpenAPI (Swagger) documentation through Knife4j for clear understanding and testing of its RESTful endpoints.
 
-These features together make `xuanwu-device-server` a powerful, adaptable, and user-friendly platform for building complex voice interaction applications.
+These features together make `xuanwu-device-gateway` a powerful, adaptable, and user-friendly platform for building complex voice interaction applications.
 
 ---
 
 ## 6. Deployment and Configuration Overview
 
-The `xuanwu-device-server` system is designed with flexibility in mind, providing multiple deployment methods and comprehensive configuration options to adapt to different usage scenarios and requirements.
+The `xuanwu-device-gateway` system is designed with flexibility in mind, providing multiple deployment methods and comprehensive configuration options to adapt to different usage scenarios and requirements.
 
 **Deployment Options:**
 
 The project can be deployed in multiple ways, mainly including using Docker to simplify the installation process, or deploying directly from source code for greater control and development.
 
 1.  **Docker-based Deployment:**
-    *   **Simplified Installation (Only `xuanwu-device-server`):** This option deploys only the runtime service and is suitable when voice AI processing and device runtime flow are the primary goals.
-    *   **Full Module Installation (Default Primary Path):** The recommended current path deploys `xuanwu-device-server + xuanwu-management-server`, with `XuanWu` connected as the external agent service.
+    *   **Simplified Installation (Only `xuanwu-device-gateway`):** This option deploys only the runtime service and is suitable when voice AI processing and device runtime flow are the primary goals.
+    *   **Full Module Installation (Default Primary Path):** The recommended current path deploys `xuanwu-device-gateway + xuanwu-management-server`, with `XuanWu` connected as the external agent service.
     *   **Legacy Java compatibility mode:** If the old management chain is still required, `manager-api` / `manager-web` / MySQL / Redis are brought up explicitly through the `legacy-java profile`.
     *   The project uses `docker-compose_all.yml` to orchestrate these services. The default `docker compose -f docker-compose_all.yml up -d` follows the Python-primary path, while `docker compose --profile legacy-java -f docker-compose_all.yml up -d` enables the legacy Java management stack.
 
 2.  **Source Code Deployment:**
-    *   The current default primary path is `xuanwu-device-server + xuanwu-management-server + XuanWu`.
+    *   The current default primary path is `xuanwu-device-gateway + xuanwu-management-server + XuanWu`.
     *   `manager-api` / `manager-web` and their database dependencies are only required when maintaining the legacy compatibility path.
     *   This approach is typically used for project development, deep customization, debugging, or in production scenarios with special environmental requirements.
 
@@ -339,11 +341,11 @@ The project can be deployed in multiple ways, mainly including using Docker to s
 
 Configuration is key to customizing system behavior, especially in selecting AI service providers and managing API keys.
 
-1.  **`xuanwu-device-server` Configuration:**
-    *   **Local `config.yaml`:** A main YAML format configuration file located in the `xuanwu-device-server` root directory. It defines server ports, selected AI service providers (ASR, LLM, TTS, VAD, Intent Recognition, Memory modules, etc.), their respective API keys or model paths, plugin configurations, and log levels.
-    *   **Dynamic Remote Configuration:** `xuanwu-device-server` now prefers runtime configuration from `xuanwu-management-server`, while agent-domain requests are proxied onward to `XuanWu`. This provides:
+1.  **`xuanwu-device-gateway` Configuration:**
+    *   **Local `config.yaml`:** A main YAML format configuration file located in the `xuanwu-device-gateway` root directory. It defines server ports, selected AI service providers (ASR, LLM, TTS, VAD, Intent Recognition, Memory modules, etc.), their respective API keys or model paths, plugin configurations, and log levels.
+    *   **Dynamic Remote Configuration:** `xuanwu-device-gateway` now prefers runtime configuration from `xuanwu-management-server`, while agent-domain requests are proxied onward to `XuanWu`. This provides:
         *   **Centralized Management:** Configuration can be centralized in the Python management host before being distributed to runtime and agent domains.
-        *   **Dynamic Updates:** `xuanwu-device-server` can refresh configuration and reinitialize AI modules without a full restart.
+        *   **Dynamic Updates:** `xuanwu-device-gateway` can refresh configuration and reinitialize AI modules without a full restart.
     *   `config/config_loader.py`, `config/xuanwu_management_client.py`, and legacy `config/manage_api_client.py` handle configuration loading together, with `manager-api` active only in explicit compatibility mode.
 
 2.  **`xuanwu-management-server` Configuration:**
@@ -357,7 +359,7 @@ Configuration is key to customizing system behavior, especially in selecting AI 
     *   The project documentation (usually README) will recommend some common configuration combinations, for example:
         *   **"Entry Level Free Settings":** This scheme aims to utilize free tier quotas of cloud AI services or completely free local models to minimize users' initial usage costs and operating expenses.
         *   **"Full Streaming Configuration":** This scheme prioritizes system response speed and interaction fluency, typically choosing AI services that support streaming processing (possibly paid).
-    *   These predefined schemes provide guidance for configuring upstream capabilities for `xuanwu-device-server` and `XuanWu`.
+    *   These predefined schemes provide guidance for configuring upstream capabilities for `xuanwu-device-gateway` and `XuanWu`.
 
 In the current full deployment model, `xuanwu-management-server` is the recommended primary operations entrypoint. `manager-web` remains only as a legacy compatibility reference interface.
 

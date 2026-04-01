@@ -11,12 +11,12 @@ It is the implementation-oriented completion ledger for the current platform blu
 ### Completed locally
 
 - `xuanwu-management-server` foundation and governance surfaces
-- `xuanwu-device-server` local boundary cleanup
-- `xuanwu-gateway` foundation plus protocol adapter implementation
+- `xuanwu-device-gateway` local boundary cleanup
+- `xuanwu-iot-gateway` foundation plus protocol adapter implementation
 - `xuanwu-jobs` lightweight scheduler-dispatcher
 - `xuanwu-jobs` richer schedule semantics for cron, retry, queued dispatch, and operator actions
 - `xuanwu-portal` unified frontend shell and current workspaces
-- device ingress integration across `xuanwu-management-server`, `xuanwu-gateway`, and `xuanwu-device-server`
+- device ingress integration across `xuanwu-management-server`, `xuanwu-iot-gateway`, and `xuanwu-device-gateway`
 - standalone wireless bridge services:
   - `xuanwu-bluetooth-bridge`
   - `xuanwu-nearlink-bridge`
@@ -25,8 +25,8 @@ It is the implementation-oriented completion ledger for the current platform blu
 ### Not locally completable without upstream
 
 - Stable `XuanWu` management API integration
-- Stable `XuanWu -> xuanwu-gateway` device command contract validation
-- Final removal of residual local IoT/Home Assistant compatibility paths in `xuanwu-device-server`
+- Stable `XuanWu -> xuanwu-iot-gateway` device command contract validation
+- Final removal of residual local IoT/Home Assistant compatibility paths in `xuanwu-device-gateway`
 
 ## Completion Matrix
 
@@ -71,7 +71,7 @@ Completed:
 - device heartbeat and recency updates
 - richer device-detail aggregation with discovery provenance and latest command result
 
-### `xuanwu-device-server`
+### `xuanwu-device-gateway`
 
 Completed:
 
@@ -96,7 +96,7 @@ Completed:
 - manual retry enqueue and claim flow
 - Docker service delivery path
 
-### `xuanwu-gateway`
+### `xuanwu-iot-gateway`
 
 Completed:
 
@@ -161,13 +161,13 @@ The following remain blocked on `XuanWu`:
 
 - stable upstream agent/provider/model APIs
 - stable upstream worker execution APIs
-- final northbound device invocation contract from `XuanWu` into `xuanwu-gateway`
+- final northbound device invocation contract from `XuanWu` into `xuanwu-iot-gateway`
 - integrated validation of agent-driven device actions
 
 ## Local Follow-up After Upstream Is Ready
 
-- remove the remaining local IoT/Home Assistant compatibility paths from `xuanwu-device-server`
-- switch final device action execution fully onto `XuanWu -> xuanwu-gateway`
+- remove the remaining local IoT/Home Assistant compatibility paths from `xuanwu-device-gateway`
+- switch final device action execution fully onto `XuanWu -> xuanwu-iot-gateway`
 - validate end-to-end agent-driven scheduled execution
 
 ## Current Priority
@@ -175,5 +175,5 @@ The following remain blocked on `XuanWu`:
 The remaining highest-priority implementation area is upstream:
 
 1. `XuanWu` management and execution contract integration
-2. end-to-end `XuanWu -> xuanwu-gateway` validation
+2. end-to-end `XuanWu -> xuanwu-iot-gateway` validation
 3. retirement of final local compatibility paths after upstream validation

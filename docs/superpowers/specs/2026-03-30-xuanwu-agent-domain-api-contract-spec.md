@@ -72,7 +72,7 @@ Agent 域对象全部以 `XuanWu` 为唯一真源：
 1. `xuanwu-management-server` 维护设备、映射、能力、网关路由
 2. `XuanWu` 读取聚合后的运行绑定结果
 3. `XuanWu` 发起标准能力调用
-4. `xuanwu-gateway` 执行南向协议调用
+4. `xuanwu-iot-gateway` 执行南向协议调用
 5. 执行结果和事件回流到 `xuanwu-management-server`
 
 ## 4. `XuanWu` 必须提供的 API 域
@@ -149,7 +149,7 @@ Agent 域对象全部以 `XuanWu` 为唯一真源：
 用途：
 
 - 由 `XuanWu` 对具体设备能力调用形成标准命令
-- 由本项目进一步路由到 `xuanwu-gateway`
+- 由本项目进一步路由到 `xuanwu-iot-gateway`
 
 #### 4.2.4 Event / Telemetry Consume
 
@@ -249,7 +249,7 @@ Agent 域对象全部以 `XuanWu` 为唯一真源：
 - 维护设备与 Agent 域资源的关系映射
 - 为运行期提供聚合视图
 
-### 7.2 `xuanwu-device-server`
+### 7.2 `xuanwu-device-gateway`
 
 需要：
 
@@ -257,7 +257,7 @@ Agent 域对象全部以 `XuanWu` 为唯一真源：
 - 只消费 `xuanwu-management-server` 的运行时配置结果
 - 把会话和设备执行链与 `XuanWu` 运行时调用解耦
 
-### 7.3 `xuanwu-gateway`
+### 7.3 `xuanwu-iot-gateway`
 
 需要：
 

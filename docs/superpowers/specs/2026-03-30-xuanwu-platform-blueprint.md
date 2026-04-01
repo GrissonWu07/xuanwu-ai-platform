@@ -4,14 +4,14 @@
 
 定义本仓在 `XuanWu` 时代的最终本地边界，确保：
 
-- `xuanwu-device-server` 只做会话设备运行时接入
+- `xuanwu-device-gateway` 只做会话设备运行时接入
 - `xuanwu-management-server` 只做管理面、设备治理和 `XuanWu` 管理代理
-- `xuanwu-gateway` 只做南向协议与能力适配
+- `xuanwu-iot-gateway` 只做南向协议与能力适配
 - 所有 Agent 域真源和实际设备调用决策都进入 `XuanWu`
 
 ## Modules
 
-### xuanwu-device-server
+### xuanwu-device-gateway
 
 职责：
 
@@ -36,7 +36,7 @@
 - OTA firmware / campaign
 - `XuanWu` 管理代理
 
-### xuanwu-gateway
+### xuanwu-iot-gateway
 
 职责：
 
@@ -52,7 +52,7 @@
 - Agent 真源
 - Model Provider / Model Config 真源
 - Agent 决策和实际设备调用
-- 调用 `xuanwu-gateway`
+- 调用 `xuanwu-iot-gateway`
 
 ## Core Relations
 
@@ -64,12 +64,12 @@
 
 ## Runtime Flow
 
-1. 会话设备连接 `xuanwu-device-server`
-2. `xuanwu-device-server` 向 `xuanwu-management-server` 拉取 runtime resolve
+1. 会话设备连接 `xuanwu-device-gateway`
+2. `xuanwu-device-gateway` 向 `xuanwu-management-server` 拉取 runtime resolve
 3. `XuanWu` 处理 Agent 逻辑
 4. 若需要设备能力调用：
-   - 会话设备本地能力：通过 `xuanwu-device-server runtime API`
-   - 其他 IoT / southbound 能力：通过 `xuanwu-gateway`
+   - 会话设备本地能力：通过 `xuanwu-device-gateway runtime API`
+   - 其他 IoT / southbound 能力：通过 `xuanwu-iot-gateway`
 
 ## Local Completion Status
 
@@ -77,17 +77,17 @@
 
 - `xuanwu-management-server` Phase 1
 - `xuanwu-management-server` Phase 2
-- `xuanwu-gateway` Phase 3 foundation
-- `xuanwu-device-server` Phase 4 local boundary cleanup
+- `xuanwu-iot-gateway` Phase 3 foundation
+- `xuanwu-device-gateway` Phase 4 local boundary cleanup
 
 本仓当前未完成且依赖上游：
 
-- `XuanWu -> xuanwu-gateway` 南向命令契约联调
-- `XuanWu` 采用标准 gateway 调用后，退场 `xuanwu-device-server` 中现存的 Home Assistant / IoT 兼容路径
+- `XuanWu -> xuanwu-iot-gateway` 南向命令契约联调
+- `XuanWu` 采用标准 gateway 调用后，退场 `xuanwu-device-gateway` 中现存的 Home Assistant / IoT 兼容路径
 
 ## Source Specs
 
-- `2026-03-28-xuanwu-device-server-rename-design.md`
+- `2026-03-28-xuanwu-device-gateway-rename-design.md`
 - `2026-03-28-xuanwu-management-server-replacement-design.md`
 - `2026-03-28-xuanwu-upstream-gap-requirements.md`
-- `2026-03-30-xuanwu-gateway-foundation-design.md`
+- `2026-03-30-xuanwu-iot-gateway-foundation-design.md`
