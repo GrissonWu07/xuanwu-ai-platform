@@ -119,30 +119,30 @@ flowchart LR
 
 ## 总体架构
 
-从上到下分别对应统一入口、平台核心、设备接入层、无线桥接层与设备世界；`XuanWu AI Agent` 位于平台上层，直接面向门户交互，并与管理面、调度面、设备网关面协同完成执行闭环。需要特别注意的是：会话型设备的实际接入入口始终是 `xuanwu-device-gateway`，`XuanWu` 与它之间是运行时协同关系，而不是设备物理接入关系。
+从上到下分别对应统一入口、平台核心、设备接入层、无线桥接层与设备世界；`XuanWu AI Agent` 位于平台上层，直接面向门户交互，并与管理面、调度面、设备网关面协同完成执行闭环。
 
 ```mermaid
 flowchart TB
-    Portal["xuanwu-portal<br/>统一运营入口"]
+    Portal["xuanwu-portal"]
 
     XW["XuanWu AI Agent<br/>智能交互、规划与执行决策"]
 
     subgraph Control["平台核心"]
         direction LR
-        Mgmt["xuanwu-management-server<br/>统一真源与运营真源"]
-        Jobs["xuanwu-jobs<br/>调度与任务分发"]
+        Mgmt["xuanwu-management-server"]
+        Jobs["xuanwu-jobs"]
     end
 
     subgraph Ingress["设备接入层"]
         direction LR
-        Device["xuanwu-device-gateway<br/>会话型设备接入"]
-        IoT["xuanwu-iot-gateway<br/>IoT / 工业设备接入与执行"]
+        Device["xuanwu-device-gateway"]
+        IoT["xuanwu-iot-gateway"]
     end
 
     subgraph Bridge["无线桥接层"]
         direction LR
-        BT["xuanwu-bluetooth-bridge<br/>蓝牙桥接"]
-        NL["xuanwu-nearlink-bridge<br/>星闪桥接"]
+        BT["xuanwu-bluetooth-bridge"]
+        NL["xuanwu-nearlink-bridge"]
     end
 
     subgraph World["设备世界"]
@@ -152,16 +152,16 @@ flowchart TB
         Wireless["蓝牙 / 星闪设备"]
     end
 
-    Portal -->|"运营工作台"| Mgmt
-    Portal -->|"Agent 交互入口"| XW
+    Portal --> Mgmt
+    Portal --> XW
 
-    Jobs -->|"调度状态与运行记录"| Mgmt
-    Jobs -->|"运行时任务"| Device
-    Jobs -->|"设备任务"| IoT
+    Jobs --> Mgmt
+    Jobs --> Device
+    Jobs --> IoT
 
-    Mgmt -->|"配置、映射、读模型"| Device
-    Mgmt -->|"设备真源、事件、遥测"| IoT
-    Mgmt -->|"管理与配置代理"| XW
+    Mgmt --> Device
+    Mgmt --> IoT
+    Mgmt --> XW
 
     Conv --> Device
     IotDev --> IoT
@@ -171,11 +171,11 @@ flowchart TB
     BT --> IoT
     NL --> IoT
 
-    Device -->|"发现、心跳、运行时回写"| Mgmt
-    IoT -->|"发现、事件、遥测、结果回写"| Mgmt
-    XW -->|"调度触发与任务协同"| Jobs
-    XW -.->|"运行时协同（非接入入口）"| Device
-    XW -->|"面向设备世界执行能力"| IoT
+    Device --> Mgmt
+    IoT --> Mgmt
+    XW --> Jobs
+    XW -.-> Device
+    XW --> IoT
 
     classDef ux fill:#f7edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
     classDef control fill:#eef5ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
@@ -191,6 +191,12 @@ flowchart TB
     class Conv,IotDev,Wireless world;
     class XW agent;
 ```
+
+说明：
+- `xuanwu-portal` 既连接平台核心，也直接连接 `XuanWu AI Agent`
+- 会话型设备通过 `xuanwu-device-gateway` 接入
+- IoT / 工业 / 无线设备通过 `xuanwu-iot-gateway` 及桥接层接入
+- 图中的虚线表示 `XuanWu` 与 `xuanwu-device-gateway` 的运行时协同关系，而不是设备接入关系
 
 ## 服务组成
 
