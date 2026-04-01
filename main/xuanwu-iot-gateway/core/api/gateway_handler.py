@@ -7,13 +7,39 @@ from aiohttp import web
 
 from core.clients.management_client import ManagementClient, NullManagementClient
 from core.registry.adapter_registry import create_builtin_registry
+from core.state.sqlalchemy_state_store import SQLAlchemyStateStore
+
+
+class MemoryStateStore:
+    def __init__(self):
+        self._items: dict[str, dict] = {}
+
+    def get_device_state(self, device_id: str) -> dict:
+        return dict(self._items.get(device_id, {"device_id": device_id, "status": "unknown"}))
+
+    def upsert_device_state(self, device_id: str, payload: dict) -> dict:
+        state = self.get_device_state(device_id)
+        if state.get("status") == "unknown" and len(state) == 2:
+            state = {"device_id": device_id}
+        state.update(dict(payload))
+        state["device_id"] = device_id
+        self._items[device_id] = dict(state)
+        return dict(state)
+
+    def close(self) -> None:
+        return None
 
 
 class GatewayHandler:
-    def __init__(self, config: dict, *, registry=None, management_client=None):
+    def __init__(self, config: dict, *, registry=None, management_client=None, state_store=None):
         self.config = config
         self.registry = registry or create_builtin_registry()
-        self.device_state: dict[str, dict] = {}
+        if state_store is not None:
+            self.state_store = state_store
+        elif str(config.get("state", {}).get("backend") or "").strip().lower() == "postgres":
+            self.state_store = SQLAlchemyStateStore.from_config(config)
+        else:
+            self.state_store = MemoryStateStore()
         if management_client is not None:
             self.management_client = management_client
         elif config.get("management", {}).get("base_url"):
@@ -48,6 +74,11 @@ class GatewayHandler:
             return "industrial"
         return "actuator"
 
+    def _update_device_state(self, device_id: str, payload: dict) -> None:
+        if not device_id:
+            return
+        self.state_store.upsert_device_state(device_id, payload)
+
     async def _sync_device_presence(
         self,
         payload: dict,
@@ -75,6 +106,18 @@ class GatewayHandler:
             },
         )
         if managed:
+            self._update_device_state(
+                device_id,
+                {
+                    "gateway_id": gateway_id,
+                    "adapter_type": adapter_type,
+                    "protocol_type": payload.get("protocol_type") or adapter_type,
+                    "session_status": session_status,
+                    "last_seen_at": last_seen_at,
+                    "connection_status": "online",
+                    "runtime_endpoint": runtime_endpoint,
+                },
+            )
             return
         await self.management_client.upsert_discovered_device(
             {
@@ -98,6 +141,18 @@ class GatewayHandler:
                 },
             }
         )
+        self._update_device_state(
+            device_id,
+            {
+                "gateway_id": gateway_id,
+                "adapter_type": adapter_type,
+                "protocol_type": payload.get("protocol_type") or adapter_type,
+                "session_status": session_status,
+                "last_seen_at": last_seen_at,
+                "connection_status": "online",
+                "runtime_endpoint": runtime_endpoint,
+            },
+        )
 
     def _dispatch_command_payload(self, payload: dict) -> tuple[dict, int]:
         adapter_type = str(payload.get("adapter_type", "")).strip()
@@ -110,12 +165,17 @@ class GatewayHandler:
         result = adapter.dispatch(payload)
         device_id = str(payload.get("device_id", "")).strip()
         if device_id:
-            self.device_state[device_id] = {
-                "device_id": device_id,
-                "last_request_id": payload.get("request_id"),
-                "last_command_name": payload.get("command_name"),
-                "status": result.get("status", "accepted"),
-            }
+            self._update_device_state(
+                device_id,
+                {
+                    "last_request_id": payload.get("request_id"),
+                    "last_command_name": payload.get("command_name"),
+                    "status": result.get("status", "accepted"),
+                    "gateway_id": payload.get("gateway_id"),
+                    "adapter_type": adapter_type,
+                    "protocol_type": payload.get("protocol_type") or adapter_type,
+                },
+            )
         return result, 200
 
     async def _publish_command_result(self, result: dict) -> None:
@@ -312,5 +372,5 @@ class GatewayHandler:
 
     async def handle_get_device_state(self, request: web.Request) -> web.Response:
         device_id = str(request.match_info["device_id"]).strip()
-        payload = self.device_state.get(device_id, {"device_id": device_id, "status": "unknown"})
+        payload = self.state_store.get_device_state(device_id)
         return self._json_response(payload)

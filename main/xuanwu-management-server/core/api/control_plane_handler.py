@@ -6,14 +6,14 @@ from aiohttp import web
 
 from config.security import resolve_control_secret
 from core.api.base_handler import BaseHandler
+from core.store.base import create_control_plane_store
 from core.store.exceptions import DeviceBindException, DeviceNotFoundException
-from core.store.local_store import LocalControlPlaneStore
 
 
 class ControlPlaneHandler(BaseHandler):
     def __init__(self, config: dict):
         super().__init__(config)
-        self.store = LocalControlPlaneStore.from_config(config)
+        self.store = create_control_plane_store(config)
         self.control_secret = resolve_control_secret(config)
 
     def _verify_control_secret(self, request: web.Request) -> bool:

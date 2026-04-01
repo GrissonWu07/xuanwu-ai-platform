@@ -8,6 +8,14 @@
 
 - 全模块 Docker 部署
 
+## 默认持久化
+
+当前根目录部署默认会一起启动 PostgreSQL，并作为平台主持久化层：
+
+- `xuanwu-management-server` 使用 schema `xw_mgmt`
+- `xuanwu-iot-gateway` 使用 schema `xw_iot`
+- PostgreSQL 宿主机数据目录为 `deploy/postgres`
+
 适合：
 
 - 想先看到 `xuanwu-portal`

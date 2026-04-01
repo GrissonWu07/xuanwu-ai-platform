@@ -57,3 +57,18 @@ def test_xuanwu_upstream_gap_requirements_doc_exists():
     assert "/xuanwu/v1/admin/agents" in spec_text
     assert "/xuanwu/v1/admin/model-providers" in spec_text
     assert "/xuanwu/v1/admin/models" in spec_text
+
+
+def test_docs_describe_postgres_first_persistence():
+    for relative_path in (
+        "docs/quick-start.md",
+        "docs/Deployment.md",
+        "docs/current-platform-capabilities.md",
+        "docs/current-api-surfaces.md",
+        "docs/platform-delivery-overview.md",
+    ):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "PostgreSQL" in text
+        assert "xw_mgmt" in text
+        assert "xw_iot" in text
+        assert "deploy/postgres" in text

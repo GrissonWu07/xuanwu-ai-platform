@@ -16,6 +16,14 @@ The current local platform consists of:
 - `xuanwu-bluetooth-bridge`
 - `xuanwu-nearlink-bridge`
 
+## Default Persistence
+
+The platform now defaults to PostgreSQL-backed persistence:
+
+- `xuanwu-management-server` uses schema `xw_mgmt`
+- `xuanwu-iot-gateway` uses schema `xw_iot`
+- root Docker deployment stores PostgreSQL data under `deploy/postgres`
+
 ## Management Capabilities
 
 `xuanwu-management-server` currently supports:

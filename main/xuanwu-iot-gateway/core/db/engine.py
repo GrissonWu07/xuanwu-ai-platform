@@ -4,8 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
 
-def build_postgres_url(config: dict) -> str:
-    postgres = config["control-plane"]["postgres"]
+def build_database_url(config: dict) -> str:
+    postgres = config["state"]["postgres"]
     direct_url = str(postgres.get("url") or "").strip()
     if direct_url:
         return direct_url
@@ -16,4 +16,4 @@ def build_postgres_url(config: dict) -> str:
 
 
 def create_db_engine(config: dict) -> Engine:
-    return create_engine(build_postgres_url(config), future=True, pool_pre_ping=True)
+    return create_engine(build_database_url(config), future=True, pool_pre_ping=True)

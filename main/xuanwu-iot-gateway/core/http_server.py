@@ -2,10 +2,13 @@ from aiohttp import web
 
 from core.api.gateway_handler import GatewayHandler
 
+GATEWAY_HANDLER_KEY = web.AppKey("gateway_handler", GatewayHandler)
+
 
 def create_http_app(config: dict) -> web.Application:
     app = web.Application()
     handler = GatewayHandler(config)
+    app[GATEWAY_HANDLER_KEY] = handler
     app.add_routes(
         [
             web.get("/gateway/v1/adapters", handler.handle_list_adapters),

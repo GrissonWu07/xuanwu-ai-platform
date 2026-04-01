@@ -12,6 +12,14 @@ Use it when you need a quick answer to:
 - what still depends on `XuanWu`
 - where to start for deployment, integration, or operator handoff
 
+## Default Persistence
+
+Current delivery is PostgreSQL-first:
+
+- `xuanwu-management-server` persists platform truth in `xw_mgmt`
+- `xuanwu-iot-gateway` persists device shadow/state in `xw_iot`
+- root Docker deployment mounts database files to `deploy/postgres`
+
 ## Active Local Services
 
 ### `xuanwu-management-server`

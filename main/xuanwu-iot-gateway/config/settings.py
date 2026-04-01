@@ -17,4 +17,19 @@ def load_runtime_config() -> dict:
                 or "xuanwu-management-local-secret"
             ),
         },
+        "state": {
+            "backend": os.environ.get("XUANWU_IOT_STATE_BACKEND", "postgres").strip() or "postgres",
+            "postgres": {
+                "url": os.environ.get("XUANWU_IOT_PG_URL", "").strip(),
+                "host": os.environ.get("XUANWU_PG_HOST", "postgres").strip() or "postgres",
+                "port": int(os.environ.get("XUANWU_PG_PORT", "5432")),
+                "database": os.environ.get("XUANWU_PG_DB", "xuanwu_platform").strip() or "xuanwu_platform",
+                "user": os.environ.get("XUANWU_PG_USER", "xuanwu").strip() or "xuanwu",
+                "password": (
+                    os.environ.get("XUANWU_PG_PASSWORD", "xuanwu_local_password").strip()
+                    or "xuanwu_local_password"
+                ),
+                "schema": os.environ.get("XUANWU_IOT_PG_SCHEMA", "xw_iot").strip() or "xw_iot",
+            },
+        },
     }

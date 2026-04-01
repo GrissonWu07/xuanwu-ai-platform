@@ -1,5 +1,7 @@
 aiohttp
 httpx
+sqlalchemy
+psycopg[binary]
 pymodbus
 opcua
 BAC0

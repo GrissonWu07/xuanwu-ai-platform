@@ -8,7 +8,7 @@ if str(SERVICE_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVICE_ROOT))
 
 from config.settings import load_runtime_config
-from core.http_server import create_http_app
+from core.http_server import GATEWAY_HANDLER_KEY, create_http_app
 
 
 def create_app(config: dict) -> web.Application:

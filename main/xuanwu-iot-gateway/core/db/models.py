@@ -15,11 +15,10 @@ def create_models_for_schema(schema: str | None) -> tuple[DeclarativeMeta, type]
     metadata = MetaData(schema=schema)
     base = declarative_base(metadata=metadata)
 
-    class ControlPlaneRecord(base):
-        __tablename__ = "control_plane_records"
+    class DeviceStateRecord(base):
+        __tablename__ = "device_state"
 
-        collection = Column(String(128), primary_key=True)
-        record_id = Column(String(255), primary_key=True)
+        device_id = Column(String(255), primary_key=True)
         payload = Column(JSON, nullable=False)
         created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
         updated_at = Column(
@@ -29,5 +28,5 @@ def create_models_for_schema(schema: str | None) -> tuple[DeclarativeMeta, type]
             onupdate=func.now(),
         )
 
-    _MODEL_CACHE[cache_key] = (base, ControlPlaneRecord)
-    return base, ControlPlaneRecord
+    _MODEL_CACHE[cache_key] = (base, DeviceStateRecord)
+    return base, DeviceStateRecord

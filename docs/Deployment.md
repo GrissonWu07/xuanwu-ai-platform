@@ -10,6 +10,7 @@
 - `xuanwu-device-gateway`
 - `xuanwu-iot-gateway`
 - `mosquitto`
+- `postgres`
 
 注意：
 
@@ -17,6 +18,14 @@
 - 如果你希望 `Agents`、`AI Config Proxy`、上游智能体管理与执行能力真正可用，还需要一个可访问的 `XuanWu` 服务，并正确设置 `XUANWU_BASE_URL`。
 
 ## 适用场景
+
+## 默认持久化
+
+当前平台默认使用 PostgreSQL 作为主持久化层：
+
+- `xuanwu-management-server` 使用 schema `xw_mgmt`
+- `xuanwu-iot-gateway` 使用 schema `xw_iot`
+- PostgreSQL 宿主机数据目录为 `deploy/postgres`
 
 推荐在这些场景使用全模块部署：
 
