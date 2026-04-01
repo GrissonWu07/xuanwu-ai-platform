@@ -24,6 +24,7 @@ def _load_scheduler_module():
 class _FakeManagementClient:
     def __init__(self):
         self.claim_calls = []
+        self.run_claim_calls = []
 
     async def list_due_schedules(self, *, now_iso: str, limit: int):
         assert now_iso.startswith("2026-03-31T")
@@ -51,6 +52,34 @@ class _FakeManagementClient:
             "payload": {"site_id": "site-a"},
         }
 
+    async def list_dispatchable_job_runs(self, *, now_iso: str, limit: int):
+        return {
+            "items": [
+                {
+                    "job_run_id": "run-manual-001",
+                    "schedule_id": "sched-manual-001",
+                    "job_type": "alarm_escalation",
+                    "executor_type": "management",
+                    "scheduled_for": "2026-03-31T10:00:00Z",
+                    "status": "queued",
+                    "payload": {"alarm_id": "alarm-001"},
+                }
+            ]
+        }
+
+    async def claim_job_run(self, job_run_id: str, *, started_at: str):
+        self.run_claim_calls.append((job_run_id, started_at))
+        return {
+            "job_run_id": job_run_id,
+            "schedule_id": "sched-manual-001",
+            "job_type": "alarm_escalation",
+            "executor_type": "management",
+            "scheduled_for": "2026-03-31T10:00:00Z",
+            "started_at": started_at,
+            "status": "running",
+            "payload": {"alarm_id": "alarm-001"},
+        }
+
 class _FakeDispatcher:
     def __init__(self):
         self.calls = []
@@ -75,6 +104,9 @@ def test_scheduler_claims_due_schedule_and_dispatches_platform_job():
     assert scheduler.client.claim_calls == [
         ("sched-telemetry-001", "2026-03-31T10:00:00Z")
     ]
+    assert scheduler.client.run_claim_calls == [
+        ("run-manual-001", "2026-03-31T10:00:00Z")
+    ]
     assert scheduler.dispatcher.calls == [
         {
             "job_run_id": "run-sched-telemetry-001-20260331T100000Z",
@@ -83,5 +115,15 @@ def test_scheduler_claims_due_schedule_and_dispatches_platform_job():
             "executor_type": "platform",
             "scheduled_for": "2026-03-31T10:00:00Z",
             "payload": {"site_id": "site-a"},
+        },
+        {
+            "job_run_id": "run-manual-001",
+            "schedule_id": "sched-manual-001",
+            "job_type": "alarm_escalation",
+            "executor_type": "management",
+            "scheduled_for": "2026-03-31T10:00:00Z",
+            "started_at": "2026-03-31T10:00:00Z",
+            "status": "running",
+            "payload": {"alarm_id": "alarm-001"},
         }
     ]

@@ -18,8 +18,27 @@ export interface DevicesCollectionResponse {
     owner_user_id: string
     lifecycle_status: string
     bind_status: string
-    device_type: string
+    device_type?: string
+    device_kind?: string
+    ingress_type?: string
+    gateway_id?: string
+    adapter_type?: string
     protocol_type: string
+    last_seen_at?: string
+  }>
+}
+
+export interface DiscoveredDevicesResponse {
+  items: Array<{
+    discovery_id: string
+    device_id: string
+    display_name?: string
+    ingress_type: string
+    device_kind: string
+    gateway_id?: string
+    protocol_type?: string
+    adapter_type?: string
+    discovery_status?: string
     last_seen_at?: string
   }>
 }
@@ -31,8 +50,12 @@ export interface DeviceDetailResponse {
     owner_user_id: string
     lifecycle_status: string
     bind_status: string
-    device_type: string
-    protocol_type: string
+    device_type?: string
+    device_kind?: string
+    ingress_type?: string
+    gateway_id?: string
+    adapter_type?: string
+    protocol_type?: string
     last_seen_at?: string
   }
   binding?: {
@@ -43,6 +66,18 @@ export interface DeviceDetailResponse {
   runtime?: {
     session_status?: string
     capability_route_count?: number
+  }
+  discovery?: {
+    discovery_id?: string
+    ingress_type?: string
+    gateway_id?: string
+    protocol_type?: string
+    adapter_type?: string
+    discovery_status?: string
+  }
+  latest_command_result?: {
+    status?: string
+    finished_at?: string
   }
   recent_events: Array<{ id: string; title: string; detail: string; at: string }>
   recent_telemetry: Array<{ metric: string; value: string; at: string }>
@@ -77,6 +112,11 @@ export interface JobScheduleDetailResponse {
   timezone?: string
   next_run_at?: string
   status?: string
+  misfire_policy?: string
+  misfire_grace_seconds?: number
+  retry_policy?: string
+  max_retry_attempts?: number
+  retry_backoff_seconds?: number
   payload?: Record<string, string | number | boolean | null | undefined>
 }
 
@@ -85,6 +125,7 @@ export interface JobRunDetailResponse {
   schedule_id: string
   status: string
   executor_type: string
+  attempt?: number
   scheduled_for?: string
   started_at?: string
   finished_at?: string
@@ -293,12 +334,32 @@ export function getChannel(channelId: string) {
   return requestJson<ChannelItem>(`/control-plane/v1/channels/${channelId}`)
 }
 
+export function updateChannel(channelId: string, payload: Partial<ChannelItem>) {
+  return requestJson<ChannelItem>(`/control-plane/v1/channels/${channelId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function listGateways() {
   return requestJson<{ items: GatewayItem[] }>('/control-plane/v1/gateways')
 }
 
 export function getGateway(gatewayId: string) {
   return requestJson<GatewayItem>(`/control-plane/v1/gateways/${gatewayId}`)
+}
+
+export function updateGateway(gatewayId: string, payload: Partial<GatewayItem>) {
+  return requestJson<GatewayItem>(`/control-plane/v1/gateways/${gatewayId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
 }
 
 export function getGatewayOverview() {
@@ -317,6 +378,10 @@ export function logout() {
 
 export function getDevices() {
   return requestJson<DevicesCollectionResponse>('/control-plane/v1/devices')
+}
+
+export function listDiscoveredDevices() {
+  return requestJson<DiscoveredDevicesResponse>('/control-plane/v1/discovered-devices')
 }
 
 export function getDeviceDetail(deviceId: string) {
@@ -343,6 +408,28 @@ export function bindDevice(deviceId: string, bindCode?: string) {
     },
     body: JSON.stringify({
       bind_code: bindCode,
+    }),
+  })
+}
+
+export function promoteDiscoveredDevice(discoveryId: string, payload: Record<string, unknown>) {
+  return requestJson(`/control-plane/v1/discovered-devices/${discoveryId}:promote`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function ignoreDiscoveredDevice(discoveryId: string, reason?: string) {
+  return requestJson(`/control-plane/v1/discovered-devices/${discoveryId}:ignore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reason,
     }),
   })
 }
@@ -409,6 +496,18 @@ export function resumeJobSchedule(scheduleId: string, reason?: string) {
 
 export function triggerJobSchedule(scheduleId: string, scheduledFor?: string) {
   return requestJson<JobRunDetailResponse>(`/control-plane/v1/jobs/schedules/${scheduleId}:trigger`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      scheduled_for: scheduledFor,
+    }),
+  })
+}
+
+export function retryJobRun(jobRunId: string, scheduledFor?: string) {
+  return requestJson<JobRunDetailResponse>(`/control-plane/v1/jobs/runs/${jobRunId}:retry`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

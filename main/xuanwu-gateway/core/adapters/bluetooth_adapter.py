@@ -23,20 +23,29 @@ class BluetoothAdapter(BaseGatewayAdapter):
         route = dict(command.get("route") or {})
         if not str(route.get("bridge_url") or "").strip():
             raise GatewayConfigurationError("bridge_url_required", "route.bridge_url is required")
-        if not str(route.get("device_address") or "").strip():
-            raise GatewayConfigurationError("device_address_required", "route.device_address is required")
+        if not str(route.get("device_key") or route.get("device_address") or "").strip():
+            raise GatewayConfigurationError("device_key_required", "route.device_key is required")
+        if not str(route.get("service_uuid") or "").strip():
+            raise GatewayConfigurationError("service_uuid_required", "route.service_uuid is required")
         if not str(route.get("characteristic_uuid") or "").strip():
             raise GatewayConfigurationError("characteristic_uuid_required", "route.characteristic_uuid is required")
 
     def execute_command(self, command: dict) -> dict:
         route = dict(command.get("route") or {})
+        operation = str(route.get("operation") or command.get("command_name") or "").strip().lower()
+        device_key = str(route.get("device_key") or route.get("device_address") or "").strip()
         response = self.transport.request(
             bridge_url=str(route.get("bridge_url") or "").rstrip("/"),
-            device_address=str(route.get("device_address") or "").strip(),
+            bridge_token=str(route.get("bridge_token") or "").strip(),
+            device_key=device_key,
             service_uuid=str(route.get("service_uuid") or "").strip(),
             characteristic_uuid=str(route.get("characteristic_uuid") or "").strip(),
-            action=str(command.get("command_name") or "").strip(),
-            value=(command.get("arguments") or {}).get("value"),
+            operation=operation,
+            gateway_id=command.get("gateway_id"),
+            device_id=command.get("device_id"),
+            request_id=command.get("request_id"),
+            encoding=str(route.get("encoding") or (command.get("arguments") or {}).get("encoding") or "hex"),
+            value=(command.get("arguments") or {}).get("value", route.get("value")),
             timeout_ms=int(route.get("timeout_ms") or 5000),
         )
         if response.get("status") != "ok":
@@ -58,17 +67,27 @@ class BluetoothAdapter(BaseGatewayAdapter):
 class BluetoothBridgeTransport:
     def request(self, **kwargs):
         payload = {
-            "device_address": kwargs["device_address"],
             "service_uuid": kwargs["service_uuid"],
             "characteristic_uuid": kwargs["characteristic_uuid"],
-            "action": kwargs["action"],
+            "request_id": kwargs.get("request_id"),
+            "gateway_id": kwargs.get("gateway_id"),
+            "device_id": kwargs.get("device_id"),
+            "encoding": kwargs.get("encoding"),
             "value": kwargs["value"],
         }
+        operation = str(kwargs.get("operation") or "").lower()
+        endpoint = "write"
+        if operation in {"read", "read_characteristic"}:
+            endpoint = "read"
+        elif operation in {"subscribe", "subscribe_characteristic"}:
+            endpoint = "subscribe"
+        elif operation in {"unsubscribe", "unsubscribe_characteristic"}:
+            endpoint = "unsubscribe"
         req = urllib_request.Request(
-            url=f"{kwargs['bridge_url']}/bluetooth/characteristics",
+            url=f"{kwargs['bridge_url']}/bluetooth/v1/devices/{kwargs['device_key']}/characteristics:{endpoint}",
             data=json.dumps(payload).encode("utf-8"),
             method="POST",
-            headers={"Content-Type": "application/json"},
+            headers=self._build_headers(kwargs.get("bridge_token")),
         )
         try:
             with urllib_request.urlopen(req, timeout=max(kwargs["timeout_ms"] / 1000.0, 0.1)) as response:
@@ -78,3 +97,10 @@ class BluetoothBridgeTransport:
             return {"status": "failed", "status_code": exc.code}
         except URLError as exc:
             raise GatewayExecutionError("bluetooth_transport_error", "Bluetooth bridge transport error", details={"reason": str(exc)})
+
+    def _build_headers(self, bridge_token: str | None) -> dict:
+        headers = {"Content-Type": "application/json"}
+        token = str(bridge_token or "").strip()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        return headers

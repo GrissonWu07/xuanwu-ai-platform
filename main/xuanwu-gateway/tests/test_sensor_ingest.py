@@ -31,6 +31,8 @@ class FakeManagementClient:
     def __init__(self):
         self.telemetry = []
         self.events = []
+        self.heartbeats = []
+        self.discovered = []
 
     async def post_telemetry(self, payload):
         self.telemetry.append(payload)
@@ -38,6 +40,14 @@ class FakeManagementClient:
 
     async def post_event(self, payload):
         self.events.append(payload)
+        return payload
+
+    async def post_device_heartbeat(self, device_id, payload):
+        self.heartbeats.append((device_id, payload))
+        return False
+
+    async def upsert_discovered_device(self, payload):
+        self.discovered.append(payload)
         return payload
 
 
@@ -60,6 +70,8 @@ def test_http_push_ingest_normalizes_telemetry_and_event():
     assert management_client.telemetry[0]["device_id"] == "sensor-001"
     assert management_client.telemetry[0]["metrics"]["temperature_c"] == 24.6
     assert management_client.events[0]["event_type"] == "telemetry.reported"
+    assert management_client.discovered[0]["device_id"] == "sensor-001"
+    assert management_client.discovered[0]["ingress_type"] == "gateway"
 
 
 def test_mqtt_ingest_normalizes_telemetry_and_event():
@@ -80,6 +92,7 @@ def test_mqtt_ingest_normalizes_telemetry_and_event():
     assert payload["status"] == "accepted"
     assert management_client.telemetry[0]["device_id"] == "sensor-002"
     assert management_client.events[0]["payload"]["topic"] == "site/plant/sensor-002/telemetry"
+    assert management_client.discovered[0]["adapter_type"] == "sensor_mqtt"
 
 
 def test_home_assistant_ingest_normalizes_state_change_event():
@@ -100,3 +113,4 @@ def test_home_assistant_ingest_normalizes_state_change_event():
     assert payload["status"] == "accepted"
     assert management_client.telemetry[0]["metrics"]["brightness"] == 180
     assert management_client.events[0]["event_type"] == "home_assistant.state_changed"
+    assert management_client.discovered[0]["adapter_type"] == "home_assistant"

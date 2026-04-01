@@ -420,6 +420,11 @@ Completed:
 - device claim/bind/suspend/retire
 - device batch import
 - mapping model integration
+- discovered-device store
+- discovered-device APIs
+- discovered-device promotion and ignore flow
+- device heartbeat/update API
+- richer device-detail aggregation with provenance and latest operational state
 
 #### Gateway management
 
@@ -430,6 +435,9 @@ Completed:
 - event ingest
 - command-result ingest
 - protocol adapter execution
+- automatic discovery callback from gateway
+- management-side pending-registration flow through discovered devices
+- heartbeat and recency updates into managed-device truth
 
 #### Device-server management integration
 
@@ -438,54 +446,29 @@ Completed:
 - runtime config resolution through management
 - runtime job execution surface
 - boundary isolation from management hosting
-
-### Not Yet Completed
-
-#### Unified discovery layer
-
-Missing:
-
-- discovered-device store
-- discovered-device APIs
-- promotion flow into managed device
-
-#### Gateway to managed-device registration
-
-Missing:
-
-- automatic discovery callback from gateway
-- device auto-registration or pending-registration flow
-- management-side gateway/device reconciliation
-
-#### Device-server to managed-device registration
-
-Missing:
-
 - first-contact discovery callback from device-server
-- automatic anonymous pending-device creation
+- automatic anonymous pending-device creation through discovered-device promotion
 - runtime-origin presence sync into managed-device truth
-
-#### Unified device recency model
-
-Missing:
-
-- first-class heartbeat/update API
-- consistent update of:
-  - `last_seen_at`
-  - `last_event_at`
-  - `last_telemetry_at`
-  - online status
-  - last ingress source
 
 #### Unified portal view
 
-Missing:
+Completed:
 
 - pending/discovered device workspace
 - visible distinction between:
   - gateway-managed device ingress
   - device-server-managed device ingress
 - discovery-to-managed promotion workflow
+
+### Remaining Work
+
+The repository-local work defined by this spec is complete.
+
+What remains is outside this local scope:
+
+- final upstream `XuanWu` execution integration
+- live-environment reconciliation policies such as gateway offline/orphan handling under real deployment conditions
+- end-to-end validation with physical gateway/device-server ingress sources
 
 ## Required Portal Behavior
 
@@ -551,13 +534,15 @@ This integration area is complete when:
 
 ## Recommended Implementation Order
 
+Implemented locally in this order:
+
 1. Add `discovered_devices` store and APIs to `xuanwu-management-server`
 2. Add `gateway device-discovery` callback
 3. Add `device-server device-discovery` callback
 4. Add `device heartbeat` update API
 5. Expand device detail aggregation
 6. Add portal discovered-device views and promotion actions
-7. Add lifecycle rules for gateway offline and orphaned devices
+7. Keep gateway offline and orphan handling as operational follow-up after upstream/live-environment validation
 
 ## Explicit Non-Goals
 

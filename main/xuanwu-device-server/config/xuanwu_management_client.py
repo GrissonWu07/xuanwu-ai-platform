@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from httpx import HTTPStatusError
 from core.runtime_config_exceptions import DeviceBindException, DeviceNotFoundException
 
 
@@ -34,6 +36,65 @@ def _client_kwargs(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _now_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+async def _post_discovered_device(
+    client: httpx.AsyncClient,
+    *,
+    device_id: str,
+    client_id: str,
+    selected_module: dict[str, Any],
+) -> None:
+    observed_at = _now_timestamp()
+    response = await client.post(
+        "/control-plane/v1/runtime/device-discovery",
+        json={
+            "discovery_id": f"device_server:{device_id}",
+            "device_id": device_id,
+            "display_name": device_id,
+            "ingress_type": "device_server",
+            "device_kind": "conversational",
+            "runtime_endpoint": f"/xuanwu/v1/?device_id={device_id}&client_id={client_id}",
+            "protocol_type": "websocket",
+            "adapter_type": "device_server",
+            "first_seen_at": observed_at,
+            "last_seen_at": observed_at,
+            "source_payload": {
+                "client_id": client_id,
+                "selected_module": selected_module,
+            },
+        },
+    )
+    response.raise_for_status()
+
+
+async def _post_device_heartbeat(
+    client: httpx.AsyncClient,
+    *,
+    device_id: str,
+    client_id: str,
+    session_status: str,
+) -> None:
+    response = await client.post(
+        f"/control-plane/v1/devices/{device_id}:heartbeat",
+        json={
+            "status": "online",
+            "session_status": session_status,
+            "last_seen_at": _now_timestamp(),
+            "runtime_endpoint": f"/xuanwu/v1/?device_id={device_id}&client_id={client_id}",
+            "ingress_type": "device_server",
+        },
+    )
+    try:
+        response.raise_for_status()
+    except HTTPStatusError as exc:
+        if exc.response.status_code == 404:
+            return
+        raise
+
+
 async def fetch_server_config(config: dict[str, Any]) -> dict[str, Any]:
     async with httpx.AsyncClient(**_client_kwargs(config)) as client:
         response = await client.get("/control-plane/v1/config/server")
@@ -57,12 +118,30 @@ async def resolve_private_config(
             },
         )
         if response.status_code == 404:
+            await _post_discovered_device(
+                client,
+                device_id=device_id,
+                client_id=client_id,
+                selected_module=selected_module,
+            )
             raise DeviceNotFoundException(device_id)
         if response.status_code == 409:
             payload = response.json()
+            await _post_device_heartbeat(
+                client,
+                device_id=device_id,
+                client_id=client_id,
+                session_status="pending_bind",
+            )
             raise DeviceBindException(payload.get("bind_code"))
         response.raise_for_status()
         payload = response.json()
+        await _post_device_heartbeat(
+            client,
+            device_id=device_id,
+            client_id=client_id,
+            session_status="connected",
+        )
         return payload.get("resolved_config", payload)
 
 

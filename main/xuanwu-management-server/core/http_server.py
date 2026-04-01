@@ -464,6 +464,10 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_list_job_runs,
             ),
             web.get(
+                "/control-plane/v1/jobs/runs:dispatchable",
+                control_plane_handler.handle_list_dispatchable_job_runs,
+            ),
+            web.get(
                 "/control-plane/v1/jobs/runs/{job_run_id}",
                 control_plane_handler.handle_get_job_run,
             ),
@@ -472,7 +476,27 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.options(
+                "/control-plane/v1/jobs/runs:dispatchable",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
                 "/control-plane/v1/jobs/runs/{job_run_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/runs/{job_run_id}:claim",
+                control_plane_handler.handle_claim_dispatchable_job_run,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs/{job_run_id}:claim",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/jobs/runs/{job_run_id}:retry",
+                control_plane_handler.handle_retry_job_run,
+            ),
+            web.options(
+                "/control-plane/v1/jobs/runs/{job_run_id}:retry",
                 control_plane_handler.handle_options,
             ),
             web.post(
@@ -494,6 +518,42 @@ def create_http_app(config: dict) -> web.Application:
             web.get(
                 "/control-plane/v1/devices",
                 control_plane_handler.handle_list_devices,
+            ),
+            web.get(
+                "/control-plane/v1/discovered-devices",
+                control_plane_handler.handle_list_discovered_devices,
+            ),
+            web.post(
+                "/control-plane/v1/discovered-devices",
+                control_plane_handler.handle_create_discovered_device,
+            ),
+            web.options(
+                "/control-plane/v1/discovered-devices",
+                control_plane_handler.handle_options,
+            ),
+            web.get(
+                "/control-plane/v1/discovered-devices/{discovery_id}",
+                control_plane_handler.handle_get_discovered_device,
+            ),
+            web.options(
+                "/control-plane/v1/discovered-devices/{discovery_id}",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/discovered-devices/{discovery_id}:promote",
+                control_plane_handler.handle_promote_discovered_device,
+            ),
+            web.options(
+                "/control-plane/v1/discovered-devices/{discovery_id}:promote",
+                control_plane_handler.handle_options,
+            ),
+            web.post(
+                "/control-plane/v1/discovered-devices/{discovery_id}:ignore",
+                control_plane_handler.handle_ignore_discovered_device,
+            ),
+            web.options(
+                "/control-plane/v1/discovered-devices/{discovery_id}:ignore",
+                control_plane_handler.handle_options,
             ),
             web.post(
                 "/control-plane/v1/devices",
@@ -523,12 +583,20 @@ def create_http_app(config: dict) -> web.Application:
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_put_device,
             ),
+            web.post(
+                "/control-plane/v1/devices/{device_id}:heartbeat",
+                control_plane_handler.handle_device_heartbeat,
+            ),
             web.options(
                 "/control-plane/v1/devices/{device_id}",
                 control_plane_handler.handle_options,
             ),
             web.options(
                 "/control-plane/v1/devices/{device_id}/detail",
+                control_plane_handler.handle_options,
+            ),
+            web.options(
+                "/control-plane/v1/devices/{device_id}:heartbeat",
                 control_plane_handler.handle_options,
             ),
             web.post(
@@ -576,8 +644,16 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.post(
+                "/control-plane/v1/runtime/device-discovery",
+                control_plane_handler.handle_runtime_device_discovery,
+            ),
+            web.post(
                 "/control-plane/v1/runtime/device-config:resolve",
                 control_plane_handler.handle_resolve_device_config,
+            ),
+            web.options(
+                "/control-plane/v1/runtime/device-discovery",
+                control_plane_handler.handle_options,
             ),
             web.options(
                 "/control-plane/v1/runtime/device-config:resolve",
@@ -616,6 +692,10 @@ def create_http_app(config: dict) -> web.Application:
                 control_plane_handler.handle_options,
             ),
             web.post(
+                "/control-plane/v1/gateway/device-discovery",
+                control_plane_handler.handle_gateway_device_discovery,
+            ),
+            web.post(
                 "/control-plane/v1/gateway/events",
                 control_plane_handler.handle_gateway_event,
             ),
@@ -626,6 +706,10 @@ def create_http_app(config: dict) -> web.Application:
             web.post(
                 "/control-plane/v1/gateway/command-results",
                 control_plane_handler.handle_gateway_command_result,
+            ),
+            web.options(
+                "/control-plane/v1/gateway/device-discovery",
+                control_plane_handler.handle_options,
             ),
             web.options(
                 "/control-plane/v1/gateway/events",

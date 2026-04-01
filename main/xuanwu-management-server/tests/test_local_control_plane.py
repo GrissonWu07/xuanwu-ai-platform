@@ -1679,6 +1679,158 @@ def test_control_plane_job_schedule_lifecycle_actions_round_trip():
         assert runs_payload["items"][0]["job_run_id"] == triggered_payload["job_run_id"]
 
 
+def test_store_supports_cron_progression_and_retry_queueing():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+
+        store.save_schedule(
+            "sched-cron-retry-001",
+            {
+                "schedule_id": "sched-cron-retry-001",
+                "name": "Nightly summary",
+                "enabled": True,
+                "job_type": "telemetry_rollup",
+                "executor_type": "platform",
+                "cron": "0 */5 * * *",
+                "timezone": "UTC",
+                "next_run_at": "2026-03-31T10:00:00Z",
+                "misfire_policy": "run_once",
+                "misfire_grace_seconds": 120,
+                "retry_policy": "fixed_backoff",
+                "max_retry_attempts": 2,
+                "retry_backoff_seconds": 60,
+                "payload": {"site_id": "site-a"},
+            },
+        )
+
+        claimed = store.claim_schedule("sched-cron-retry-001", "2026-03-31T10:00:00Z")
+        failed = store.fail_job_run(
+            claimed["job_run_id"],
+            {
+                "status": "failed",
+                "failed_at": "2026-03-31T10:00:05Z",
+                "error": {"code": "gateway_timeout", "message": "Gateway timed out"},
+            },
+        )
+        dispatchable = store.list_dispatchable_job_runs("2026-03-31T10:01:05Z", limit=10)
+
+        assert claimed["attempt"] == 1
+        assert claimed["retry_policy"] == "fixed_backoff"
+        assert claimed["misfire_policy"] == "run_once"
+        assert store.get_schedule("sched-cron-retry-001")["next_run_at"] == "2026-03-31T15:00:00Z"
+        assert failed["retry_status"] == "scheduled"
+        assert failed["retry_job_run_id"].startswith("run-sched-cron-retry-001-")
+        assert dispatchable[0]["attempt"] == 2
+        assert dispatchable[0]["scheduled_for"] == "2026-03-31T10:01:05Z"
+        assert dispatchable[0]["status"] == "queued"
+
+
+def test_control_plane_job_run_dispatchable_claim_and_retry_endpoints_work_together():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+
+        handler.store.save_schedule(
+            "sched-retry-001",
+            {
+                "schedule_id": "sched-retry-001",
+                "enabled": True,
+                "job_type": "alarm_escalation",
+                "executor_type": "management",
+                "interval_seconds": 600,
+                "next_run_at": "2026-03-31T10:00:00Z",
+                "retry_policy": "fixed_backoff",
+                "max_retry_attempts": 2,
+                "retry_backoff_seconds": 30,
+                "payload": {"site_id": "factory-cn-01"},
+            },
+        )
+
+        trigger_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/jobs/schedules/sched-retry-001:trigger",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"schedule_id": "sched-retry-001"},
+        )
+        trigger_request._read_bytes = b'{"scheduled_for":"2026-03-31T09:55:00Z"}'
+        trigger_response = asyncio.run(handler.handle_trigger_job_schedule(trigger_request))
+        triggered_payload = yaml.safe_load(trigger_response.text)
+
+        dispatchable_response = asyncio.run(
+            handler.handle_list_dispatchable_job_runs(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/runs:dispatchable?now=2026-03-31T09:55:00Z&limit=20",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        dispatchable_payload = yaml.safe_load(dispatchable_response.text)
+
+        claim_request = make_mocked_request(
+            "POST",
+            f"/control-plane/v1/jobs/runs/{triggered_payload['job_run_id']}:claim",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"job_run_id": triggered_payload["job_run_id"]},
+        )
+        claim_request._read_bytes = b'{"started_at":"2026-03-31T09:55:02Z"}'
+        claim_response = asyncio.run(handler.handle_claim_dispatchable_job_run(claim_request))
+        claimed_payload = yaml.safe_load(claim_response.text)
+
+        fail_request = make_mocked_request(
+            "POST",
+            f"/control-plane/v1/jobs/runs/{triggered_payload['job_run_id']}:fail",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"job_run_id": triggered_payload["job_run_id"]},
+        )
+        fail_request._read_bytes = (
+            b'{"status":"failed","failed_at":"2026-03-31T09:55:10Z","error":{"code":"alarm_timeout","message":"timeout"}}'
+        )
+        fail_response = asyncio.run(handler.handle_fail_job_run(fail_request))
+        failed_payload = yaml.safe_load(fail_response.text)
+
+        retry_request = make_mocked_request(
+            "POST",
+            f"/control-plane/v1/jobs/runs/{triggered_payload['job_run_id']}:retry",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"job_run_id": triggered_payload["job_run_id"]},
+        )
+        retry_request._read_bytes = b'{"scheduled_for":"2026-03-31T09:56:00Z"}'
+        retry_response = asyncio.run(handler.handle_retry_job_run(retry_request))
+        retry_payload = yaml.safe_load(retry_response.text)
+
+        dispatchable_retry_response = asyncio.run(
+            handler.handle_list_dispatchable_job_runs(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/jobs/runs:dispatchable?now=2026-03-31T09:56:00Z&limit=20",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        dispatchable_retry_payload = yaml.safe_load(dispatchable_retry_response.text)
+
+        assert trigger_response.status == 201
+        assert dispatchable_response.status == 200
+        assert claim_response.status == 200
+        assert fail_response.status == 200
+        assert retry_response.status == 201
+        assert dispatchable_payload["items"][0]["job_run_id"] == triggered_payload["job_run_id"]
+        assert claimed_payload["status"] == "running"
+        assert claimed_payload["started_at"] == "2026-03-31T09:55:02Z"
+        assert failed_payload["retry_status"] == "scheduled"
+        assert retry_payload["attempt"] == 2
+        assert retry_payload["scheduled_for"] == "2026-03-31T09:56:00Z"
+        assert retry_payload["job_run_id"] in [
+            item["job_run_id"] for item in dispatchable_retry_payload["items"]
+        ]
+
+
 def test_control_plane_resource_item_endpoints_round_trip_real_records():
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -2374,3 +2526,282 @@ def test_control_plane_returns_expected_errors_for_invalid_management_requests()
         assert yaml.safe_load(missing_firmware_response.text)["error"] == "firmware_not_found"
         assert missing_alarm_response.status == 404
         assert yaml.safe_load(missing_alarm_response.text)["error"] == "alarm_not_found"
+
+
+def test_store_persists_and_promotes_discovered_devices():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+        discovered = store.save_discovered_device(
+            "disc-gw-001",
+            {
+                "discovery_id": "disc-gw-001",
+                "device_id": "sensor-01",
+                "gateway_id": "gateway-mqtt-001",
+                "ingress_type": "gateway",
+                "device_kind": "sensor",
+                "protocol_type": "mqtt",
+                "adapter_type": "sensor_mqtt",
+                "first_seen_at": "2026-04-01T08:00:00Z",
+                "last_seen_at": "2026-04-01T08:00:00Z",
+                "source_payload": {"topic": "factory/temp/1"},
+            },
+        )
+        discovered_again = store.save_discovered_device(
+            "disc-gw-001",
+            {
+                "discovery_id": "disc-gw-001",
+                "device_id": "sensor-01",
+                "gateway_id": "gateway-mqtt-001",
+                "ingress_type": "gateway",
+                "device_kind": "sensor",
+                "protocol_type": "mqtt",
+                "adapter_type": "sensor_mqtt",
+                "first_seen_at": "2026-04-01T08:00:00Z",
+                "last_seen_at": "2026-04-01T08:05:00Z",
+                "source_payload": {"topic": "factory/temp/1"},
+            },
+        )
+        promoted = store.promote_discovered_device(
+            "disc-gw-001",
+            {
+                "user_id": "anonymous",
+                "display_name": "Factory Temperature Sensor",
+                "bind_status": "bound",
+                "lifecycle_status": "claimed",
+            },
+        )
+
+        assert discovered["discovery_status"] == "pending"
+        assert discovered_again["last_seen_at"] == "2026-04-01T08:05:00Z"
+        assert store.list_discovered_devices()[0]["device_id"] == "sensor-01"
+        assert promoted["device_id"] == "sensor-01"
+        assert promoted["ingress_type"] == "gateway"
+        assert promoted["gateway_id"] == "gateway-mqtt-001"
+        assert promoted["protocol_type"] == "mqtt"
+        assert store.get_discovered_device("disc-gw-001")["discovery_status"] == "promoted"
+
+
+def test_store_updates_device_recency_via_heartbeat_and_callbacks():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        store = LocalControlPlaneStore(Path(temp_dir))
+        store.save_device(
+            "dev-runtime-001",
+            {
+                "device_id": "dev-runtime-001",
+                "user_id": "anonymous",
+                "device_kind": "conversational",
+                "ingress_type": "device_server",
+                "runtime_endpoint": "ws://runtime",
+                "bind_status": "bound",
+            },
+        )
+        heartbeat = store.update_device_heartbeat(
+            "dev-runtime-001",
+            {
+                "ingress_type": "device_server",
+                "status": "online",
+                "session_status": "connected",
+                "last_seen_at": "2026-04-01T08:10:00Z",
+            },
+        )
+        store.append_event(
+            {
+                "event_id": "evt-runtime-001",
+                "device_id": "dev-runtime-001",
+                "event_type": "runtime.connected",
+                "occurred_at": "2026-04-01T08:11:00Z",
+            }
+        )
+        store.append_telemetry(
+            {
+                "telemetry_id": "tel-runtime-001",
+                "device_id": "dev-runtime-001",
+                "capability_code": "runtime.latency",
+                "value": 42,
+                "observed_at": "2026-04-01T08:12:00Z",
+            }
+        )
+        store.save_command_result(
+            {
+                "result_id": "cmdr-runtime-001",
+                "command_id": "cmd-runtime-001",
+                "device_id": "dev-runtime-001",
+                "gateway_id": "gateway-http-001",
+                "status": "succeeded",
+                "finished_at": "2026-04-01T08:13:00Z",
+            }
+        )
+        updated_device = store.get_device("dev-runtime-001")
+
+        assert heartbeat["connection_status"] == "online"
+        assert updated_device["last_seen_at"] == "2026-04-01T08:13:00Z"
+        assert updated_device["last_event_at"] == "2026-04-01T08:11:00Z"
+        assert updated_device["last_telemetry_at"] == "2026-04-01T08:12:00Z"
+        assert updated_device["last_command_at"] == "2026-04-01T08:13:00Z"
+
+
+def test_device_detail_includes_discovery_provenance_and_latest_command_result():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        handler.store.save_discovered_device(
+            "disc-runtime-001",
+            {
+                "discovery_id": "disc-runtime-001",
+                "device_id": "dev-runtime-001",
+                "ingress_type": "device_server",
+                "device_kind": "conversational",
+                "runtime_endpoint": "ws://runtime",
+                "first_seen_at": "2026-04-01T08:00:00Z",
+                "last_seen_at": "2026-04-01T08:00:00Z",
+                "source_payload": {"client_id": "client-runtime-001"},
+            },
+        )
+        handler.store.promote_discovered_device(
+            "disc-runtime-001",
+            {
+                "user_id": "anonymous",
+                "bind_status": "bound",
+                "display_name": "Runtime Device",
+            },
+        )
+        handler.store.save_command_result(
+            {
+                "result_id": "cmdr-runtime-001",
+                "command_id": "cmd-runtime-001",
+                "device_id": "dev-runtime-001",
+                "status": "succeeded",
+                "finished_at": "2026-04-01T08:15:00Z",
+            }
+        )
+        handler.store.append_event(
+            {
+                "event_id": "evt-alarm-runtime-001",
+                "alarm_id": "alarm-runtime-001",
+                "device_id": "dev-runtime-001",
+                "event_type": "alarm.triggered",
+                "severity": "warning",
+                "message": "Device temperature drift",
+                "occurred_at": "2026-04-01T08:16:00Z",
+            }
+        )
+
+        payload = handler.store.build_device_detail("dev-runtime-001")
+
+        assert payload["discovery"]["discovery_id"] == "disc-runtime-001"
+        assert payload["discovery"]["ingress_type"] == "device_server"
+        assert payload["latest_command_result"]["result_id"] == "cmdr-runtime-001"
+        assert payload["latest_alarm"]["alarm_id"] == "alarm-runtime-001"
+        assert payload["binding"]["channel_id"] is None
+        assert payload["runtime"]["session_status"] == "unknown"
+
+
+def test_control_plane_discovery_and_heartbeat_endpoints_round_trip():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        create_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/discovered-devices",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        create_request._read_bytes = (
+            b'{"discovery_id":"disc-http-001","device_id":"dev-http-001","ingress_type":"gateway",'
+            b'"device_kind":"actuator","gateway_id":"gateway-http-001","protocol_type":"http","adapter_type":"http",'
+            b'"first_seen_at":"2026-04-01T08:00:00Z","last_seen_at":"2026-04-01T08:00:00Z"}'
+        )
+        create_response = asyncio.run(handler.handle_create_discovered_device(create_request))
+        gateway_create_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/gateway/device-discovery",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        gateway_create_request._read_bytes = (
+            b'{"discovery_id":"disc-http-002","device_id":"dev-http-002","gateway_id":"gateway-http-001",'
+            b'"device_kind":"actuator","protocol_type":"http","adapter_type":"http",'
+            b'"first_seen_at":"2026-04-01T08:01:00Z","last_seen_at":"2026-04-01T08:01:00Z"}'
+        )
+        gateway_create_response = asyncio.run(handler.handle_gateway_device_discovery(gateway_create_request))
+        list_response = asyncio.run(
+            handler.handle_list_discovered_devices(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/discovered-devices",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                )
+            )
+        )
+        promote_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/discovered-devices/disc-http-001:promote",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"discovery_id": "disc-http-001"},
+        )
+        promote_request._read_bytes = b'{"user_id":"anonymous","display_name":"HTTP Actuator","bind_status":"bound"}'
+        promote_response = asyncio.run(handler.handle_promote_discovered_device(promote_request))
+        heartbeat_request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/devices/dev-http-001:heartbeat",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+            match_info={"device_id": "dev-http-001"},
+        )
+        heartbeat_request._read_bytes = (
+            b'{"ingress_type":"gateway","gateway_id":"gateway-http-001","status":"online",'
+            b'"last_seen_at":"2026-04-01T08:05:00Z"}'
+        )
+        heartbeat_response = asyncio.run(handler.handle_device_heartbeat(heartbeat_request))
+        get_discovery_response = asyncio.run(
+            handler.handle_get_discovered_device(
+                make_mocked_request(
+                    "GET",
+                    "/control-plane/v1/discovered-devices/disc-http-001",
+                    headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+                    match_info={"discovery_id": "disc-http-001"},
+                )
+            )
+        )
+
+        assert create_response.status == 201
+        assert gateway_create_response.status == 201
+        assert promote_response.status == 200
+        assert heartbeat_response.status == 200
+        assert yaml.safe_load(list_response.text)["items"][0]["device_id"] == "dev-http-001"
+        assert yaml.safe_load(get_discovery_response.text)["discovery_status"] == "promoted"
+        assert yaml.safe_load(heartbeat_response.text)["last_seen_at"] == "2026-04-01T08:05:00Z"
+
+
+def test_runtime_device_discovery_alias_creates_discovered_device():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        handler = ControlPlaneHandler(
+            {
+                "server": {"auth_key": "runtime-secret"},
+                "control-plane": {"data_dir": str(root)},
+            }
+        )
+        request = make_mocked_request(
+            "POST",
+            "/control-plane/v1/runtime/device-discovery",
+            headers={"X-Xuanwu-Control-Secret": "runtime-secret"},
+        )
+        request._read_bytes = (
+            b'{"discovery_id":"disc-runtime-002","device_id":"dev-runtime-002","device_kind":"conversational",'
+            b'"runtime_endpoint":"ws://runtime","last_seen_at":"2026-04-01T09:00:00Z"}'
+        )
+
+        response = asyncio.run(handler.handle_runtime_device_discovery(request))
+        payload = yaml.safe_load(response.text)
+
+        assert response.status == 201
+        assert payload["ingress_type"] == "device_server"
+        assert handler.store.get_discovered_device("disc-runtime-002")["device_id"] == "dev-runtime-002"

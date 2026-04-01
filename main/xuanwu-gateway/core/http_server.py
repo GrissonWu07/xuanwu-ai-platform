@@ -17,6 +17,8 @@ def create_http_app(config: dict) -> web.Application:
             web.post("/gateway/v1/ingest/http-push", handler.handle_ingest_http_push),
             web.post("/gateway/v1/ingest/mqtt", handler.handle_ingest_mqtt),
             web.post("/gateway/v1/ingest/home-assistant", handler.handle_ingest_home_assistant),
+            web.post("/gateway/v1/bridge/events", handler.handle_bridge_event),
+            web.post("/gateway/v1/commands:dispatch-result", handler.handle_command_dispatch_result),
             web.get("/gateway/v1/devices/{device_id}/state", handler.handle_get_device_state),
         ]
     )

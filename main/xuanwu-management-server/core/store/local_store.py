@@ -4,6 +4,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -65,6 +66,7 @@ class LocalControlPlaneStore:
         (self.root_dir / "users").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "roles").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channels").mkdir(parents=True, exist_ok=True)
+        (self.root_dir / "discovered_devices").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "user_device_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "user_channel_mappings").mkdir(parents=True, exist_ok=True)
         (self.root_dir / "channel_device_mappings").mkdir(parents=True, exist_ok=True)
@@ -115,15 +117,121 @@ class LocalControlPlaneStore:
         record = dict(payload)
         record.setdefault("device_id", device_id)
         record["user_id"] = user_id
+        record.setdefault("device_kind", "conversational")
+        record.setdefault("ingress_type", "device_server")
         record.setdefault("bind_status", "pending")
         record.setdefault("lifecycle_status", "created")
         record.setdefault("channel_ids", [])
+        record.setdefault("gateway_id", None)
+        record.setdefault("protocol_type", None)
+        record.setdefault("adapter_type", None)
+        record.setdefault("runtime_endpoint", None)
+        record.setdefault("capability_refs", [])
+        record.setdefault("runtime_overrides", {})
+        record.setdefault("connection_status", "unknown")
+        record.setdefault("session_status", "unknown")
+        record.setdefault("last_seen_at", None)
+        record.setdefault("last_event_at", None)
+        record.setdefault("last_telemetry_at", None)
+        record.setdefault("last_command_at", None)
         self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", record)
         self._replace_user_device_mappings_for_device(user_id, device_id)
         return record
 
     def list_devices(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "devices")
+
+    def get_discovered_device(self, discovery_id: str) -> dict[str, Any] | None:
+        return self._read_yaml(self.root_dir / "discovered_devices" / f"{discovery_id}.yaml")
+
+    def list_discovered_devices(self) -> list[dict[str, Any]]:
+        return self._list_yaml_dir(self.root_dir / "discovered_devices")
+
+    def save_discovered_device(self, discovery_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        record = dict(payload)
+        discovery_id = str(discovery_id or record.get("discovery_id", "")).strip()
+        device_id = str(record.get("device_id", "")).strip()
+        if not discovery_id:
+            raise ValueError("discovery_id_required")
+        if not device_id:
+            raise ValueError("device_id_required")
+        existing = self.get_discovered_device(discovery_id) or {}
+        merged = dict(existing)
+        merged.update(record)
+        merged["discovery_id"] = discovery_id
+        merged["device_id"] = device_id
+        merged.setdefault("ingress_type", "gateway")
+        merged.setdefault("device_kind", "sensor")
+        merged.setdefault("gateway_id", None)
+        merged.setdefault("protocol_type", None)
+        merged.setdefault("adapter_type", None)
+        merged.setdefault("runtime_endpoint", None)
+        merged.setdefault("source_payload", {})
+        merged.setdefault("first_seen_at", merged.get("last_seen_at"))
+        merged.setdefault("last_seen_at", merged.get("first_seen_at"))
+        merged.setdefault("discovery_status", "pending")
+        self._write_yaml(self.root_dir / "discovered_devices" / f"{discovery_id}.yaml", merged)
+        return merged
+
+    def promote_discovered_device(self, discovery_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        discovered = self.get_discovered_device(discovery_id)
+        if discovered is None:
+            raise ValueError("discovered_device_not_found")
+        device_payload = {
+            "device_id": discovered["device_id"],
+            "user_id": payload.get("user_id"),
+            "display_name": payload.get("display_name"),
+            "device_kind": discovered.get("device_kind"),
+            "ingress_type": discovered.get("ingress_type"),
+            "gateway_id": discovered.get("gateway_id"),
+            "protocol_type": discovered.get("protocol_type"),
+            "adapter_type": discovered.get("adapter_type"),
+            "runtime_endpoint": discovered.get("runtime_endpoint"),
+            "bind_status": payload.get("bind_status", "pending"),
+            "lifecycle_status": payload.get("lifecycle_status", "claimed"),
+            "source_payload": deepcopy(discovered.get("source_payload") or {}),
+            "last_seen_at": discovered.get("last_seen_at"),
+        }
+        saved = self.save_device(discovered["device_id"], device_payload)
+        discovered_record = dict(discovered)
+        discovered_record["discovery_status"] = "promoted"
+        discovered_record["promoted_device_id"] = discovered["device_id"]
+        self._write_yaml(self.root_dir / "discovered_devices" / f"{discovery_id}.yaml", discovered_record)
+        return saved
+
+    def ignore_discovered_device(self, discovery_id: str, reason: str | None = None) -> dict[str, Any]:
+        discovered = self.get_discovered_device(discovery_id)
+        if discovered is None:
+            raise ValueError("discovered_device_not_found")
+        updated = dict(discovered)
+        updated["discovery_status"] = "ignored"
+        if reason:
+            updated["ignore_reason"] = reason
+        self._write_yaml(self.root_dir / "discovered_devices" / f"{discovery_id}.yaml", updated)
+        return updated
+
+    def update_device_heartbeat(self, device_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        device = self.get_device(device_id)
+        if device is None:
+            raise DeviceNotFoundException(device_id)
+        updated = dict(device)
+        updated["connection_status"] = payload.get("status", updated.get("connection_status", "unknown"))
+        updated["session_status"] = payload.get("session_status", updated.get("session_status"))
+        updated["last_seen_at"] = payload.get("last_seen_at", updated.get("last_seen_at"))
+        if payload.get("ingress_type"):
+            updated["ingress_type"] = payload.get("ingress_type")
+        if payload.get("gateway_id"):
+            updated["gateway_id"] = payload.get("gateway_id")
+        if payload.get("protocol_type"):
+            updated["protocol_type"] = payload.get("protocol_type")
+        if payload.get("adapter_type"):
+            updated["adapter_type"] = payload.get("adapter_type")
+        if payload.get("device_kind"):
+            updated["device_kind"] = payload.get("device_kind")
+        if payload.get("runtime_endpoint"):
+            updated["runtime_endpoint"] = payload.get("runtime_endpoint")
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", updated)
+        return updated
 
     def claim_device(self, device_id: str, user_id: str) -> dict[str, Any]:
         device = self.get_device(device_id)
@@ -500,6 +608,11 @@ class LocalControlPlaneStore:
         if not event_id:
             raise ValueError("event_id_required")
         self._write_yaml(self.root_dir / "events" / f"{event_id}.yaml", payload)
+        self._touch_device_from_record(
+            str(payload.get("device_id") or "").strip(),
+            "last_event_at",
+            payload.get("occurred_at") or payload.get("timestamp"),
+        )
 
         alarm_id = str(payload.get("alarm_id", "")).strip()
         if payload.get("event_type") == "alarm.triggered" and alarm_id:
@@ -520,6 +633,7 @@ class LocalControlPlaneStore:
                     "source": alarm_source,
                     "site_id": payload.get("site_id"),
                     "status": "active",
+                    "created_at": payload.get("occurred_at") or payload.get("timestamp"),
                     "last_event_id": event_id,
                 },
             )
@@ -544,6 +658,11 @@ class LocalControlPlaneStore:
         if not telemetry_id:
             raise ValueError("telemetry_id_required")
         self._write_yaml(self.root_dir / "telemetry" / f"{telemetry_id}.yaml", payload)
+        self._touch_device_from_record(
+            str(payload.get("device_id") or "").strip(),
+            "last_telemetry_at",
+            payload.get("observed_at") or payload.get("reported_at") or payload.get("timestamp"),
+        )
         return payload
 
     def list_telemetry(self, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -556,6 +675,11 @@ class LocalControlPlaneStore:
         if not result_id:
             raise ValueError("result_id_required")
         self._write_yaml(self.root_dir / "command_results" / f"{result_id}.yaml", payload)
+        self._touch_device_from_record(
+            str(payload.get("device_id") or "").strip(),
+            "last_command_at",
+            payload.get("finished_at") or payload.get("timestamp"),
+        )
         self.append_event(
             {
                 "event_id": f"evt-{result_id}",
@@ -691,6 +815,11 @@ class LocalControlPlaneStore:
         record.setdefault("timezone", "UTC")
         record.setdefault("payload", {})
         record.setdefault("executor_type", "platform")
+        record.setdefault("misfire_policy", "run_once")
+        record.setdefault("misfire_grace_seconds", 0)
+        record.setdefault("retry_policy", "never")
+        record.setdefault("max_retry_attempts", 0)
+        record.setdefault("retry_backoff_seconds", 0)
         record["status"] = "active" if record.get("enabled", True) else "disabled"
         self._write_yaml(self.root_dir / "job_schedules" / f"{schedule_id}.yaml", record)
         return record
@@ -718,6 +847,20 @@ class LocalControlPlaneStore:
     def list_job_runs(self) -> list[dict[str, Any]]:
         return self._list_yaml_dir(self.root_dir / "job_runs")
 
+    def list_dispatchable_job_runs(self, now_iso: str, *, limit: int = 100) -> list[dict[str, Any]]:
+        now = self._parse_timestamp(now_iso)
+        dispatchable: list[dict[str, Any]] = []
+        for item in self.list_job_runs():
+            if str(item.get("status") or "").strip().lower() != "queued":
+                continue
+            scheduled_for = str(item.get("scheduled_for") or "").strip()
+            if not scheduled_for:
+                continue
+            if self._parse_timestamp(scheduled_for) <= now:
+                dispatchable.append(item)
+        dispatchable.sort(key=lambda item: str(item.get("scheduled_for", "")))
+        return dispatchable[:limit]
+
     def claim_schedule(self, schedule_id: str, scheduled_for: str) -> dict[str, Any]:
         schedule = self.get_schedule(schedule_id)
         if schedule is None:
@@ -738,6 +881,12 @@ class LocalControlPlaneStore:
             "executor_type": schedule.get("executor_type"),
             "scheduled_for": scheduled_for,
             "status": "queued",
+            "attempt": 1,
+            "misfire_policy": schedule.get("misfire_policy", "run_once"),
+            "misfire_grace_seconds": int(schedule.get("misfire_grace_seconds", 0) or 0),
+            "retry_policy": schedule.get("retry_policy", "never"),
+            "max_retry_attempts": int(schedule.get("max_retry_attempts", 0) or 0),
+            "retry_backoff_seconds": int(schedule.get("retry_backoff_seconds", 0) or 0),
             "payload": deepcopy(schedule.get("payload") or {}),
         }
         self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", run_record)
@@ -750,6 +899,18 @@ class LocalControlPlaneStore:
             updated_schedule,
         )
         return run_record
+
+    def claim_job_run(self, job_run_id: str, started_at: str) -> dict[str, Any]:
+        existing = self.get_job_run(job_run_id)
+        if existing is None:
+            raise ValueError("job_run_not_found")
+        if str(existing.get("status") or "").strip().lower() != "queued":
+            raise ValueError("job_run_not_dispatchable")
+        record = dict(existing)
+        record["status"] = "running"
+        record["started_at"] = started_at
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", record)
+        return record
 
     def pause_schedule(self, schedule_id: str, reason: str | None = None) -> dict[str, Any]:
         schedule = self.get_schedule(schedule_id)
@@ -779,19 +940,7 @@ class LocalControlPlaneStore:
         schedule = self.get_schedule(schedule_id)
         if schedule is None:
             raise ValueError("schedule_not_found")
-        job_run_id = self._build_job_run_id(schedule_id, scheduled_for)
-        run_record = {
-            "job_run_id": job_run_id,
-            "schedule_id": schedule_id,
-            "job_type": schedule.get("job_type"),
-            "executor_type": schedule.get("executor_type"),
-            "scheduled_for": scheduled_for,
-            "status": "queued",
-            "payload": deepcopy(schedule.get("payload") or {}),
-            "trigger_mode": "manual",
-        }
-        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", run_record)
-        return run_record
+        return self._create_queued_job_run(schedule, scheduled_for, attempt=1, trigger_mode="manual")
 
     def complete_job_run(self, job_run_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         existing = self.get_job_run(job_run_id)
@@ -801,6 +950,7 @@ class LocalControlPlaneStore:
         record.update(dict(payload))
         record["job_run_id"] = job_run_id
         record["status"] = str(payload.get("status") or "completed")
+        record.setdefault("finished_at", payload.get("finished_at") or record.get("finished_at"))
         self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", record)
         return record
 
@@ -812,8 +962,38 @@ class LocalControlPlaneStore:
         record.update(dict(payload))
         record["job_run_id"] = job_run_id
         record["status"] = str(payload.get("status") or "failed")
+        failed_at = str(payload.get("failed_at") or record.get("failed_at") or record.get("scheduled_for") or "").strip()
+        if failed_at:
+            record["failed_at"] = failed_at
+        retry_run = self._create_retry_job_run(record)
+        if retry_run is not None:
+            record["retry_status"] = "scheduled"
+            record["retry_job_run_id"] = retry_run["job_run_id"]
         self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", record)
         return record
+
+    def retry_job_run(self, job_run_id: str, scheduled_for: str | None = None) -> dict[str, Any]:
+        existing = self.get_job_run(job_run_id)
+        if existing is None:
+            raise ValueError("job_run_not_found")
+        if str(existing.get("status") or "").strip().lower() not in {"failed", "completed"}:
+            raise ValueError("job_run_not_retryable")
+        schedule = self.get_schedule(str(existing.get("schedule_id") or ""))
+        if schedule is None:
+            raise ValueError("schedule_not_found")
+        next_attempt = int(existing.get("attempt", 1) or 1) + 1
+        when = str(scheduled_for or self._compute_retry_scheduled_for(existing)).strip()
+        retry_run = self._create_queued_job_run(
+            schedule,
+            when,
+            attempt=next_attempt,
+            trigger_mode="retry",
+        )
+        updated_existing = dict(existing)
+        updated_existing["retry_status"] = "scheduled"
+        updated_existing["retry_job_run_id"] = retry_run["job_run_id"]
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", updated_existing)
+        return retry_run
 
     def build_server_config(self, base_config: dict[str, Any]) -> dict[str, Any]:
         server_profile = self.load_server_profile()
@@ -1163,11 +1343,20 @@ class LocalControlPlaneStore:
             source = str(item.get("source") or item.get("device_id") or "unknown")
             severity_counts[severity] = severity_counts.get(severity, 0) + 1
             source_counts[source] = source_counts.get(source, 0) + 1
-        today_prefix = self._format_timestamp(datetime.now(timezone.utc))[:10]
+        alarm_events = [item for item in self.list_events() if str(item.get("event_type") or "").startswith("alarm.")]
+        reference_timestamp = next(
+            (
+                str(item.get("occurred_at") or item.get("timestamp") or "")
+                for item in self._sort_records_by_time(alarm_events, "occurred_at", "event_id", reverse=True)
+                if str(item.get("occurred_at") or item.get("timestamp") or "").strip()
+            ),
+            self._format_timestamp(datetime.now(timezone.utc)),
+        )
+        today_prefix = reference_timestamp[:10]
         escalated_today = len(
             [
                 item
-                for item in self.list_events()
+                for item in alarm_events
                 if str(item.get("event_type") or "") == "alarm.escalated"
                 and str(item.get("occurred_at") or item.get("timestamp") or "").startswith(today_prefix)
             ]
@@ -1177,11 +1366,7 @@ class LocalControlPlaneStore:
             for source, count in sorted(source_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
         ]
         sorted_alarms = self._sort_records_by_time(alarms, "created_at", "alarm_id", reverse=True)
-        alert_activity = [
-            item
-            for item in self._sort_records_by_time(self.list_events(), "occurred_at", "event_id", reverse=True)
-            if str(item.get("event_type") or "").startswith("alarm.")
-        ][:5]
+        alert_activity = self._sort_records_by_time(alarm_events, "occurred_at", "event_id", reverse=True)[:5]
         return {
             "summary": [
                 {"label": "Active alerts", "value": str(len(active_alarms))},
@@ -1247,6 +1432,8 @@ class LocalControlPlaneStore:
         if device is None:
             raise DeviceNotFoundException(device_id)
         owner = self.get_user(str(device.get("user_id") or "anonymous"))
+        discovery = self.get_discovered_device_for_device(device_id)
+        gateway = self.get_gateway(str(device.get("gateway_id") or "")) if device.get("gateway_id") else None
         channel_memberships = [
             item
             for item in self.list_channel_device_mappings()
@@ -1272,18 +1459,57 @@ class LocalControlPlaneStore:
         for item in telemetry_items:
             capability_code = str(item.get("capability_code") or "unknown")
             latest_by_capability.setdefault(capability_code, item)
+        latest_command_result = self.get_latest_command_result_for_device(device_id)
+        latest_alarm = self.get_latest_alarm_for_device(device_id)
+        runtime_binding_view = self.build_runtime_binding_view(device_id)
+        capability_routing_view = self.build_runtime_capability_routing_view(device_id)
         return {
-            "device": device,
+            "device": deepcopy(device),
             "owner_summary": owner,
+            "gateway_summary": gateway,
+            "discovery": deepcopy(discovery or {}),
             "channel_memberships": channel_memberships,
             "agent_binding": {
                 "mapping": deepcopy(device_agent_mapping or {}),
                 "agent": deepcopy(agent or {}),
             },
-            "runtime_binding_view": self.build_runtime_binding_view(device_id),
-            "capability_routing_view": self.build_runtime_capability_routing_view(device_id),
-            "recent_events": recent_events,
+            "runtime_binding_view": runtime_binding_view,
+            "capability_routing_view": capability_routing_view,
+            "binding": {
+                "agent_id": runtime_binding_view.get("agent_id"),
+                "channel_id": runtime_binding_view.get("channel_id"),
+                "model_config_id": runtime_binding_view.get("model_config_id"),
+            },
+            "runtime": {
+                "session_status": device.get("session_status"),
+                "capability_route_count": len(capability_routing_view.get("command_routes") or []),
+            },
+            "recent_events": [
+                {
+                    "id": item.get("event_id"),
+                    "title": item.get("message") or item.get("event_type") or item.get("event_id"),
+                    "detail": item.get("source")
+                    or item.get("device_id")
+                    or item.get("gateway_id")
+                    or item.get("event_type")
+                    or "Device event",
+                    "at": item.get("occurred_at") or item.get("timestamp"),
+                }
+                for item in recent_events
+            ],
+            "recent_telemetry": [
+                {
+                    "metric": item.get("capability_code"),
+                    "value": json.dumps(item.get("metrics") or {}, ensure_ascii=False)
+                    if isinstance(item.get("metrics"), dict)
+                    else str(item.get("metrics") or item.get("value") or ""),
+                    "at": item.get("observed_at") or item.get("reported_at") or item.get("timestamp"),
+                }
+                for item in list(latest_by_capability.values())
+            ],
             "latest_telemetry_snapshot": list(latest_by_capability.values()),
+            "latest_alarm": deepcopy(latest_alarm or {}),
+            "latest_command_result": deepcopy(latest_command_result or {}),
         }
 
     def _read_yaml(self, path: Path, default: dict[str, Any] | None = None) -> dict[str, Any] | None:
@@ -1320,6 +1546,42 @@ class LocalControlPlaneStore:
             if isinstance(payload, dict):
                 items.append(payload)
         return items
+
+    def get_discovered_device_for_device(self, device_id: str) -> dict[str, Any] | None:
+        for item in self.list_discovered_devices():
+            if str(item.get("device_id") or "") == device_id:
+                return item
+        return None
+
+    def get_latest_command_result_for_device(self, device_id: str) -> dict[str, Any] | None:
+        items = [
+            item
+            for item in self._list_yaml_dir(self.root_dir / "command_results")
+            if str(item.get("device_id") or "") == device_id
+        ]
+        sorted_items = self._sort_records_by_time(items, "finished_at", "result_id", reverse=True)
+        return sorted_items[0] if sorted_items else None
+
+    def get_latest_alarm_for_device(self, device_id: str) -> dict[str, Any] | None:
+        items = [
+            item
+            for item in self._list_yaml_dir(self.root_dir / "alarms")
+            if str(item.get("device_id") or "") == device_id
+        ]
+        sorted_items = self._sort_records_by_time(items, "created_at", "alarm_id", reverse=True)
+        return sorted_items[0] if sorted_items else None
+
+    def _touch_device_from_record(self, device_id: str, field: str, timestamp: Any):
+        if not device_id:
+            return
+        device = self.get_device(device_id)
+        if device is None:
+            return
+        updated = dict(device)
+        updated[field] = timestamp or updated.get(field)
+        if field != "last_seen_at" and timestamp:
+            updated["last_seen_at"] = timestamp
+        self._write_yaml(self.root_dir / "devices" / f"{device_id}.yaml", updated)
 
     def _normalize_owner_user_id(self, user_id: Any) -> str:
         normalized = str(user_id or "").strip()
@@ -1495,13 +1757,124 @@ class LocalControlPlaneStore:
                 seconds=int(interval_seconds)
             )
             return self._format_timestamp(next_time)
+        cron_expression = str(schedule.get("cron") or "").strip()
+        if cron_expression:
+            return self._calculate_cron_next_run_at(
+                cron_expression,
+                scheduled_for,
+                str(schedule.get("timezone") or "UTC").strip() or "UTC",
+            )
         return None
 
-    def _build_job_run_id(self, schedule_id: str, scheduled_for: str) -> str:
+    def _calculate_cron_next_run_at(self, expression: str, scheduled_for: str, timezone_name: str) -> str:
+        fields = expression.split()
+        if len(fields) != 5:
+            raise ValueError("invalid_cron_expression")
+        minute_field, hour_field, day_field, month_field, weekday_field = fields
+        zone = ZoneInfo(timezone_name)
+        cursor = self._parse_timestamp(scheduled_for).astimezone(zone).replace(second=0, microsecond=0) + timedelta(minutes=1)
+        for _ in range(0, 60 * 24 * 370):
+            if (
+                self._cron_field_matches(minute_field, cursor.minute, 0, 59)
+                and self._cron_field_matches(hour_field, cursor.hour, 0, 23)
+                and self._cron_field_matches(day_field, cursor.day, 1, 31)
+                and self._cron_field_matches(month_field, cursor.month, 1, 12)
+                and self._cron_field_matches(weekday_field, (cursor.weekday() + 1) % 7, 0, 6)
+            ):
+                return self._format_timestamp(cursor.astimezone(timezone.utc))
+            cursor += timedelta(minutes=1)
+        raise ValueError("cron_next_run_not_found")
+
+    def _cron_field_matches(self, field: str, value: int, minimum: int, maximum: int) -> bool:
+        for part in field.split(","):
+            token = part.strip()
+            if not token:
+                continue
+            if token == "*":
+                return True
+            step = 1
+            base = token
+            if "/" in token:
+                base, step_token = token.split("/", 1)
+                step = int(step_token)
+            if base == "*":
+                if (value - minimum) % step == 0:
+                    return True
+                continue
+            if "-" in base:
+                start_token, end_token = base.split("-", 1)
+                start = int(start_token)
+                end = int(end_token)
+                if start <= value <= end and (value - start) % step == 0:
+                    return True
+                continue
+            candidate = int(base)
+            if minimum <= candidate <= maximum and value == candidate:
+                return True
+        return False
+
+    def _create_queued_job_run(
+        self,
+        schedule: dict[str, Any],
+        scheduled_for: str,
+        *,
+        attempt: int,
+        trigger_mode: str,
+    ) -> dict[str, Any]:
+        schedule_id = str(schedule.get("schedule_id") or "").strip()
+        job_run_id = self._build_job_run_id(schedule_id, scheduled_for, attempt=attempt)
+        run_record = {
+            "job_run_id": job_run_id,
+            "schedule_id": schedule_id,
+            "job_type": schedule.get("job_type"),
+            "executor_type": schedule.get("executor_type"),
+            "scheduled_for": scheduled_for,
+            "status": "queued",
+            "attempt": attempt,
+            "trigger_mode": trigger_mode,
+            "misfire_policy": schedule.get("misfire_policy", "run_once"),
+            "misfire_grace_seconds": int(schedule.get("misfire_grace_seconds", 0) or 0),
+            "retry_policy": schedule.get("retry_policy", "never"),
+            "max_retry_attempts": int(schedule.get("max_retry_attempts", 0) or 0),
+            "retry_backoff_seconds": int(schedule.get("retry_backoff_seconds", 0) or 0),
+            "payload": deepcopy(schedule.get("payload") or {}),
+        }
+        self._write_yaml(self.root_dir / "job_runs" / f"{job_run_id}.yaml", run_record)
+        return run_record
+
+    def _create_retry_job_run(self, failed_run: dict[str, Any]) -> dict[str, Any] | None:
+        retry_policy = str(failed_run.get("retry_policy") or "never").strip().lower()
+        if retry_policy == "never":
+            return None
+        current_attempt = int(failed_run.get("attempt", 1) or 1)
+        max_retry_attempts = int(failed_run.get("max_retry_attempts", 0) or 0)
+        if current_attempt > max_retry_attempts:
+            return None
+        schedule = self.get_schedule(str(failed_run.get("schedule_id") or ""))
+        if schedule is None:
+            return None
+        scheduled_for = self._compute_retry_scheduled_for(failed_run)
+        return self._create_queued_job_run(
+            schedule,
+            scheduled_for,
+            attempt=current_attempt + 1,
+            trigger_mode="retry",
+        )
+
+    def _compute_retry_scheduled_for(self, failed_run: dict[str, Any]) -> str:
+        failed_at = str(failed_run.get("failed_at") or failed_run.get("scheduled_for") or "").strip()
+        base_time = self._parse_timestamp(failed_at)
+        retry_policy = str(failed_run.get("retry_policy") or "never").strip().lower()
+        backoff_seconds = int(failed_run.get("retry_backoff_seconds", 0) or 0)
+        if retry_policy == "fixed_backoff" and backoff_seconds > 0:
+            base_time += timedelta(seconds=backoff_seconds)
+        return self._format_timestamp(base_time)
+
+    def _build_job_run_id(self, schedule_id: str, scheduled_for: str, *, attempt: int = 1) -> str:
         clean_timestamp = (
             scheduled_for.replace("-", "")
             .replace(":", "")
             .replace("T", "T")
             .replace("Z", "Z")
         )
-        return f"run-{schedule_id}-{clean_timestamp}"
+        return f"run-{schedule_id}-{clean_timestamp}-a{attempt}"

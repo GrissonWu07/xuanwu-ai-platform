@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 from aiohttp import web
 
@@ -29,6 +30,74 @@ class GatewayHandler:
 
     def _loads_json(self, payload: str) -> dict:
         return json.loads(payload)
+
+    def _timestamp(self, value=None) -> str:
+        if value:
+            return str(value)
+        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    def _infer_device_kind(self, payload: dict) -> str:
+        declared = str(payload.get("device_kind", "")).strip()
+        if declared:
+            return declared
+        adapter_type = str(payload.get("adapter_type", "")).strip()
+        capability_code = str(payload.get("capability_code", "")).strip()
+        if adapter_type.startswith("sensor") or capability_code.startswith("sensor."):
+            return "sensor"
+        if adapter_type in {"modbus_tcp", "opc_ua", "bacnet_ip", "can_gateway"}:
+            return "industrial"
+        return "actuator"
+
+    async def _sync_device_presence(
+        self,
+        payload: dict,
+        *,
+        observed_at=None,
+        session_status: str = "gateway_active",
+    ) -> None:
+        device_id = str(payload.get("device_id", "")).strip()
+        if not device_id:
+            return
+        adapter_type = str(payload.get("adapter_type", "")).strip() or "gateway"
+        gateway_id = str(payload.get("gateway_id", "")).strip() or None
+        last_seen_at = self._timestamp(observed_at or payload.get("observed_at"))
+        runtime_endpoint = f"/gateway/v1/devices/{device_id}/state"
+        managed = await self.management_client.post_device_heartbeat(
+            device_id,
+            {
+                "status": "online",
+                "session_status": session_status,
+                "last_seen_at": last_seen_at,
+                "gateway_id": gateway_id,
+                "runtime_endpoint": runtime_endpoint,
+                "protocol_type": payload.get("protocol_type") or adapter_type,
+                "adapter_type": adapter_type,
+            },
+        )
+        if managed:
+            return
+        await self.management_client.upsert_discovered_device(
+            {
+                "discovery_id": str(
+                    payload.get("discovery_id") or f"gateway:{gateway_id or 'unknown'}:{device_id}"
+                ),
+                "device_id": device_id,
+                "display_name": payload.get("display_name"),
+                "ingress_type": "gateway",
+                "device_kind": self._infer_device_kind(payload),
+                "gateway_id": gateway_id,
+                "protocol_type": payload.get("protocol_type") or adapter_type,
+                "adapter_type": adapter_type,
+                "runtime_endpoint": runtime_endpoint,
+                "first_seen_at": last_seen_at,
+                "last_seen_at": last_seen_at,
+                "source_payload": {
+                    "capability_code": payload.get("capability_code"),
+                    "topic": payload.get("topic"),
+                    "site_id": payload.get("site_id"),
+                },
+            }
+        )
 
     def _dispatch_command_payload(self, payload: dict) -> tuple[dict, int]:
         adapter_type = str(payload.get("adapter_type", "")).strip()
@@ -82,6 +151,11 @@ class GatewayHandler:
             return {"error": "adapter_ingest_not_supported"}, 400
         if result.get("error"):
             return result, 400
+        await self._sync_device_presence(
+            payload,
+            observed_at=payload.get("observed_at") or payload.get("reported_at"),
+            session_status="telemetry_active",
+        )
         for telemetry in result.get("telemetry") or []:
             await self.management_client.post_telemetry(telemetry)
         for event in result.get("events") or []:
@@ -98,6 +172,7 @@ class GatewayHandler:
             return self._json_response({"error": "invalid_json"}, status=400)
         result, status = self._dispatch_command_payload(payload)
         if status == 200:
+            await self._sync_device_presence(payload, session_status="command_ready")
             await self._publish_command_result(result)
         return self._json_response(result, status=status)
 
@@ -114,6 +189,7 @@ class GatewayHandler:
         result, status = self._dispatch_command_payload(payload)
         if status != 200:
             return self._json_response(result, status=status)
+        await self._sync_device_presence(payload, session_status="command_ready")
         await self._publish_command_result(result)
         return self._json_response(
             {
@@ -150,6 +226,83 @@ class GatewayHandler:
         payload.setdefault("adapter_type", "home_assistant")
         result, status = await self._ingest_payload(payload)
         return self._json_response(result, status=status)
+
+    async def handle_bridge_event(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        device_key = str(payload.get("device_key") or "").strip()
+        bridge_type = str(payload.get("bridge_type") or "bridge").strip()
+        observed_at = payload.get("timestamp")
+        gateway_payload = {
+            "device_id": str(payload.get("device_id") or device_key).strip(),
+            "gateway_id": payload.get("gateway_id") or payload.get("bridge_id"),
+            "adapter_type": bridge_type,
+            "protocol_type": bridge_type,
+            "device_kind": payload.get("device_kind"),
+            "display_name": payload.get("display_name"),
+            "discovery_id": payload.get("discovery_id"),
+            "observed_at": observed_at,
+        }
+        await self._sync_device_presence(
+            gateway_payload,
+            observed_at=observed_at,
+            session_status="bridge_active",
+        )
+        await self.management_client.post_event(
+            {
+                "event_id": str(
+                    payload.get("event_id")
+                    or f"bridge-event-{bridge_type}-{device_key or 'unknown'}-{observed_at or 'now'}"
+                ),
+                "device_id": gateway_payload["device_id"],
+                "gateway_id": gateway_payload["gateway_id"],
+                "event_type": payload.get("event_type") or "bridge.event",
+                "severity": payload.get("severity") or "info",
+                "occurred_at": observed_at or self._timestamp(),
+                "payload": dict(payload.get("payload") or {}),
+            }
+        )
+        telemetry = payload.get("telemetry")
+        if isinstance(telemetry, dict) and telemetry:
+            await self.management_client.post_telemetry(
+                {
+                    "telemetry_id": str(
+                        payload.get("telemetry_id")
+                        or f"bridge-telemetry-{bridge_type}-{device_key or 'unknown'}-{observed_at or 'now'}"
+                    ),
+                    "device_id": gateway_payload["device_id"],
+                    "gateway_id": gateway_payload["gateway_id"],
+                    "capability_code": payload.get("capability_code") or f"bridge.{bridge_type}",
+                    "observed_at": observed_at or self._timestamp(),
+                    "metrics": telemetry,
+                }
+            )
+        return self._json_response({"status": "accepted"}, status=202)
+
+    async def handle_command_dispatch_result(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        device_id = str(
+            payload.get("result", {}).get("device_id") or payload.get("device_id") or ""
+        ).strip()
+        if device_id:
+            await self._sync_device_presence(
+                {
+                    "device_id": device_id,
+                    "gateway_id": payload.get("gateway_id"),
+                    "adapter_type": payload.get("adapter_type"),
+                    "protocol_type": payload.get("adapter_type"),
+                    "observed_at": payload.get("finished_at") or payload.get("timestamp"),
+                },
+                observed_at=payload.get("finished_at") or payload.get("timestamp"),
+                session_status="command_ready",
+            )
+        await self.management_client.post_command_result(payload)
+        return self._json_response({"status": "accepted"}, status=202)
 
     async def handle_health(self, request: web.Request) -> web.Response:
         return self._json_response({"status": "ok", "adapter_count": len(self.registry.describe())})

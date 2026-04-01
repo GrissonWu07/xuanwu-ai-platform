@@ -132,6 +132,45 @@ function buildFetchMock() {
         }),
       )
     }
+    if (path.endsWith('/control-plane/v1/devices')) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              device_id: 'probe-01',
+              display_name: 'Cooling probe 01',
+              owner_user_id: 'user_gangwu',
+              lifecycle_status: 'claimed',
+              bind_status: 'pending',
+              device_kind: 'sensor',
+              ingress_type: 'gateway',
+              protocol_type: 'mqtt',
+              gateway_id: 'gateway_alpha',
+            },
+          ],
+        }),
+      )
+    }
+    if (path.endsWith('/control-plane/v1/discovered-devices')) {
+      return new Response(
+        JSON.stringify({
+          items: [
+            {
+              discovery_id: 'gateway_alpha:discover-01',
+              device_id: 'temp-01',
+              display_name: 'Line temperature 01',
+              ingress_type: 'gateway',
+              device_kind: 'sensor',
+              gateway_id: 'gateway_alpha',
+              protocol_type: 'mqtt',
+              adapter_type: 'sensor_mqtt',
+              discovery_status: 'pending',
+              last_seen_at: '2026-03-31T10:40:00+08:00',
+            },
+          ],
+        }),
+      )
+    }
     if (path.endsWith('/control-plane/v1/xuanwu/agents')) {
       return new Response(
         JSON.stringify({
@@ -202,6 +241,10 @@ describe('portal profile destinations', () => {
     expect(within(channelDetail).getByText('user_gangwu')).toBeVisible()
     expect(within(gatewayDetail).getByRole('heading', { name: 'Gateway Alpha' })).toBeVisible()
     expect(within(gatewayDetail).getByText('site_alpha')).toBeVisible()
+    expect(within(gatewayDetail).getByText('1')).toBeVisible()
+    expect(within(gatewayDetail).getByText('pending discoveries')).toBeVisible()
+    expect(within(gatewayDetail).getByText('Cooling probe 01')).toBeVisible()
+    expect(within(gatewayDetail).getByText('Line temperature 01')).toBeVisible()
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/gateway/overview', expect.any(Object))
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/channels/channel_workshop', expect.any(Object))
     expect(fetchMock).toHaveBeenCalledWith('/control-plane/v1/gateways/gateway_alpha', expect.any(Object))
@@ -321,6 +364,118 @@ describe('portal profile destinations', () => {
     expect(await within(userDetail).findByText('active')).toBeVisible()
     expect(fetchMock).toHaveBeenCalledWith(
       '/control-plane/v1/users/user_lin',
+      expect.objectContaining({ method: 'PUT' }),
+    )
+  })
+
+  it('updates channel and gateway status from the channels and gateways workspace', async () => {
+    const mutableChannel = {
+      channel_id: 'channel_workshop',
+      display_name: 'Workshop floor',
+      owner_user_id: 'user_gangwu',
+      status: 'active',
+      device_count: 12,
+    }
+    const mutableGateway = {
+      gateway_id: 'gateway_alpha',
+      display_name: 'Gateway Alpha',
+      adapter_type: 'mqtt',
+      status: 'healthy',
+      site_id: 'site_alpha',
+      protocol_type: 'mqtt',
+    }
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path.endsWith('/control-plane/v1/channels')) {
+        return new Response(JSON.stringify({ items: [structuredClone(mutableChannel)] }))
+      }
+      if (path.endsWith('/control-plane/v1/gateways')) {
+        return new Response(JSON.stringify({ items: [structuredClone(mutableGateway)] }))
+      }
+      if (path.endsWith('/control-plane/v1/gateway/overview')) {
+        return new Response(
+          JSON.stringify({
+            total_count: 1,
+            protocol_distribution: { mqtt: 1 },
+            site_distribution: { site_alpha: 1 },
+            items: [structuredClone(mutableGateway)],
+          }),
+        )
+      }
+      if (path.endsWith('/control-plane/v1/devices')) {
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                device_id: 'probe-01',
+                display_name: 'Cooling probe 01',
+                owner_user_id: 'user_gangwu',
+                lifecycle_status: 'claimed',
+                bind_status: 'pending',
+                device_kind: 'sensor',
+                ingress_type: 'gateway',
+                protocol_type: 'mqtt',
+                gateway_id: 'gateway_alpha',
+              },
+            ],
+          }),
+        )
+      }
+      if (path.endsWith('/control-plane/v1/discovered-devices')) {
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                discovery_id: 'gateway_alpha:discover-01',
+                device_id: 'temp-01',
+                display_name: 'Line temperature 01',
+                ingress_type: 'gateway',
+                device_kind: 'sensor',
+                gateway_id: 'gateway_alpha',
+                protocol_type: 'mqtt',
+                adapter_type: 'sensor_mqtt',
+                discovery_status: 'pending',
+                last_seen_at: '2026-03-31T10:40:00+08:00',
+              },
+            ],
+          }),
+        )
+      }
+      if (path.endsWith('/control-plane/v1/channels/channel_workshop') && !init?.method) {
+        return new Response(JSON.stringify(structuredClone(mutableChannel)))
+      }
+      if (path.endsWith('/control-plane/v1/gateways/gateway_alpha') && !init?.method) {
+        return new Response(JSON.stringify(structuredClone(mutableGateway)))
+      }
+      if (path.endsWith('/control-plane/v1/channels/channel_workshop') && init?.method === 'PUT') {
+        mutableChannel.status = 'paused'
+        return new Response(JSON.stringify(structuredClone(mutableChannel)))
+      }
+      if (path.endsWith('/control-plane/v1/gateways/gateway_alpha') && init?.method === 'PUT') {
+        mutableGateway.status = 'maintenance'
+        return new Response(JSON.stringify(structuredClone(mutableGateway)))
+      }
+      throw new Error(`Unexpected request: ${path}`)
+    })
+
+    await renderPortal('/channels-gateways?channelId=channel_workshop&gatewayId=gateway_alpha', fetchMock)
+
+    const channelDetail = await screen.findByTestId('channel-detail-panel')
+    const gatewayDetail = await screen.findByTestId('gateway-detail-panel')
+
+    await fireEvent.click(within(channelDetail).getByRole('button', { name: 'Pause channel' }))
+    expect(await within(channelDetail).findByText('paused')).toBeVisible()
+
+    await fireEvent.click(within(gatewayDetail).getByRole('button', { name: 'Set maintenance mode' }))
+    expect(await within(gatewayDetail).findByText('maintenance')).toBeVisible()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/channels/channel_workshop',
+      expect.objectContaining({ method: 'PUT' }),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/gateways/gateway_alpha',
       expect.objectContaining({ method: 'PUT' }),
     )
   })

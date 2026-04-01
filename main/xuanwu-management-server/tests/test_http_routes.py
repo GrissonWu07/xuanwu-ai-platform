@@ -48,6 +48,13 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/devices:batch-import" in registered_paths
     assert "/control-plane/v1/devices/{device_id}" in registered_paths
     assert "/control-plane/v1/devices/{device_id}/detail" in registered_paths
+    assert "/control-plane/v1/discovered-devices" in registered_paths
+    assert "/control-plane/v1/discovered-devices/{discovery_id}" in registered_paths
+    assert "/control-plane/v1/discovered-devices/{discovery_id}:promote" in registered_paths
+    assert "/control-plane/v1/discovered-devices/{discovery_id}:ignore" in registered_paths
+    assert "/control-plane/v1/devices/{device_id}:heartbeat" in registered_paths
+    assert "/control-plane/v1/gateway/device-discovery" in registered_paths
+    assert "/control-plane/v1/runtime/device-discovery" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:claim" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:bind" in registered_paths
     assert "/control-plane/v1/devices/{device_id}:suspend" in registered_paths
@@ -98,6 +105,9 @@ def test_create_app_registers_control_plane_routes():
     assert "/control-plane/v1/jobs/schedules/{schedule_id}:claim" in registered_paths
     assert "/control-plane/v1/jobs:execute" in registered_paths
     assert "/control-plane/v1/jobs/runs" in registered_paths
+    assert "/control-plane/v1/jobs/runs:dispatchable" in registered_paths
     assert "/control-plane/v1/jobs/runs/{job_run_id}" in registered_paths
+    assert "/control-plane/v1/jobs/runs/{job_run_id}:claim" in registered_paths
+    assert "/control-plane/v1/jobs/runs/{job_run_id}:retry" in registered_paths
     assert "/control-plane/v1/jobs/runs/{job_run_id}:complete" in registered_paths
     assert "/control-plane/v1/jobs/runs/{job_run_id}:fail" in registered_paths

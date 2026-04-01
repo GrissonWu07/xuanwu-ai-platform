@@ -37,30 +37,40 @@ class JobScheduler:
                 schedule["schedule_id"],
                 scheduled_for=schedule.get("next_run_at", now_iso),
             )
-            result = await self.dispatcher.dispatch(claimed)
-            normalized = str(claimed.get("executor_type", "")).strip().lower()
-            if normalized not in {"platform", "management"}:
-                if str(result.get("status", "")).lower() in {"accepted", "completed", "ok"}:
-                    complete = getattr(self.client, "complete_job_run", None)
-                    if callable(complete):
-                        await complete(
-                            claimed["job_run_id"],
-                            {
-                                "status": "completed",
-                                "result": result,
-                            },
-                        )
-                else:
-                    fail = getattr(self.client, "fail_job_run", None)
-                    if callable(fail):
-                        await fail(
-                            claimed["job_run_id"],
-                            {
-                                "status": "failed",
-                                "error": result.get("error", "job_dispatch_failed"),
-                                "result": result,
-                            },
-                        )
+            await self._dispatch_job(claimed)
+        dispatchable_response = await self.client.list_dispatchable_job_runs(now_iso=now_iso, limit=limit)
+        for job_run in dispatchable_response.get("items", []):
+            claimed_run = await self.client.claim_job_run(
+                job_run["job_run_id"],
+                started_at=job_run.get("scheduled_for", now_iso),
+            )
+            await self._dispatch_job(claimed_run)
+
+    async def _dispatch_job(self, job_message: dict):
+        result = await self.dispatcher.dispatch(job_message)
+        normalized = str(job_message.get("executor_type", "")).strip().lower()
+        if normalized not in {"platform", "management"}:
+            if str(result.get("status", "")).lower() in {"accepted", "completed", "ok"}:
+                complete = getattr(self.client, "complete_job_run", None)
+                if callable(complete):
+                    await complete(
+                        job_message["job_run_id"],
+                        {
+                            "status": "completed",
+                            "result": result,
+                        },
+                    )
+            else:
+                fail = getattr(self.client, "fail_job_run", None)
+                if callable(fail):
+                    await fail(
+                        job_message["job_run_id"],
+                        {
+                            "status": "failed",
+                            "error": result.get("error", "job_dispatch_failed"),
+                            "result": result,
+                        },
+                    )
 
 
 async def run_scheduler_forever():

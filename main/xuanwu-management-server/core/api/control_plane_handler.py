@@ -377,6 +377,91 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_devices()})
 
+    async def handle_list_discovered_devices(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        return self._json_response({"items": self.store.list_discovered_devices()})
+
+    async def handle_create_discovered_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            created = self.store.save_discovered_device(payload.get("discovery_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_gateway_device_discovery(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        payload.setdefault("ingress_type", "gateway")
+        try:
+            created = self.store.save_discovered_device(payload.get("discovery_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_runtime_device_discovery(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        payload.setdefault("ingress_type", "device_server")
+        try:
+            created = self.store.save_discovered_device(payload.get("discovery_id"), payload)
+        except ValueError as exc:
+            return self._json_response({"error": str(exc)}, status=400)
+        return self._json_response(created, status=201)
+
+    async def handle_get_discovered_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        discovery_id = str(request.match_info["discovery_id"]).strip()
+        payload = self.store.get_discovered_device(discovery_id)
+        if payload is None:
+            return self._json_response({"error": "discovered_device_not_found"}, status=404)
+        return self._json_response(payload)
+
+    async def handle_promote_discovered_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        discovery_id = str(request.match_info["discovery_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            promoted = self.store.promote_discovered_device(discovery_id, payload)
+        except ValueError as exc:
+            status = 404 if str(exc) == "discovered_device_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(promoted)
+
+    async def handle_ignore_discovered_device(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        discovery_id = str(request.match_info["discovery_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            ignored = self.store.ignore_discovered_device(discovery_id, payload.get("reason"))
+        except ValueError as exc:
+            status = 404 if str(exc) == "discovered_device_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(ignored)
+
     async def handle_create_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -440,6 +525,20 @@ class ControlPlaneHandler(BaseHandler):
         except ValueError as exc:
             return self._json_response({"error": str(exc)}, status=400)
         return self._json_response(saved)
+
+    async def handle_device_heartbeat(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        device_id = str(request.match_info["device_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            return self._json_response({"error": "invalid_json"}, status=400)
+        try:
+            updated = self.store.update_device_heartbeat(device_id, payload)
+        except DeviceNotFoundException:
+            return self._json_response({"error": "device_not_found"}, status=404)
+        return self._json_response(updated)
 
     async def handle_claim_device(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
@@ -830,6 +929,17 @@ class ControlPlaneHandler(BaseHandler):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
         return self._json_response({"items": self.store.list_job_runs()})
 
+    async def handle_list_dispatchable_job_runs(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        now_iso = str(request.query.get("now", "")).strip()
+        if not now_iso:
+            return self._json_response({"error": "now_required"}, status=400)
+        limit = int(str(request.query.get("limit", "100")).strip() or "100")
+        return self._json_response(
+            {"items": self.store.list_dispatchable_job_runs(now_iso, limit=limit)}
+        )
+
     async def handle_get_job_run(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):
             return self._json_response({"error": "control_secret_invalid"}, status=401)
@@ -840,6 +950,37 @@ class ControlPlaneHandler(BaseHandler):
         if payload is None:
             return self._json_response({"error": "job_run_not_found"}, status=404)
         return self._json_response(payload)
+
+    async def handle_claim_dispatchable_job_run(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        job_run_id = str(request.match_info["job_run_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        started_at = str(payload.get("started_at") or datetime.now(timezone.utc).isoformat()).strip()
+        try:
+            claimed = self.store.claim_job_run(job_run_id, started_at)
+        except ValueError as exc:
+            status = 404 if str(exc) == "job_run_not_found" else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(claimed)
+
+    async def handle_retry_job_run(self, request: web.Request) -> web.Response:
+        if not self._verify_control_secret(request):
+            return self._json_response({"error": "control_secret_invalid"}, status=401)
+        job_run_id = str(request.match_info["job_run_id"]).strip()
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        try:
+            retried = self.store.retry_job_run(job_run_id, payload.get("scheduled_for"))
+        except ValueError as exc:
+            status = 404 if str(exc) in {"job_run_not_found", "schedule_not_found"} else 400
+            return self._json_response({"error": str(exc)}, status=status)
+        return self._json_response(retried, status=201)
 
     async def handle_execute_job(self, request: web.Request) -> web.Response:
         if not self._verify_control_secret(request):

@@ -11,20 +11,26 @@ import {
   getAuthMe,
   getDeviceDetail,
   getDevices,
+  ignoreDiscoveredDevice,
+  listDiscoveredDevices,
+  promoteDiscoveredDevice,
   retireDevice,
   suspendDevice,
   type AuthMeResponse,
   type DeviceDetailResponse,
+  type DiscoveredDevicesResponse,
   type DevicesCollectionResponse,
 } from '@/api/management'
 
 const devices = ref<DevicesCollectionResponse['items']>([])
+const discoveredDevices = ref<DiscoveredDevicesResponse['items']>([])
 const selectedDeviceId = ref('')
 const detail = ref<DeviceDetailResponse | null>(null)
 const search = ref('')
 const loadError = ref('')
 const actionError = ref('')
 const actionBusy = ref(false)
+const discoveredActionBusy = ref('')
 const me = ref<AuthMeResponse | null>(null)
 const route = useRoute()
 const router = useRouter()
@@ -45,7 +51,15 @@ const tableRows = computed(() =>
         return true
       }
 
-      return [item.device_id, item.display_name, item.owner_user_id, item.device_type, item.protocol_type]
+      return [
+        item.device_id,
+        item.display_name,
+        item.owner_user_id,
+        item.device_type,
+        item.device_kind,
+        item.ingress_type,
+        item.protocol_type,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(keyword))
     })
@@ -57,6 +71,21 @@ const tableRows = computed(() =>
       owner: item.owner_user_id,
       runtime: item.last_seen_at || 'No signal',
     })),
+)
+
+const pendingDiscoveredDevices = computed(() =>
+  discoveredDevices.value
+    .filter((item) => (item.discovery_status || 'pending') === 'pending')
+    .filter((item) => {
+      const keyword = search.value.trim().toLowerCase()
+      if (!keyword) {
+        return true
+      }
+
+      return [item.device_id, item.display_name, item.gateway_id, item.protocol_type, item.adapter_type]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(keyword))
+    }),
 )
 
 async function loadDeviceDetail(deviceId: string) {
@@ -85,9 +114,14 @@ async function loadDevices() {
   loadError.value = ''
 
   try {
-    const [response, mePayload] = await Promise.all([getDevices(), getAuthMe().catch(() => null)])
+    const [response, mePayload, discoveredPayload] = await Promise.all([
+      getDevices(),
+      getAuthMe().catch(() => null),
+      listDiscoveredDevices().catch(() => ({ items: [] })),
+    ])
     devices.value = response.items
     me.value = mePayload
+    discoveredDevices.value = discoveredPayload.items
 
     const requestedDeviceId = typeof route.query.deviceId === 'string' ? route.query.deviceId : ''
     const nextDeviceId =
@@ -106,12 +140,15 @@ function handleRowSelect(row: Record<string, string>) {
 }
 
 async function refreshSelectedDevice() {
+  const [response, discoveredPayload] = await Promise.all([
+    getDevices(),
+    listDiscoveredDevices().catch(() => ({ items: [] })),
+  ])
+  devices.value = response.items
+  discoveredDevices.value = discoveredPayload.items
   if (!selectedDeviceId.value) {
     return
   }
-
-  const response = await getDevices()
-  devices.value = response.items
   await loadDeviceDetail(selectedDeviceId.value)
 }
 
@@ -144,6 +181,40 @@ async function runLifecycleAction(action: 'claim' | 'bind' | 'suspend' | 'retire
   }
 }
 
+async function runDiscoveredAction(
+  action: 'promote' | 'ignore',
+  discovery: DiscoveredDevicesResponse['items'][number],
+) {
+  if (discoveredActionBusy.value) {
+    return
+  }
+
+  discoveredActionBusy.value = discovery.discovery_id
+  actionError.value = ''
+
+  try {
+    if (action === 'promote') {
+      const promoted = (await promoteDiscoveredDevice(discovery.discovery_id, {
+        user_id: me.value?.user_id || 'anonymous',
+        display_name: discovery.display_name || discovery.device_id,
+        lifecycle_status: 'claimed',
+        bind_status: 'pending',
+      })) as { device_id?: string }
+      await refreshSelectedDevice()
+      if (promoted.device_id) {
+        await selectDevice(promoted.device_id)
+      }
+    } else {
+      await ignoreDiscoveredDevice(discovery.discovery_id, 'portal_ignore')
+      await refreshSelectedDevice()
+    }
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Discovery action failed'
+  } finally {
+    discoveredActionBusy.value = ''
+  }
+}
+
 watch(
   () => route.query.deviceId,
   (deviceId) => {
@@ -163,7 +234,7 @@ const detailActivity = computed(
   () =>
     detail.value?.recent_events.map((item) => ({
       title: item.title,
-      meta: `${item.at} · ${item.detail}`,
+      meta: `${item.at} | ${item.detail}`,
     })) ?? [],
 )
 
@@ -178,7 +249,7 @@ onMounted(() => {
       <div>
         <span class="eyebrow">Ownership and runtime</span>
         <h1>Devices</h1>
-        <p>Review lifecycle, binding, and runtime context for the fleet from one working surface.</p>
+        <p>Review lifecycle, binding, runtime context, and newly discovered endpoints from one working surface.</p>
       </div>
       <label class="page-filter">
         <span class="sr-only">Filter devices</span>
@@ -191,21 +262,72 @@ onMounted(() => {
     </div>
 
     <div v-else class="surface-grid">
-      <DataTable
-        title="Registered devices"
-        :columns="columns"
-        :rows="tableRows"
-        row-key="id"
-        row-label-key="name"
-        :selected-row-key="selectedDeviceId"
-        selectable
-        @row-select="handleRowSelect"
-      />
+      <div class="stacked-panels">
+        <DataTable
+          title="Registered devices"
+          :columns="columns"
+          :rows="tableRows"
+          row-key="id"
+          row-label-key="name"
+          :selected-row-key="selectedDeviceId"
+          selectable
+          @row-select="handleRowSelect"
+        />
+
+        <section class="panel discovered-panel" data-testid="discovered-devices-panel">
+          <header class="panel-head">
+            <h2>Awaiting promotion</h2>
+            <span>{{ pendingDiscoveredDevices.length }} rows</span>
+          </header>
+
+          <div v-if="pendingDiscoveredDevices.length === 0" class="discovered-empty">
+            No newly discovered gateway or device-server endpoints are waiting for promotion.
+          </div>
+
+          <div v-else class="discovered-list">
+            <article v-for="item in pendingDiscoveredDevices" :key="item.discovery_id" class="discovered-item">
+              <div class="discovered-item__meta">
+                <div>
+                  <strong>{{ item.display_name || item.device_id }}</strong>
+                  <p>{{ item.device_kind }} via {{ item.ingress_type }}</p>
+                </div>
+                <span>{{ item.protocol_type || item.adapter_type || 'unknown' }}</span>
+              </div>
+              <div class="discovered-item__detail">
+                <span>ID: {{ item.device_id }}</span>
+                <span v-if="item.gateway_id">Gateway: {{ item.gateway_id }}</span>
+                <span>Seen: {{ item.last_seen_at || 'unknown' }}</span>
+              </div>
+              <div class="action-row">
+                <button
+                  type="button"
+                  class="action-button"
+                  :disabled="discoveredActionBusy === item.discovery_id"
+                  @click="runDiscoveredAction('promote', item)"
+                >
+                  Promote to managed device
+                </button>
+                <button
+                  type="button"
+                  class="action-button action-button--danger"
+                  :disabled="discoveredActionBusy === item.discovery_id"
+                  @click="runDiscoveredAction('ignore', item)"
+                >
+                  Ignore discovery
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
 
       <aside v-if="detail" class="detail-panel" data-testid="device-detail-panel">
         <header class="detail-panel__head">
           <div>
-            <span class="detail-panel__eyebrow">{{ detail.device.device_type }} · {{ detail.device.protocol_type }}</span>
+            <span class="detail-panel__eyebrow">
+              {{ detail.device.device_type || detail.device.device_kind || 'device' }} |
+              {{ detail.device.protocol_type || 'unknown' }}
+            </span>
             <h2>{{ detail.device.display_name || detail.device.device_id }}</h2>
           </div>
           <span class="detail-chip">{{ detail.runtime?.session_status || 'unknown' }}</span>
@@ -239,6 +361,18 @@ onMounted(() => {
           <div class="detail-card">
             <span>Capability routes</span>
             <strong>{{ detail.runtime?.capability_route_count ?? 0 }}</strong>
+          </div>
+          <div class="detail-card">
+            <span>Ingress</span>
+            <strong>{{ detail.device.ingress_type || detail.discovery?.ingress_type || 'unknown' }}</strong>
+          </div>
+          <div class="detail-card">
+            <span>Gateway</span>
+            <strong>{{ detail.discovery?.gateway_id || 'Direct' }}</strong>
+          </div>
+          <div class="detail-card">
+            <span>Latest command</span>
+            <strong>{{ detail.latest_command_result?.status || 'None' }}</strong>
           </div>
         </div>
 
@@ -329,6 +463,11 @@ onMounted(() => {
   gap: 1rem;
 }
 
+.stacked-panels {
+  display: grid;
+  gap: 1rem;
+}
+
 .detail-panel {
   display: grid;
   gap: 1rem;
@@ -384,7 +523,9 @@ onMounted(() => {
 }
 
 .detail-card span,
-.metric-line span {
+.metric-line span,
+.discovered-item__detail span,
+.discovered-item__meta p {
   color: var(--muted);
 }
 
@@ -449,6 +590,41 @@ onMounted(() => {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(91, 109, 145, 0.12);
+}
+
+.discovered-panel {
+  padding: 1.2rem;
+  border-radius: 24px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.discovered-empty {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.discovered-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.discovered-item {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(91, 109, 145, 0.12);
+}
+
+.discovered-item__meta,
+.discovered-item__detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 1120px) {

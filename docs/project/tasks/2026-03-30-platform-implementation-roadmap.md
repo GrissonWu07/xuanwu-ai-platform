@@ -2,7 +2,7 @@
 
 ## Scope
 - Turn the active platform specs into repository-local implementation work.
-- Finish all local management, gateway, and runtime-boundary work in this repository.
+- Finish all local management, gateway, runtime-boundary, bridge, jobs, and portal work in this repository.
 - Leave Agent-domain source-of-truth work to `XuanWu`.
 
 ## Status
@@ -62,6 +62,20 @@
     - `nearlink`
 - Verified with bootstrap, registry, and dispatch tests.
 
+### Phase 3a: `xuanwu-gateway` protocol depth and wireless bridges
+- Implemented:
+  - MQTT broker-message normalization
+  - Home Assistant state ingest
+  - Modbus TCP baseline reads and writes
+  - OPC UA browse/read/write
+  - BACnet/IP multi-property reads
+  - CAN bridge query routing
+  - standalone `xuanwu-bluetooth-bridge`
+  - standalone `xuanwu-nearlink-bridge`
+  - Linux RPM packaging assets for both bridge services
+  - Windows Service packaging assets for both bridge services
+- Verified with gateway, bridge, and bridge-callback test suites.
+
 ### Phase 4: `xuanwu-device-server` boundary cleanup
 - Implemented:
   - runtime naming cleanup to `XuanWu`
@@ -70,7 +84,15 @@
   - runtime tests aligned to new management server path
 - Verified with device-server regression tests.
 
-## Remaining
+### Phase 4a: device ingress convergence
+- Implemented:
+  - discovered-device layer in management
+  - gateway device-discovery callback
+  - device-server first-contact discovery callback
+  - unified device heartbeat and recency updates
+  - device detail provenance aggregation
+  - portal discovered-device review and promotion flow
+- Verified with management, gateway, device-server, and portal test coverage.
 
 ### Phase 5: `xuanwu-jobs` foundation
 - Implemented:
@@ -82,6 +104,9 @@
     - `xuanwu-gateway`
     - `xuanwu-device-server`
   - Docker Compose service for `xuanwu-jobs`
+  - cron progression
+  - dispatchable queued run polling
+  - retry enqueue and claim semantics
 
 ### Phase 6: `xuanwu-portal` shell delivery
 - Implemented:
@@ -116,7 +141,12 @@
     - `Jobs`
     - `Alerts`
   - `Channels & Gateways` upgraded from raw lists to a live gateway overview view with protocol and site distribution
+  - discovered-device review and promote/ignore actions in `Devices`
+  - channel and gateway state actions in `Channels & Gateways`
+  - job pause, resume, trigger, retry, and policy visibility in `Jobs`
 - Verified with portal unit tests and `vite` production build.
+
+## Remaining
 
 ### Phase 7: upstream `XuanWu` integration
 - Required from upstream:
@@ -127,46 +157,39 @@
   - remove remaining local IoT/Home Assistant compatibility paths from `xuanwu-device-server`
   - switch final device-action execution fully onto `XuanWu -> xuanwu-gateway`
 
+## Local Completion Status
+
+All repository-local phases for the current spec set are complete.
+
+The only remaining roadmap item is upstream `XuanWu` integration and the final cleanup that depends on it.
+
 ## Verification
 - command:
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-gateway/tests/test_sensor_ingest.py main/xuanwu-gateway/tests/test_bridge_callbacks.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-bluetooth-bridge/tests main/xuanwu-nearlink-bridge/tests tests/test_wireless_bridge_layout.py -q`
 - expected:
   - local platform work stays green
 - actual:
-  - local verification command updated to the single-service `xuanwu-jobs` stack
+  - `83 passed`
 
 - command:
   - `npm test`
   - `npm run build`
   - cwd: `main/xuanwu-portal`
 - expected:
-  - portal shell and current profile-menu destinations stay green
+  - portal shell and workspaces stay green
   - production bundle builds successfully
 - actual:
   - portal unit tests green
   - `vite` production build green
 
 - command:
-  - `python -m coverage run --source=main/xuanwu-management-server,main/xuanwu-gateway,main/xuanwu-device-server,main/xuanwu-jobs -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
-- expected:
-  - non-upstream local surfaces have measurable coverage
-- actual:
-  - full local platform suite total coverage: `62%`
-  - key files:
-    - `config_loader.py`: `88%`
-    - `control_plane_handler.py`: `62%`
-    - `local_store.py`: `84%`
-    - `xuanwu-jobs/core/scheduler.py`: `64%`
-    - `xuanwu-jobs/core/dispatcher.py`: tracked in the active local dispatch suite
-
-- command:
-  - `python -m py_compile main/xuanwu-management-server/core/store/local_store.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/http_server.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/http_server.py`
+  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/store/local_store.py main/xuanwu-gateway/app.py main/xuanwu-gateway/core/http_server.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/clients/management_client.py main/xuanwu-gateway/core/adapters/bluetooth_adapter.py main/xuanwu-gateway/core/adapters/nearlink_adapter.py main/xuanwu-jobs/app.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/clients/management_client.py main/xuanwu-device-server/app.py main/xuanwu-device-server/config/xuanwu_management_client.py main/xuanwu-bluetooth-bridge/app.py main/xuanwu-bluetooth-bridge/core/http_server.py main/xuanwu-bluetooth-bridge/core/api/bridge_handler.py main/xuanwu-nearlink-bridge/app.py main/xuanwu-nearlink-bridge/core/http_server.py main/xuanwu-nearlink-bridge/core/api/bridge_handler.py`
 - expected:
   - syntax validation passes
 - actual:
   - passed
 
 ## Handoff Notes
-- Local implementation work is effectively complete for the current spec set, including the lightweight single-service `xuanwu-jobs` path.
+- Local implementation work is complete for the current spec set.
 - The only remaining major implementation phase depends on upstream `XuanWu` contract delivery.
-- Portal work can continue locally for deeper pages, but the current shell and management-backed destinations are complete.
+- Additional local work from here is optional enhancement unless it unblocks that upstream integration.

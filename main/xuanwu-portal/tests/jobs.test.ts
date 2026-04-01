@@ -55,6 +55,11 @@ const scheduleDetailPayload = {
   timezone: 'Asia/Shanghai',
   next_run_at: '2026-03-31T10:40:00+08:00',
   status: 'queued',
+  misfire_policy: 'run_once',
+  misfire_grace_seconds: 120,
+  retry_policy: 'fixed_backoff',
+  max_retry_attempts: 2,
+  retry_backoff_seconds: 30,
   payload: {
     site_id: 'site-sh-01',
     escalation_policy: 'warehouse-critical',
@@ -335,6 +340,87 @@ describe('JobsPage', () => {
     )
     expect(fetchMock).toHaveBeenCalledWith(
       '/control-plane/v1/jobs/schedules/sched_alarm_sweep:trigger',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('shows retry and misfire policies and retries the latest failed run', async () => {
+    const fetchMock = vi.fn((input: string, init?: RequestInit) => {
+      if (input === '/control-plane/v1/jobs/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            ...jobsOverviewPayload,
+            runs: [
+              {
+                job_run_id: 'run_alarm_failed_1030',
+                schedule_id: 'sched_alarm_sweep',
+                status: 'failed',
+                executor_type: 'management',
+                started_at: '2026-03-31T10:30:00+08:00',
+                finished_at: '2026-03-31T10:30:18+08:00',
+              },
+            ],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/schedules/sched_alarm_sweep') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => structuredClone(scheduleDetailPayload),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_failed_1030') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            job_run_id: 'run_alarm_failed_1030',
+            schedule_id: 'sched_alarm_sweep',
+            status: 'failed',
+            executor_type: 'management',
+            scheduled_for: '2026-03-31T10:30:00+08:00',
+            started_at: '2026-03-31T10:30:00+08:00',
+            finished_at: '2026-03-31T10:30:18+08:00',
+            error: {
+              code: 'alarm_timeout',
+              message: 'timeout',
+            },
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/jobs/runs/run_alarm_failed_1030:retry' && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            job_run_id: 'run_alarm_retry_1036',
+            schedule_id: 'sched_alarm_sweep',
+            status: 'queued',
+            executor_type: 'management',
+            scheduled_for: '2026-03-31T10:36:00+08:00',
+            attempt: 2,
+          }),
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/jobs?scheduleId=sched_alarm_sweep', fetchMock)
+
+    const detail = await screen.findByTestId('job-detail-panel')
+    expect(await within(detail).findByText('run_once')).toBeVisible()
+    expect(await within(detail).findByText('120 seconds')).toBeVisible()
+    expect(await within(detail).findByText('fixed_backoff')).toBeVisible()
+    expect(await within(detail).findByText('2 attempts / 30s backoff')).toBeVisible()
+
+    await fireEvent.click(within(detail).getByRole('button', { name: 'Retry failed run' }))
+
+    expect(await within(detail).findByText('run_alarm_retry_1036')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/jobs/runs/run_alarm_failed_1030:retry',
       expect.objectContaining({ method: 'POST' }),
     )
   })

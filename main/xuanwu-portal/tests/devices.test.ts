@@ -87,6 +87,23 @@ const secondDetail = {
   ],
 }
 
+const discoveredDevicesPayload = {
+  items: [
+    {
+      discovery_id: 'gateway:gw-01:probe-01',
+      device_id: 'probe-01',
+      display_name: 'Cooling probe 01',
+      ingress_type: 'gateway',
+      device_kind: 'sensor',
+      gateway_id: 'gw-01',
+      protocol_type: 'mqtt',
+      adapter_type: 'sensor_mqtt',
+      discovery_status: 'pending',
+      last_seen_at: '2026-03-31T10:35:00+08:00',
+    },
+  ],
+}
+
 async function renderDevicesWorkspace(fetchMock: ReturnType<typeof vi.fn>) {
   vi.stubGlobal('fetch', fetchMock)
 
@@ -385,6 +402,129 @@ describe('DevicesPage', () => {
     )
     expect(fetchMock).toHaveBeenCalledWith(
       '/control-plane/v1/devices/panel-07:retire',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('promotes discovered devices into the managed fleet', async () => {
+    const managedItems = [...devicesPayload.items]
+    const discoveredItems = [...discoveredDevicesPayload.items]
+    const promotedDetail = {
+      device: {
+        device_id: 'probe-01',
+        display_name: 'Cooling probe 01',
+        owner_user_id: 'user_gangwu',
+        lifecycle_status: 'claimed',
+        bind_status: 'pending',
+        device_kind: 'sensor',
+        ingress_type: 'gateway',
+        protocol_type: 'mqtt',
+        last_seen_at: '2026-03-31T10:35:00+08:00',
+      },
+      binding: {},
+      runtime: {
+        session_status: 'telemetry_active',
+        capability_route_count: 0,
+      },
+      discovery: {
+        discovery_id: 'gateway:gw-01:probe-01',
+        ingress_type: 'gateway',
+        gateway_id: 'gw-01',
+        protocol_type: 'mqtt',
+        adapter_type: 'sensor_mqtt',
+        discovery_status: 'promoted',
+      },
+      latest_command_result: {
+        status: 'None',
+      },
+      recent_events: [],
+      recent_telemetry: [],
+    }
+
+    const fetchMock = vi.fn((input: string, init?: RequestInit) => {
+      if (input === '/control-plane/v1/dashboard/overview') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            hero: {
+              title: 'Overview',
+              subtitle: 'Dashboard',
+              primaryAction: 'Inspect devices',
+              secondaryAction: 'Review alerts',
+            },
+            statusPills: [],
+            quickStats: [],
+            todaySummary: [],
+            liveActivity: [],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/auth/me') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            user_id: 'user_gangwu',
+            display_name: 'Gang Wu',
+            role_ids: ['platform_owner'],
+            permissions: ['devices.read', 'devices.write'],
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            items: managedItems,
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/discovered-devices') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            items: discoveredItems,
+          }),
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/edge-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => firstDetail,
+        })
+      }
+
+      if (input === '/control-plane/v1/devices/probe-01/detail') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => promotedDetail,
+        })
+      }
+
+      if (input === '/control-plane/v1/discovered-devices/gateway:gw-01:probe-01:promote' && init?.method === 'POST') {
+        managedItems.push(promotedDetail.device as any)
+        discoveredItems.splice(0, discoveredItems.length)
+        return Promise.resolve({
+          ok: true,
+          json: async () => promotedDetail.device,
+        })
+      }
+
+      throw new Error(`Unexpected request: ${input}`)
+    })
+
+    await renderPortal('/devices', fetchMock)
+
+    expect(await screen.findByText('Cooling probe 01')).toBeVisible()
+    await fireEvent.click(screen.getByRole('button', { name: 'Promote to managed device' }))
+
+    expect(await screen.findByTestId('device-detail-panel')).toBeVisible()
+    expect(await screen.findByText('user_gangwu')).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/control-plane/v1/discovered-devices/gateway:gw-01:probe-01:promote',
       expect.objectContaining({ method: 'POST' }),
     )
   })

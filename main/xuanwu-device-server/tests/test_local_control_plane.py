@@ -268,6 +268,147 @@ class XuanwuManagementConfigTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_private_config_resolution_reports_discovery_for_unknown_device(self):
+        async def scenario():
+            received = {"discoveries": [], "heartbeats": []}
+
+            async def handle_resolve(request: web.Request):
+                return web.json_response({"error": "not_found"}, status=404)
+
+            async def handle_discovery(request: web.Request):
+                received["discoveries"].append(await request.json())
+                return web.json_response({"ok": True}, status=201)
+
+            async def handle_heartbeat(request: web.Request):
+                received["heartbeats"].append(await request.json())
+                return web.json_response({"ok": True})
+
+            upstream = web.Application()
+            upstream.router.add_post("/control-plane/v1/runtime/device-config:resolve", handle_resolve)
+            upstream.router.add_post("/control-plane/v1/runtime/device-discovery", handle_discovery)
+            upstream.router.add_post("/control-plane/v1/devices/{device_id}:heartbeat", handle_heartbeat)
+            runner = web.AppRunner(upstream)
+            await runner.setup()
+            site = web.TCPSite(runner, "127.0.0.1", 0)
+            await site.start()
+            port = site._server.sockets[0].getsockname()[1]
+
+            config = {
+                **self.base_config,
+                "xuanwu-management-server": {
+                    "enabled": True,
+                    "url": f"http://127.0.0.1:{port}",
+                    "secret": "mgmt-secret-discovery",
+                },
+            }
+
+            with self.assertRaisesRegex(Exception, "esp32-discovery-001"):
+                await get_private_config_from_api(config, "esp32-discovery-001", "client-discovery-001")
+
+            await runner.cleanup()
+
+            self.assertEqual([], received["heartbeats"])
+            self.assertEqual("esp32-discovery-001", received["discoveries"][0]["device_id"])
+            self.assertEqual("device_server", received["discoveries"][0]["ingress_type"])
+            self.assertEqual("conversational", received["discoveries"][0]["device_kind"])
+
+        asyncio.run(scenario())
+
+    def test_private_config_resolution_reports_heartbeat_for_managed_device(self):
+        async def scenario():
+            received = {"discoveries": [], "heartbeats": []}
+
+            async def handle_resolve(request: web.Request):
+                return web.json_response({"resolved_config": {"prompt": "runtime prompt"}})
+
+            async def handle_discovery(request: web.Request):
+                received["discoveries"].append(await request.json())
+                return web.json_response({"ok": True}, status=201)
+
+            async def handle_heartbeat(request: web.Request):
+                received["heartbeats"].append(
+                    {
+                        "device_id": request.match_info["device_id"],
+                        "payload": await request.json(),
+                    }
+                )
+                return web.json_response({"ok": True})
+
+            upstream = web.Application()
+            upstream.router.add_post("/control-plane/v1/runtime/device-config:resolve", handle_resolve)
+            upstream.router.add_post("/control-plane/v1/runtime/device-discovery", handle_discovery)
+            upstream.router.add_post("/control-plane/v1/devices/{device_id}:heartbeat", handle_heartbeat)
+            runner = web.AppRunner(upstream)
+            await runner.setup()
+            site = web.TCPSite(runner, "127.0.0.1", 0)
+            await site.start()
+            port = site._server.sockets[0].getsockname()[1]
+
+            config = {
+                **self.base_config,
+                "xuanwu-management-server": {
+                    "enabled": True,
+                    "url": f"http://127.0.0.1:{port}",
+                    "secret": "mgmt-secret-heartbeat",
+                },
+            }
+
+            resolved = await get_private_config_from_api(config, "esp32-managed-001", "client-managed-001")
+
+            await runner.cleanup()
+
+            self.assertEqual("runtime prompt", resolved["prompt"])
+            self.assertEqual([], received["discoveries"])
+            self.assertEqual("esp32-managed-001", received["heartbeats"][0]["device_id"])
+            self.assertEqual("device_server", received["heartbeats"][0]["payload"]["ingress_type"])
+            self.assertEqual("connected", received["heartbeats"][0]["payload"]["session_status"])
+
+        asyncio.run(scenario())
+
+    def test_private_config_resolution_marks_pending_bind_heartbeat(self):
+        async def scenario():
+            received = {"discoveries": [], "heartbeats": []}
+
+            async def handle_resolve(request: web.Request):
+                return web.json_response({"bind_code": "BIND-001"}, status=409)
+
+            async def handle_discovery(request: web.Request):
+                received["discoveries"].append(await request.json())
+                return web.json_response({"ok": True}, status=201)
+
+            async def handle_heartbeat(request: web.Request):
+                received["heartbeats"].append(await request.json())
+                return web.json_response({"ok": True})
+
+            upstream = web.Application()
+            upstream.router.add_post("/control-plane/v1/runtime/device-config:resolve", handle_resolve)
+            upstream.router.add_post("/control-plane/v1/runtime/device-discovery", handle_discovery)
+            upstream.router.add_post("/control-plane/v1/devices/{device_id}:heartbeat", handle_heartbeat)
+            runner = web.AppRunner(upstream)
+            await runner.setup()
+            site = web.TCPSite(runner, "127.0.0.1", 0)
+            await site.start()
+            port = site._server.sockets[0].getsockname()[1]
+
+            config = {
+                **self.base_config,
+                "xuanwu-management-server": {
+                    "enabled": True,
+                    "url": f"http://127.0.0.1:{port}",
+                    "secret": "mgmt-secret-pending-bind",
+                },
+            }
+
+            with self.assertRaisesRegex(Exception, "BIND-001"):
+                await get_private_config_from_api(config, "esp32-bind-001", "client-bind-001")
+
+            await runner.cleanup()
+
+            self.assertEqual([], received["discoveries"])
+            self.assertEqual("pending_bind", received["heartbeats"][0]["session_status"])
+
+        asyncio.run(scenario())
+
     def test_template_fallback_speaks_and_records_reply(self):
         engine = TemplateFallbackDialogueEngine("XuanWu is unavailable right now.")
 

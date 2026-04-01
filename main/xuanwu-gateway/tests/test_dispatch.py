@@ -28,7 +28,24 @@ def _load_handler_module():
 
 
 def test_dispatch_routes_command_to_matching_adapter():
-    handler = _load_handler_module().GatewayHandler({})
+    class FakeManagementClient:
+        def __init__(self):
+            self.discovered = []
+            self.command_results = []
+
+        async def post_device_heartbeat(self, device_id, payload):
+            return False
+
+        async def upsert_discovered_device(self, payload):
+            self.discovered.append(payload)
+            return payload
+
+        async def post_command_result(self, payload):
+            self.command_results.append(payload)
+            return payload
+
+    management_client = FakeManagementClient()
+    handler = _load_handler_module().GatewayHandler({}, management_client=management_client)
     handler.registry.register(
         _load_handler_module().create_builtin_registry().get("http").__class__(
             transport=type(
@@ -58,6 +75,8 @@ def test_dispatch_routes_command_to_matching_adapter():
     assert payload["adapter_type"] == "http"
     assert payload["status"] == "succeeded"
     assert payload["result"]["command_name"] == "turn_on"
+    assert management_client.discovered[0]["device_id"] == "device-001"
+    assert management_client.command_results[0]["device_id"] == "device-001"
 
 
 def test_dispatch_returns_404_for_unknown_adapter():
@@ -91,7 +110,17 @@ def test_health_and_config_endpoints_return_status_and_config():
 
 
 def test_commands_alias_and_device_state_work():
-    handler = _load_handler_module().GatewayHandler({})
+    class FakeManagementClient:
+        async def post_device_heartbeat(self, device_id, payload):
+            return True
+
+        async def upsert_discovered_device(self, payload):
+            raise AssertionError("discovery should not run when heartbeat succeeds")
+
+        async def post_command_result(self, payload):
+            return payload
+
+    handler = _load_handler_module().GatewayHandler({}, management_client=FakeManagementClient())
     handler.registry.register(
         _load_handler_module().create_builtin_registry().get("http").__class__(
             transport=type(
@@ -131,7 +160,22 @@ def test_commands_alias_and_device_state_work():
 
 
 def test_job_execution_dispatches_real_gateway_command_payload():
-    handler = _load_handler_module().GatewayHandler({})
+    class FakeManagementClient:
+        def __init__(self):
+            self.discovered = []
+
+        async def post_device_heartbeat(self, device_id, payload):
+            return False
+
+        async def upsert_discovered_device(self, payload):
+            self.discovered.append(payload)
+            return payload
+
+        async def post_command_result(self, payload):
+            return payload
+
+    management_client = FakeManagementClient()
+    handler = _load_handler_module().GatewayHandler({}, management_client=management_client)
     handler.registry.register(
         _load_handler_module().create_builtin_registry().get("http").__class__(
             transport=type(
@@ -162,6 +206,7 @@ def test_job_execution_dispatches_real_gateway_command_payload():
     assert payload["status"] == "completed"
     assert payload["job_run_id"] == "run-gateway-001"
     assert payload["result"]["result"]["command_name"] == "turn_off"
+    assert management_client.discovered[0]["device_id"] == "device-004"
 
 
 def test_mqtt_ingest_can_use_mqtt_adapter_normalization():
@@ -212,12 +257,20 @@ def test_mqtt_ingest_can_use_mqtt_adapter_normalization():
         def __init__(self):
             self.telemetry = []
             self.events = []
+            self.discovered = []
 
         async def post_telemetry(self, payload):
             self.telemetry.append(payload)
 
         async def post_event(self, payload):
             self.events.append(payload)
+
+        async def post_device_heartbeat(self, device_id, payload):
+            return False
+
+        async def upsert_discovered_device(self, payload):
+            self.discovered.append(payload)
+            return payload
 
     management_client = FakeManagementClient()
     handler = handler_module.GatewayHandler({}, registry=FakeRegistry(), management_client=management_client)
@@ -233,3 +286,4 @@ def test_mqtt_ingest_can_use_mqtt_adapter_normalization():
     assert response.status == 202
     assert management_client.telemetry[0]["metrics"]["temperature"] == 24.6
     assert management_client.events[0]["payload"]["topic"] == "factory/line-1/temp"
+    assert management_client.discovered[0]["device_id"] == "sensor-mqtt-001"

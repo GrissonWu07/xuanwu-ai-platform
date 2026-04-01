@@ -7,11 +7,17 @@ import EmptyState from '@/components/EmptyState.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import {
   getChannel,
+  getDevices,
   getGateway,
   getGatewayOverview,
+  listDiscoveredDevices,
   listChannels,
   listGateways,
+  updateChannel,
+  updateGateway,
   type ChannelItem,
+  type DevicesCollectionResponse,
+  type DiscoveredDevicesResponse,
   type GatewayItem,
   type GatewayOverviewResponse,
 } from '@/api/management'
@@ -19,12 +25,17 @@ import {
 const loading = ref(true)
 const channels = ref<ChannelItem[]>([])
 const gateways = ref<GatewayItem[]>([])
+const devices = ref<DevicesCollectionResponse['items']>([])
+const discoveredDevices = ref<DiscoveredDevicesResponse['items']>([])
 const gatewayOverview = ref<GatewayOverviewResponse | null>(null)
 const selectedChannelId = ref('')
 const selectedGatewayId = ref('')
 const selectedChannel = ref<ChannelItem | null>(null)
 const selectedGateway = ref<GatewayItem | null>(null)
 const error = ref('')
+const actionError = ref('')
+const channelActionBusy = ref(false)
+const gatewayActionBusy = ref(false)
 const route = useRoute()
 const router = useRouter()
 
@@ -74,6 +85,14 @@ const siteSummary = computed(() =>
     .map(([siteId, count]) => `${siteId} · ${count} route${count === 1 ? '' : 's'}`),
 )
 
+const selectedGatewayManagedDevices = computed(() =>
+  devices.value.filter((item) => item.gateway_id === selectedGatewayId.value),
+)
+
+const selectedGatewayDiscoveredDevices = computed(() =>
+  discoveredDevices.value.filter((item) => item.gateway_id === selectedGatewayId.value && item.discovery_status !== 'ignored'),
+)
+
 async function selectChannel(channelId: string) {
   selectedChannelId.value = channelId
   selectedChannel.value = await getChannel(channelId)
@@ -105,15 +124,20 @@ async function selectGateway(gatewayId: string) {
 async function loadChannelsGateways() {
   loading.value = true
   error.value = ''
+  actionError.value = ''
   try {
-    const [channelsPayload, gatewaysPayload, overviewPayload] = await Promise.all([
+    const [channelsPayload, gatewaysPayload, overviewPayload, devicesPayload, discoveredPayload] = await Promise.all([
       listChannels(),
       listGateways(),
       getGatewayOverview(),
+      getDevices(),
+      listDiscoveredDevices().catch(() => ({ items: [] })),
     ])
     channels.value = channelsPayload.items
     gateways.value = gatewaysPayload.items
     gatewayOverview.value = overviewPayload
+    devices.value = devicesPayload.items
+    discoveredDevices.value = discoveredPayload.items
 
     const requestedChannelId = typeof route.query.channelId === 'string' ? route.query.channelId : ''
     const requestedGatewayId = typeof route.query.gatewayId === 'string' ? route.query.gatewayId : ''
@@ -134,6 +158,86 @@ async function loadChannelsGateways() {
     error.value = err instanceof Error ? err.message : 'Unable to load channels and gateways'
   } finally {
     loading.value = false
+  }
+}
+
+async function pauseSelectedChannel() {
+  if (!selectedChannel.value || channelActionBusy.value || selectedChannel.value.status === 'paused') {
+    return
+  }
+  channelActionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await updateChannel(selectedChannel.value.channel_id, {
+      ...selectedChannel.value,
+      status: 'paused',
+    })
+    channels.value = channels.value.map((item) => (item.channel_id === updated.channel_id ? updated : item))
+    selectedChannel.value = updated
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : 'Unable to pause channel.'
+  } finally {
+    channelActionBusy.value = false
+  }
+}
+
+async function activateSelectedChannel() {
+  if (!selectedChannel.value || channelActionBusy.value || selectedChannel.value.status === 'active') {
+    return
+  }
+  channelActionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await updateChannel(selectedChannel.value.channel_id, {
+      ...selectedChannel.value,
+      status: 'active',
+    })
+    channels.value = channels.value.map((item) => (item.channel_id === updated.channel_id ? updated : item))
+    selectedChannel.value = updated
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : 'Unable to activate channel.'
+  } finally {
+    channelActionBusy.value = false
+  }
+}
+
+async function setGatewayMaintenance() {
+  if (!selectedGateway.value || gatewayActionBusy.value || selectedGateway.value.status === 'maintenance') {
+    return
+  }
+  gatewayActionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await updateGateway(selectedGateway.value.gateway_id, {
+      ...selectedGateway.value,
+      status: 'maintenance',
+    })
+    gateways.value = gateways.value.map((item) => (item.gateway_id === updated.gateway_id ? updated : item))
+    selectedGateway.value = updated
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : 'Unable to update gateway.'
+  } finally {
+    gatewayActionBusy.value = false
+  }
+}
+
+async function markGatewayHealthy() {
+  if (!selectedGateway.value || gatewayActionBusy.value || selectedGateway.value.status === 'healthy') {
+    return
+  }
+  gatewayActionBusy.value = true
+  actionError.value = ''
+  try {
+    const updated = await updateGateway(selectedGateway.value.gateway_id, {
+      ...selectedGateway.value,
+      status: 'healthy',
+    })
+    gateways.value = gateways.value.map((item) => (item.gateway_id === updated.gateway_id ? updated : item))
+    selectedGateway.value = updated
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : 'Unable to update gateway.'
+  } finally {
+    gatewayActionBusy.value = false
   }
 }
 
@@ -232,6 +336,26 @@ onMounted(loadChannelsGateways)
                 <strong>{{ selectedChannel.device_count ?? 0 }}</strong>
               </div>
             </div>
+            <div class="action-row">
+              <button
+                v-if="selectedChannel.status !== 'paused'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="channelActionBusy"
+                @click="pauseSelectedChannel"
+              >
+                Pause channel
+              </button>
+              <button
+                v-if="selectedChannel.status === 'paused'"
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="channelActionBusy"
+                @click="activateSelectedChannel"
+              >
+                Activate channel
+              </button>
+            </div>
           </aside>
         </div>
 
@@ -267,7 +391,65 @@ onMounted(loadChannelsGateways)
                 <span>Site</span>
                 <strong>{{ selectedGateway.site_id || 'No site' }}</strong>
               </div>
+              <div class="detail-card">
+                <span>Managed devices</span>
+                <strong>{{ selectedGatewayManagedDevices.length }}</strong>
+              </div>
+              <div class="detail-card">
+                <span>pending discoveries</span>
+                <strong>{{ selectedGatewayDiscoveredDevices.length }} pending</strong>
+              </div>
             </div>
+            <div class="action-row">
+              <button
+                v-if="selectedGateway.status !== 'maintenance'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="gatewayActionBusy"
+                @click="setGatewayMaintenance"
+              >
+                Set maintenance mode
+              </button>
+              <button
+                v-if="selectedGateway.status === 'maintenance'"
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="gatewayActionBusy"
+                @click="markGatewayHealthy"
+              >
+                Mark healthy
+              </button>
+            </div>
+            <section class="detail-section">
+              <h3>Managed devices</h3>
+              <div class="insight-chips">
+                <span
+                  v-for="item in selectedGatewayManagedDevices"
+                  :key="item.device_id"
+                  class="insight-chip"
+                >
+                  {{ item.display_name || item.device_id }}
+                </span>
+                <span v-if="selectedGatewayManagedDevices.length === 0" class="insight-chip insight-chip--muted">
+                  No managed devices
+                </span>
+              </div>
+            </section>
+            <section class="detail-section">
+              <h3>Discovery queue</h3>
+              <div class="insight-chips">
+                <span
+                  v-for="item in selectedGatewayDiscoveredDevices"
+                  :key="item.discovery_id"
+                  class="insight-chip insight-chip--warning"
+                >
+                  {{ item.display_name || item.device_id }}
+                </span>
+                <span v-if="selectedGatewayDiscoveredDevices.length === 0" class="insight-chip insight-chip--muted">
+                  No pending discoveries
+                </span>
+              </div>
+            </section>
           </aside>
           <article v-if="protocolSummary.length || siteSummary.length" class="insight-panel">
             <div v-if="protocolSummary.length" class="insight-section">
@@ -285,6 +467,7 @@ onMounted(loadChannelsGateways)
           </article>
         </div>
       </section>
+      <p v-if="actionError" class="action-error">{{ actionError }}</p>
     </template>
   </section>
 </template>
@@ -407,6 +590,41 @@ onMounted(loadChannelsGateways)
   color: var(--muted);
 }
 
+.detail-section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.detail-section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action-button--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.action-button--ghost {
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(91, 109, 145, 0.16);
+}
+
 .insight-section {
   display: grid;
   gap: 0.75rem;
@@ -426,6 +644,22 @@ onMounted(loadChannelsGateways)
   border-radius: 999px;
   background: rgba(124, 108, 255, 0.1);
   color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.insight-chip--warning {
+  background: rgba(185, 132, 20, 0.12);
+  color: var(--warning);
+}
+
+.insight-chip--muted {
+  background: rgba(91, 109, 145, 0.12);
+  color: var(--muted);
+}
+
+.action-error {
+  margin: 0;
+  color: var(--danger);
   font-weight: 600;
 }
 

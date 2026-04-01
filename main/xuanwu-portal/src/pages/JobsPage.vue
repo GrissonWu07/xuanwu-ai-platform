@@ -11,6 +11,7 @@ import {
   getJobsOverview,
   getJobSchedule,
   pauseJobSchedule,
+  retryJobRun,
   resumeJobSchedule,
   triggerJobSchedule,
   type JobRunDetailResponse,
@@ -56,6 +57,7 @@ const selectedSchedule = computed(
 const selectedRuns = computed(() =>
   runs.value
     .filter((item) => item.schedule_id === selectedSchedule.value?.schedule_id)
+    .filter((item) => item.job_run_id !== selectedRunDetail.value?.job_run_id)
     .map((item) => ({
       title: item.job_run_id,
       meta: `${item.status} · ${item.executor_type} · ${item.started_at || 'Pending start'}`,
@@ -65,6 +67,28 @@ const selectedRuns = computed(() =>
 const schedulePayloadEntries = computed(() =>
   Object.entries(selectedScheduleDetail.value?.payload ?? {}).filter(([, value]) => value !== undefined && value !== null),
 )
+
+const misfireSummary = computed(() => {
+  if (!selectedScheduleDetail.value?.misfire_policy) {
+    return null
+  }
+  return {
+    policy: selectedScheduleDetail.value.misfire_policy,
+    grace: `${selectedScheduleDetail.value.misfire_grace_seconds ?? 0} seconds`,
+  }
+})
+
+const retrySummary = computed(() => {
+  if (!selectedScheduleDetail.value?.retry_policy) {
+    return null
+  }
+  const attempts = selectedScheduleDetail.value.max_retry_attempts ?? 0
+  const backoff = selectedScheduleDetail.value.retry_backoff_seconds ?? 0
+  return {
+    policy: selectedScheduleDetail.value.retry_policy,
+    detail: `${attempts} attempts / ${backoff}s backoff`,
+  }
+})
 
 const selectedRunSummary = computed(() => {
   if (selectedRunDetail.value?.error?.message) {
@@ -179,6 +203,23 @@ async function triggerSelectedSchedule() {
     upsertJobRun(run)
   } catch (error) {
     actionError.value = error instanceof Error ? error.message : 'Unable to run schedule now.'
+  } finally {
+    actionBusy.value = false
+  }
+}
+
+async function retrySelectedRun() {
+  if (!selectedRunDetail.value || actionBusy.value || selectedRunDetail.value.status !== 'failed') {
+    return
+  }
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const run = await retryJobRun(selectedRunDetail.value.job_run_id)
+    selectedRunDetail.value = run
+    upsertJobRun(run)
+  } catch (error) {
+    actionError.value = error instanceof Error ? error.message : 'Unable to retry failed run.'
   } finally {
     actionBusy.value = false
   }
@@ -304,6 +345,22 @@ onMounted(() => {
               <span>Scheduled for</span>
               <strong>{{ selectedRunDetail.scheduled_for }}</strong>
             </div>
+            <div v-if="misfireSummary" class="detail-card">
+              <span>Misfire policy</span>
+              <strong>{{ misfireSummary.policy }}</strong>
+            </div>
+            <div v-if="misfireSummary" class="detail-card">
+              <span>Misfire grace</span>
+              <strong>{{ misfireSummary.grace }}</strong>
+            </div>
+            <div v-if="retrySummary" class="detail-card">
+              <span>Retry policy</span>
+              <strong>{{ retrySummary.policy }}</strong>
+            </div>
+            <div v-if="retrySummary" class="detail-card">
+              <span>Retry budget</span>
+              <strong>{{ retrySummary.detail }}</strong>
+            </div>
           </div>
 
           <section v-if="schedulePayloadEntries.length > 0" class="detail-section">
@@ -355,6 +412,15 @@ onMounted(() => {
                 @click="triggerSelectedSchedule"
               >
                 Run now
+              </button>
+              <button
+                v-if="selectedRunDetail?.status === 'failed'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="actionBusy"
+                @click="retrySelectedRun"
+              >
+                Retry failed run
               </button>
             </div>
             <p v-if="actionError" class="action-error">{{ actionError }}</p>

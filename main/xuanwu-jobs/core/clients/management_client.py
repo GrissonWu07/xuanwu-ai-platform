@@ -31,6 +31,20 @@ class ManagementClient:
         ) as response:
             return await response.json()
 
+    async def list_dispatchable_job_runs(self, *, now_iso: str, limit: int):
+        async with self.session.get(
+            f"{self.base_url}/control-plane/v1/jobs/runs:dispatchable",
+            params={"now": now_iso, "limit": str(limit)},
+        ) as response:
+            return await response.json()
+
+    async def claim_job_run(self, job_run_id: str, *, started_at: str):
+        async with self.session.post(
+            f"{self.base_url}/control-plane/v1/jobs/runs/{job_run_id}:claim",
+            json={"started_at": started_at},
+        ) as response:
+            return await response.json()
+
     async def execute_job(self, job_message: dict):
         async with self.session.post(
             f"{self.base_url}/control-plane/v1/jobs:execute",

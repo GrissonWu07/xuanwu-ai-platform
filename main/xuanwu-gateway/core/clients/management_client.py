@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import aiohttp
+from aiohttp import ClientResponseError
 
 
 class ManagementClient:
@@ -52,6 +53,28 @@ class ManagementClient:
             response.raise_for_status()
             return await response.json()
 
+    async def upsert_discovered_device(self, payload: dict):
+        async with self._session.post(
+            f"{self.base_url}/control-plane/v1/gateway/device-discovery",
+            json=payload,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def post_device_heartbeat(self, device_id: str, payload: dict) -> bool:
+        try:
+            async with self._session.post(
+                f"{self.base_url}/control-plane/v1/devices/{device_id}:heartbeat",
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                await response.json()
+                return True
+        except ClientResponseError as exc:
+            if exc.status == 404:
+                return False
+            raise
+
     async def close(self):
         await self._session.close()
 
@@ -71,6 +94,12 @@ class NullManagementClient:
 
     async def post_command_result(self, payload: dict):
         return payload
+
+    async def upsert_discovered_device(self, payload: dict):
+        return payload
+
+    async def post_device_heartbeat(self, device_id: str, payload: dict) -> bool:
+        return False
 
     async def close(self):
         return None

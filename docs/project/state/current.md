@@ -91,6 +91,8 @@
   - query-dimension filtering for event and telemetry listing
   - command-result persistence plus mirrored `command.result` event creation
   - `XuanWu` proxy surfaces for agents, model providers, and models
+  - discovered-device APIs and promotion flow
+  - device heartbeat updates and richer device detail aggregation
 - `xuanwu-gateway` now provides:
   - standalone service bootstrap
   - adapter registry
@@ -116,6 +118,7 @@
     - `can_gateway`
     - `bluetooth`
     - `nearlink`
+  - gateway callbacks for discovered devices and device heartbeat updates into management
 - `xuanwu-device-server` boundary work is complete for the local phase:
   - `XuanWu` runtime naming is aligned
   - runtime context exposes `xuanwu_session_key`
@@ -124,10 +127,14 @@
   - non-upstream local test suite is now the active verification baseline
   - upstream-only `XuanWu` integration tests were removed from the local completion gate
   - `/runtime/v1/jobs:execute` now exposes local runtime job execution
+  - unknown runtime devices now report first-contact discovery into management
+  - runtime activity now reports heartbeat back into management
 - `xuanwu-jobs` now provides:
   - a single lightweight scheduler-dispatcher service
   - due-schedule polling and claim against `xuanwu-management-server`
   - direct API dispatch for `platform`, `gateway`, and `device` executors
+  - dispatchable queued run polling and claim
+  - cron progression plus retry scheduling metadata
   - no Redis dependency in the local execution path
   - current local-only coverage baseline is:
     - `config_loader.py`: 88%
@@ -136,13 +143,22 @@
     - `xuanwu-jobs/core/dispatcher.py`: active dispatcher coverage is tracked in the local suite
     - `xuanwu-jobs/core/clients/management_client.py`: 91%
     - current full local platform suite total: 62%
+- device ingress integration is now complete locally:
+  - discovered devices
+  - promote/ignore workflow
+  - gateway first-seen discovery
+  - device-server first-contact discovery
+  - unified device recency and heartbeat updates
+  - portal device discovery workspace
+- standalone wireless bridges are now implemented locally:
+  - `main/xuanwu-bluetooth-bridge`
+  - `main/xuanwu-nearlink-bridge`
+  - Linux RPM packaging assets
+  - Windows Service packaging assets
 
 ## In Progress
-- Remaining upstream work is now concentrated in contract integration with `XuanWu`.
-- Local platform work can move next into:
-  - deeper portal destinations beyond the current shell
-  - richer scheduling semantics without changing the service boundaries
-  - cross-page navigation and drilldown flows inside `xuanwu-portal`
+- Remaining unfinished work is now concentrated in contract integration with `XuanWu`.
+- The current local spec set is complete; any further local work is optional enhancement rather than a required blocker.
 
 ## Risks / Decisions
 - Decision: all Agent-domain truth remains in `XuanWu`.
@@ -156,6 +172,7 @@
 - Risk: upstream `XuanWu` still needs to consume the final gateway contract end-to-end before local runtime compatibility paths can be removed.
 
 ## Next Step
-- Expand schedule semantics and execution classes:
-  - add richer schedule expressions beyond the local interval baseline
-  - validate final upstream contracts before retiring the remaining local compatibility paths
+- Validate final upstream contracts and then retire the remaining local compatibility paths:
+  - stable management proxy responses from `XuanWu`
+  - stable execution contract from `XuanWu` into `xuanwu-gateway`
+  - end-to-end agent-driven device invocation validation
