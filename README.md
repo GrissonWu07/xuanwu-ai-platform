@@ -33,7 +33,7 @@
 - 结合 Knowledge、Workflow、Model 和规则做持续决策
 - 让设备从“被动响应”变成“可编排、可协同、可运营”的平台能力
 
-而本仓库的角色，就是把这种智能代理能力落到设备平台层。它负责把设备接入、设备管理、网关执行、调度编排、统一门户、运营读模型与可观测性，收敛成清晰、稳定、可扩展的本地平台。
+而本仓库的角色，就是把这种智能代理能力落到设备平台层。它负责把设备接入、设备管理、网关执行、调度编排、统一门户、运营读模型与可观测性，收敛成清晰、稳定、可扩展的本地平台；`XuanWu AI Agent` 则位于平台上层，直接面向用户交互，并与本地各服务协同完成真实设备世界中的执行与运营闭环。
 
 ## 这个项目解决什么问题
 
@@ -51,7 +51,7 @@
 
 ### 让 Agent 域与设备平台域保持清晰边界
 
-`XuanWu` 负责 Agent / Workflow / Knowledge / Model；本仓库负责设备、网关、调度、运营与观测。边界清楚，系统才能持续演进。
+`XuanWu` 负责 Agent / Workflow / Knowledge / Model 以及面向用户的智能交互；本仓库负责设备、网关、调度、运营与观测。两者之间是协同关系，不是互相替代的关系；边界清楚，系统才能持续演进。
 
 ## 核心能力
 
@@ -77,7 +77,7 @@
 
 ### 3. 中心化 Agent 协同
 
-`XuanWu` 承接 Agent 域真源与执行决策；本仓库提供本地设备平台底座。这种分层让智能体能力与设备平台能力协同工作，而不是互相耦合、互相污染边界。
+`XuanWu` 承接 Agent 域真源、用户侧交互与执行决策；本仓库提供本地设备平台底座。这种分层让智能体能力与设备平台能力协同工作，而不是互相耦合、互相污染边界。
 
 ### 4. 多协议、多网关扩展
 
@@ -119,11 +119,13 @@ flowchart LR
 
 ## 总体架构
 
-从上到下分别对应统一入口、平台核心、设备接入层、无线桥接层与设备世界；`XuanWu` 作为智能体域，与平台管理面协同，并通过 IoT 网关面向设备世界执行能力。
+从上到下分别对应统一入口、平台核心、设备接入层、无线桥接层与设备世界；`XuanWu AI Agent` 位于平台上层，直接面向门户交互，并与管理面、调度面、设备网关面协同完成执行闭环。需要特别注意的是：会话型设备的实际接入入口始终是 `xuanwu-device-gateway`，`XuanWu` 与它之间是运行时协同关系，而不是设备物理接入关系。
 
 ```mermaid
 flowchart TB
     Portal["xuanwu-portal<br/>统一运营入口"]
+
+    XW["XuanWu AI Agent<br/>智能交互、规划与执行决策"]
 
     subgraph Control["平台核心"]
         direction LR
@@ -150,10 +152,8 @@ flowchart TB
         Wireless["蓝牙 / 星闪设备"]
     end
 
-    XW["XuanWu<br/>Agent 域真源与执行决策"]
-
-    Portal -->|"统一运营入口"| Mgmt
-    Portal -->|"任务视图与操作"| Jobs
+    Portal -->|"运营工作台"| Mgmt
+    Portal -->|"Agent 交互入口"| XW
 
     Jobs -->|"调度状态与运行记录"| Mgmt
     Jobs -->|"运行时任务"| Device
@@ -161,6 +161,7 @@ flowchart TB
 
     Mgmt -->|"配置、映射、读模型"| Device
     Mgmt -->|"设备真源、事件、遥测"| IoT
+    Mgmt -->|"管理与配置代理"| XW
 
     Conv --> Device
     IotDev --> IoT
@@ -172,7 +173,8 @@ flowchart TB
 
     Device -->|"发现、心跳、运行时回写"| Mgmt
     IoT -->|"发现、事件、遥测、结果回写"| Mgmt
-    Mgmt -->|"管理与配置代理"| XW
+    XW -->|"调度触发与任务协同"| Jobs
+    XW -.->|"运行时协同（非接入入口）"| Device
     XW -->|"面向设备世界执行能力"| IoT
 
     classDef ux fill:#f7edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
@@ -201,7 +203,7 @@ flowchart TB
 | `xuanwu-portal` | 统一运营工作台 | Overview、Devices、Agents、Jobs、Alerts、用户与角色、通道与网关、AI Config Proxy、遥测与告警、设置 |
 | `xuanwu-bluetooth-bridge` | 蓝牙桥接服务 | 无线设备连接、系统级打包、向 `xuanwu-iot-gateway` 回调集成 |
 | `xuanwu-nearlink-bridge` | 星闪桥接服务 | 星闪设备桥接、系统环境解耦、向 `xuanwu-iot-gateway` 回调集成 |
-| `XuanWu` | Agent 域真源与决策层 | Agent、Workflow、Knowledge、Model、上游管理与执行决策 |
+| `XuanWu` | Agent 域真源与决策层 | Agent、Workflow、Knowledge、Model、用户侧智能交互、执行决策，并与 `xuanwu-portal`、`xuanwu-management-server`、`xuanwu-jobs`、`xuanwu-device-gateway`、`xuanwu-iot-gateway` 协同 |
 
 ## 平台支持的设备与协议
 
@@ -282,12 +284,13 @@ flowchart TB
 - 遥测、事件、告警、OTA
 - 蓝牙 / 星闪等桥接集成
 
-`XuanWu` 关注的是 Agent 域真源与执行决策：
+`XuanWu` 关注的是 Agent 域真源、用户交互与执行决策：
 
 - Agent
 - Workflow
 - Knowledge
 - Model
+- 面向门户的智能交互
 - 上游管理 API
 - 上游执行 API
 - 面向设备世界的智能编排与决策
