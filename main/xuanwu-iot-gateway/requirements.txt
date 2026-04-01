@@ -1,0 +1,6 @@
+aiohttp
+httpx
+pymodbus
+opcua
+BAC0
+paho-mqtt

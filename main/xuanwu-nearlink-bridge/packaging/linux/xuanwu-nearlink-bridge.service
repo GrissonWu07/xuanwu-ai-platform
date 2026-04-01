@@ -1,0 +1,16 @@
+[Unit]
+Description=XuanWu NearLink Bridge
+After=network.target
+
+[Service]
+Type=simple
+User=xuanwu
+Group=xuanwu
+EnvironmentFile=-/etc/xuanwu/nearlink-bridge/env
+ExecStart=/usr/bin/python3 /opt/xuanwu/nearlink-bridge/app.py
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/opt/xuanwu/nearlink-bridge
+
+[Install]
+WantedBy=multi-user.target

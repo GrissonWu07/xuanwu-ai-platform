@@ -1,0 +1,521 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+import DataTable, { type DataTableColumn } from '@/components/DataTable.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import SummaryCard from '@/components/SummaryCard.vue'
+import { getAuthMe, listRoles, listUsers, updateUser, type AuthMeResponse, type RoleItem, type UserItem } from '@/api/management'
+
+const loading = ref(true)
+const me = ref<AuthMeResponse | null>(null)
+const roles = ref<RoleItem[]>([])
+const users = ref<UserItem[]>([])
+const error = ref('')
+const selectedUserId = ref('')
+const selectedRoleId = ref('')
+const userActionBusy = ref(false)
+const userActionError = ref('')
+const route = useRoute()
+const router = useRouter()
+
+const roleColumns: DataTableColumn[] = [
+  { key: 'label', label: 'Role' },
+  { key: 'permission_count', label: 'Permissions' },
+  { key: 'description', label: 'Description' },
+]
+
+const userColumns: DataTableColumn[] = [
+  { key: 'display_name', label: 'User' },
+  { key: 'email', label: 'Email' },
+  { key: 'status', label: 'Status' },
+  { key: 'roles', label: 'Roles' },
+]
+
+const roleRows = computed(() =>
+  roles.value.map((role) => ({
+    id: role.role_id,
+    label: role.label,
+    permission_count: String(role.permission_count ?? role.permissions?.length ?? 0),
+    description: role.description ?? 'No description',
+  })),
+)
+
+const userRows = computed(() =>
+  users.value.map((user) => ({
+    id: user.user_id,
+    display_name: user.display_name ?? user.user_id,
+    email: user.email ?? 'No email',
+    status: user.status ?? 'unknown',
+    roles: (user.role_ids ?? []).join(', ') || 'No roles',
+  })),
+)
+
+const selectedUser = computed(
+  () => users.value.find((user) => user.user_id === selectedUserId.value) ?? users.value[0] ?? null,
+)
+
+const selectedRole = computed(
+  () => roles.value.find((role) => role.role_id === selectedRoleId.value) ?? roles.value[0] ?? null,
+)
+
+const selectedRolePermissions = computed(() => selectedRole.value?.permissions ?? [])
+
+async function syncQuery(next: { userId?: string; roleId?: string }) {
+  const query = {
+    ...route.query,
+    userId: next.userId || undefined,
+    roleId: next.roleId || undefined,
+  }
+  await router.replace({ query })
+}
+
+async function selectUser(userId: string) {
+  if (!userId) {
+    return
+  }
+  selectedUserId.value = userId
+  if (route.query.userId !== userId) {
+    await syncQuery({
+      userId,
+      roleId: selectedRoleId.value,
+    })
+  }
+}
+
+async function selectRole(roleId: string) {
+  if (!roleId) {
+    return
+  }
+  selectedRoleId.value = roleId
+  if (route.query.roleId !== roleId) {
+    await syncQuery({
+      userId: selectedUserId.value,
+      roleId,
+    })
+  }
+}
+
+async function loadUsersRoles() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const [mePayload, rolesPayload, usersPayload] = await Promise.all([getAuthMe(), listRoles(), listUsers()])
+    me.value = mePayload
+    roles.value = rolesPayload.items
+    users.value = usersPayload.items
+
+    const requestedUserId = typeof route.query.userId === 'string' ? route.query.userId : ''
+    const requestedRoleId = typeof route.query.roleId === 'string' ? route.query.roleId : ''
+    const nextUserId = usersPayload.items.find((user) => user.user_id === requestedUserId)?.user_id ?? usersPayload.items[0]?.user_id ?? ''
+    const nextRoleId = rolesPayload.items.find((role) => role.role_id === requestedRoleId)?.role_id ?? rolesPayload.items[0]?.role_id ?? ''
+
+    if (nextUserId) {
+      selectedUserId.value = nextUserId
+    }
+    if (nextRoleId) {
+      selectedRoleId.value = nextRoleId
+    }
+
+    if (nextUserId && nextRoleId && (route.query.userId !== nextUserId || route.query.roleId !== nextRoleId)) {
+      await syncQuery({ userId: nextUserId, roleId: nextRoleId })
+    }
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unable to load users and roles'
+  } finally {
+    loading.value = false
+  }
+}
+
+function patchUser(userId: string, patch: Partial<UserItem>) {
+  users.value = users.value.map((user) =>
+    user.user_id === userId
+      ? {
+          ...user,
+          ...patch,
+        }
+      : user,
+  )
+}
+
+async function activateSelectedUser() {
+  if (!selectedUser.value || userActionBusy.value || selectedUser.value.status === 'active') {
+    return
+  }
+  userActionBusy.value = true
+  userActionError.value = ''
+  try {
+    const updated = await updateUser(selectedUser.value.user_id, {
+      ...selectedUser.value,
+      status: 'active',
+    })
+    patchUser(selectedUser.value.user_id, updated)
+  } catch (err) {
+    userActionError.value = err instanceof Error ? err.message : 'Unable to activate user.'
+  } finally {
+    userActionBusy.value = false
+  }
+}
+
+async function suspendSelectedUser() {
+  if (!selectedUser.value || userActionBusy.value || selectedUser.value.status === 'suspended') {
+    return
+  }
+  userActionBusy.value = true
+  userActionError.value = ''
+  try {
+    const updated = await updateUser(selectedUser.value.user_id, {
+      ...selectedUser.value,
+      status: 'suspended',
+    })
+    patchUser(selectedUser.value.user_id, updated)
+  } catch (err) {
+    userActionError.value = err instanceof Error ? err.message : 'Unable to suspend user.'
+  } finally {
+    userActionBusy.value = false
+  }
+}
+
+function handleUserSelect(row: Record<string, string>) {
+  void selectUser(row.id)
+}
+
+function handleRoleSelect(row: Record<string, string>) {
+  void selectRole(row.id)
+}
+
+watch(
+  () => route.query.userId,
+  (userId) => {
+    const nextUserId = typeof userId === 'string' ? userId : ''
+    if (!nextUserId || nextUserId === selectedUserId.value || users.value.length === 0) {
+      return
+    }
+    const exists = users.value.some((user) => user.user_id === nextUserId)
+    if (exists) {
+      selectedUserId.value = nextUserId
+    }
+  },
+)
+
+watch(
+  () => route.query.roleId,
+  (roleId) => {
+    const nextRoleId = typeof roleId === 'string' ? roleId : ''
+    if (!nextRoleId || nextRoleId === selectedRoleId.value || roles.value.length === 0) {
+      return
+    }
+    const exists = roles.value.some((role) => role.role_id === nextRoleId)
+    if (exists) {
+      selectedRoleId.value = nextRoleId
+    }
+  },
+)
+
+onMounted(loadUsersRoles)
+</script>
+
+<template>
+  <section class="secondary-page">
+    <header class="page-head">
+      <div>
+        <span class="eyebrow">Profile destination</span>
+        <h1>Users &amp; Roles</h1>
+        <p>Review who owns the fleet, which roles exist, and what permissions are exposed through the management surface.</p>
+      </div>
+      <button type="button" class="ghost-action" @click="loadUsersRoles">Refresh</button>
+    </header>
+
+    <div v-if="error">
+      <EmptyState title="Users & Roles unavailable" :detail="error" />
+    </div>
+
+    <template v-else>
+      <section class="metric-grid" aria-label="Users and roles metrics">
+        <SummaryCard title="Signed in user" :value="me?.display_name ?? 'Unknown'" :detail="me?.email ?? 'No email'" />
+        <SummaryCard title="Users" :value="String(users.length)" detail="Managed by xuanwu-management-server" />
+        <SummaryCard title="Roles" :value="String(roles.length)" detail="Effective permission groups" />
+      </section>
+
+      <article v-if="me" class="panel">
+        <header class="panel-head">
+          <h2>Current profile</h2>
+          <span>{{ me.user_id }}</span>
+        </header>
+        <p class="profile-copy">
+          {{ me.display_name }} currently holds
+          <strong>{{ me.role_ids.length }}</strong>
+          role assignments and
+          <strong>{{ me.permissions.length }}</strong>
+          effective permissions.
+        </p>
+      </article>
+
+      <div v-if="loading" class="loading-copy">Loading users and roles...</div>
+
+      <section v-else class="surface-grid">
+        <div class="table-stack">
+          <DataTable
+            title="Role catalogue"
+            :columns="roleColumns"
+            :rows="roleRows"
+            row-key="id"
+            row-label-key="label"
+            :selected-row-key="selectedRole?.role_id"
+            selectable
+            @row-select="handleRoleSelect"
+          />
+          <DataTable
+            title="User directory"
+            :columns="userColumns"
+            :rows="userRows"
+            row-key="id"
+            row-label-key="display_name"
+            :selected-row-key="selectedUser?.user_id"
+            selectable
+            @row-select="handleUserSelect"
+          />
+        </div>
+
+        <aside class="detail-stack">
+          <article v-if="selectedUser" class="panel" data-testid="user-detail-panel">
+            <header class="panel-head">
+              <div>
+                <span class="detail-eyebrow">Selected user</span>
+                <h2>{{ selectedUser.display_name ?? selectedUser.user_id }}</h2>
+              </div>
+              <span>{{ selectedUser.status ?? 'unknown' }}</span>
+            </header>
+            <div class="detail-grid">
+              <div class="detail-card">
+                <span>Email</span>
+                <strong>{{ selectedUser.email ?? 'No email' }}</strong>
+              </div>
+              <div class="detail-card">
+                <span>Role assignments</span>
+                <strong>{{ (selectedUser.role_ids ?? []).join(', ') || 'No roles' }}</strong>
+              </div>
+            </div>
+            <div class="user-actions">
+              <button
+                v-if="selectedUser.status !== 'active'"
+                type="button"
+                class="action-button action-button--primary"
+                :disabled="userActionBusy"
+                @click="activateSelectedUser"
+              >
+                Activate user
+              </button>
+              <button
+                v-if="selectedUser.status !== 'suspended'"
+                type="button"
+                class="action-button action-button--ghost"
+                :disabled="userActionBusy"
+                @click="suspendSelectedUser"
+              >
+                Suspend user
+              </button>
+            </div>
+            <p v-if="userActionError" class="action-error">{{ userActionError }}</p>
+          </article>
+
+          <article v-if="selectedRole" class="panel" data-testid="role-detail-panel">
+            <header class="panel-head">
+              <div>
+                <span class="detail-eyebrow">Selected role</span>
+                <h2>{{ selectedRole.label }}</h2>
+              </div>
+              <span>{{ selectedRole.permission_count ?? selectedRolePermissions.length }} permissions</span>
+            </header>
+            <p class="profile-copy">{{ selectedRole.description ?? 'No description' }}</p>
+            <div class="permission-list">
+              <span v-for="permission in selectedRolePermissions" :key="permission" class="permission-chip">
+                {{ permission }}
+              </span>
+            </div>
+          </article>
+        </aside>
+      </section>
+    </template>
+  </section>
+</template>
+
+<style scoped>
+.secondary-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+}
+
+.eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-head h1 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+}
+
+.page-head p,
+.profile-copy,
+.loading-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ghost-action {
+  min-height: 2.85rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(91, 109, 145, 0.16);
+  font-weight: 700;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.surface-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+  gap: 1rem;
+}
+
+.table-stack,
+.detail-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1.2rem;
+  border-radius: 24px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel-head h2 {
+  margin: 0.3rem 0 0;
+}
+
+.detail-eyebrow {
+  color: var(--soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.detail-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(124, 108, 255, 0.06);
+}
+
+.detail-card span {
+  color: var(--muted);
+}
+
+.permission-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.permission-chip {
+  display: inline-flex;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(124, 108, 255, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.72rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.action-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(65, 46, 109, 0.14);
+}
+
+.action-button--primary {
+  background: linear-gradient(135deg, var(--accent-strong), #7f6bff);
+  border-color: transparent;
+  color: white;
+}
+
+.action-button--ghost {
+  background: rgba(124, 108, 255, 0.08);
+  color: var(--text);
+}
+
+.action-error {
+  margin: 0.75rem 0 0;
+  color: #b42318;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 960px) {
+  .page-head,
+  .metric-grid,
+  .surface-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}
+</style>

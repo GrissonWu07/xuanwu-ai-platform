@@ -1,0 +1,8 @@
+# 生产镜像，仅包含应用代码
+FROM ghcr.io/GrissonWu07/ai-assist-deviceserver:server-base
+
+COPY main/xuanwu-device-gateway .
+
+# 启动应用
+CMD ["python", "app.py"]
+

@@ -1,0 +1,16 @@
+[Unit]
+Description=XuanWu Bluetooth Bridge
+After=network.target bluetooth.target
+
+[Service]
+Type=simple
+User=xuanwu
+Group=xuanwu
+EnvironmentFile=-/etc/xuanwu/bluetooth-bridge/env
+ExecStart=/usr/bin/python3 /opt/xuanwu/bluetooth-bridge/app.py
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/opt/xuanwu/bluetooth-bridge
+
+[Install]
+WantedBy=multi-user.target

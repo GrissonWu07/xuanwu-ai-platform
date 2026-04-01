@@ -1,0 +1,1 @@
+"""Sensor MQTT adapter package."""
