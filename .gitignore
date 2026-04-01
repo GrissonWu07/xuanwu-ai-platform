@@ -150,6 +150,7 @@ tmp
 .history
 .DS_Store
 main/xuanwu-device-gateway/data
+deploy/data/
 
 main/manager-web/node_modules
 main/xuanwu-portal/node_modules/
@@ -167,6 +168,7 @@ main/xuanwu-device-gateway/models/sherpa-onnx*
 /asr-models/iic/SenseVoiceSmall/
 /main/xuanwu-device-gateway/asr-models/iic/SenseVoiceSmall/
 /models/SenseVoiceSmall/model.pt
+deploy/models/SenseVoiceSmall/model.pt
 my_wakeup_words.mp3
 !main/xuanwu-device-gateway/config/assets/bind_code.wav
 !main/xuanwu-device-gateway/config/assets/wakeup_words.wav

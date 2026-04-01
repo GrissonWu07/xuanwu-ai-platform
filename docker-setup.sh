@@ -2,11 +2,11 @@
 
 set -eu
 
-PROJECT_ROOT="/opt/xuanwu-device-gateway"
-DATA_DIR="$PROJECT_ROOT/data"
-MODEL_DIR="$PROJECT_ROOT/models/SenseVoiceSmall"
+PROJECT_ROOT="/opt/xuanwu-ai-platform"
+DATA_DIR="$PROJECT_ROOT/deploy/data"
+MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
-COMPOSE_PATH="$PROJECT_ROOT/docker-compose_all.yml"
+COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"
 CONFIG_PATH="$DATA_DIR/.config.yaml"
 
 download_if_missing() {
@@ -35,6 +35,26 @@ ensure_curl() {
     exit 1
 }
 
+ensure_git() {
+    if command -v git >/dev/null 2>&1; then
+        return
+    fi
+    echo "git was not detected. Please install git first."
+    exit 1
+}
+
+sync_repo() {
+    if [ -d "$PROJECT_ROOT/.git" ]; then
+        git -C "$PROJECT_ROOT" fetch --all --prune
+        git -C "$PROJECT_ROOT" checkout main
+        git -C "$PROJECT_ROOT" pull --ff-only origin main
+        return
+    fi
+
+    rm -rf "$PROJECT_ROOT"
+    git clone https://github.com/GrissonWu07/xuanwu-ai-platform.git "$PROJECT_ROOT"
+}
+
 if [ "$(id -u)" -ne 0 ]; then
     echo "Please run this script with root privileges."
     exit 1
@@ -42,12 +62,10 @@ fi
 
 ensure_docker
 ensure_curl
+ensure_git
+sync_repo
 
 mkdir -p "$DATA_DIR" "$MODEL_DIR"
-
-download_if_missing \
-    "$COMPOSE_PATH" \
-    "https://ghfast.top/https://raw.githubusercontent.com/GrissonWu07/xuanwu-ai-platform/refs/heads/main/main/xuanwu-device-gateway/docker-compose_all.yml"
 
 if [ ! -f "$CONFIG_PATH" ]; then
     : > "$CONFIG_PATH"
@@ -73,5 +91,8 @@ XuanWu AI Python stack is up:
 - vision endpoint: http://$LOCAL_IP:8003/mcp/vision/explain
 - WebSocket endpoint: ws://$LOCAL_IP:8000/xuanwu/v1/
 
-Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL.
+You can edit local runtime overrides in:
+- $CONFIG_PATH
+
+Please make sure the external XuanWu service is reachable through XUANWU_BASE_URL in docker-compose.yml.
 EOF

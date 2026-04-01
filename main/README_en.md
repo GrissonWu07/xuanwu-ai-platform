@@ -330,7 +330,7 @@ The project can be deployed in multiple ways, mainly including using Docker to s
     *   **Simplified Installation (Only `xuanwu-device-gateway`):** This option deploys only the runtime service and is suitable when voice AI processing and device runtime flow are the primary goals.
     *   **Full Module Installation (Default Primary Path):** The recommended current path deploys `xuanwu-device-gateway + xuanwu-management-server`, with `XuanWu` connected as the external agent service.
     *   **Legacy Java compatibility mode:** If the old management chain is still required, `manager-api` / `manager-web` / MySQL / Redis are brought up explicitly through the `legacy-java profile`.
-    *   The project uses `docker-compose_all.yml` to orchestrate these services. The default `docker compose -f docker-compose_all.yml up -d` follows the Python-primary path, while `docker compose --profile legacy-java -f docker-compose_all.yml up -d` enables the legacy Java management stack.
+*   The repository root `docker-compose.yml` is now the canonical deployment entrypoint for the local platform layer. The default `docker compose up -d` follows the Python-primary path.
 
 2.  **Source Code Deployment:**
     *   The current default primary path is `xuanwu-device-gateway + xuanwu-management-server + XuanWu`.

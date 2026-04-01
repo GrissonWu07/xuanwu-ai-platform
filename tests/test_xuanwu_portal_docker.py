@@ -14,7 +14,7 @@ def test_xuanwu_portal_dockerfile_exists() -> None:
 
 
 def test_compose_includes_xuanwu_portal_service() -> None:
-    compose_file = REPO_ROOT / "main" / "xuanwu-device-gateway" / "docker-compose_all.yml"
+    compose_file = REPO_ROOT / "docker-compose.yml"
     content = compose_file.read_text(encoding="utf-8")
     assert "xuanwu-portal:" in content
     assert '"18081:80"' in content

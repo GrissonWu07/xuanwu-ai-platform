@@ -14,10 +14,10 @@ def test_xuanwu_gateway_has_dedicated_dockerfile():
 
 
 def test_xuanwu_gateway_compose_uses_dedicated_dockerfile():
-    compose = Path("main/xuanwu-device-gateway/docker-compose_all.yml").read_text(encoding="utf-8")
+    compose = Path("docker-compose.yml").read_text(encoding="utf-8")
     assert "dockerfile: main/xuanwu-iot-gateway/Dockerfile" in compose
 
 
 def test_compose_defines_mqtt_broker_service():
-    compose = Path("main/xuanwu-device-gateway/docker-compose_all.yml").read_text(encoding="utf-8")
+    compose = Path("docker-compose.yml").read_text(encoding="utf-8")
     assert "mosquitto:" in compose

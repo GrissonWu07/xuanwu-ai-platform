@@ -5,9 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_docker_compose_includes_single_xuanwu_jobs_service():
-    compose_text = (
-        ROOT / "main" / "xuanwu-device-gateway" / "docker-compose_all.yml"
-    ).read_text(encoding="utf-8")
+    compose_text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
     assert "xuanwu-jobs:" in compose_text
     assert "xuanwu-jobs-scheduler:" not in compose_text

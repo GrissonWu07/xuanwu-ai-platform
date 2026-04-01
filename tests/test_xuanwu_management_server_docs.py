@@ -9,9 +9,7 @@ def test_management_server_directory_exists():
 
 
 def test_docker_compose_is_python_primary_only():
-    compose_text = (
-        ROOT / "main" / "xuanwu-device-gateway" / "docker-compose_all.yml"
-    ).read_text(encoding="utf-8")
+    compose_text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
     assert "xuanwu-management-server" in compose_text
     assert "XUANWU_BASE_URL=http://xuanwu-ai:8000" in compose_text
