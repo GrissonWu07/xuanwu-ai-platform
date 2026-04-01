@@ -6,7 +6,7 @@
 
 让智能代理不只是“理解意图”，还能够连接设备、协同网关、调度任务、持续运营。
 
-[English](./README_en.md) | [Deutsch](./README_de.md) | [Português (Brasil)](./README_pt_BR.md) | [Tiếng Việt](./README_vi.md)
+[English](./README_en.md)
 
 </div>
 

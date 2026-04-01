@@ -1,378 +1,331 @@
-[![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
+<div align="center">
 
-<h1 align="center">Xuanwu Backend Service xuanwu-device-gateway</h1>
+# XuanWu AI Device Platform
 
-<p align="center">
-This project is based on human-machine symbiotic intelligence theory and technology to develop intelligent terminal hardware and software systems<br/>providing backend services for the open-source intelligent hardware project
-<a href="https://github.com/78/xuanwu-esp32">xuanwu-esp32</a><br/>
-Implemented using Python, Java, and Vue according to the <a href="https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh">Xuanwu Communication Protocol</a><br/>
-Support for MQTT+UDP protocol, Websocket protocol, MCP access point, voiceprint recognition, and knowledge base
-</p>
+The unified intelligent device platform for `XuanWu AI Agent`
 
-<p align="center">
-<a href="./docs/FAQ.md">FAQ</a>
-· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/issues">Report Issues</a>
-· <a href="./README.md#%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3">Deployment Docs</a>
-· <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">Release Notes</a>
-</p>
+Make the intelligent agent do more than understand intent: connect devices, coordinate gateways, schedule jobs, and support continuous operations.
 
-<p align="center">
-  <a href="./README.md"><img alt="简体中文版自述文件" src="https://img.shields.io/badge/简体中文-DFE0E5"></a>
-  <a href="./README_en.md"><img alt="README in English" src="https://img.shields.io/badge/English-DBEDFA"></a>
-  <a href="./README_vi.md"><img alt="Tiếng Việt" src="https://img.shields.io/badge/Tiếng Việt-DFE0E5"></a>
-  <a href="./README_de.md"><img alt="Deutsch" src="https://img.shields.io/badge/Deutsch-DFE0E5"></a>
-  <a href="./README_pt_BR.md"><img alt="Português (Brasil)" src="https://img.shields.io/badge/Português (Brasil)-DFE0E5"></a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/releases">
-    <img alt="GitHub Contributors" src="https://img.shields.io/github/v/release/xinnan-tech/device-server?logo=docker" />
-  </a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/LICENSE">
-    <img alt="GitHub pull requests" src="https://img.shields.io/badge/license-MIT-white?labelColor=black" />
-  </a>
-  <a href="https://github.com/GrissonWu07/ai-assist-deviceserver">
-    <img alt="stars" src="https://img.shields.io/github/stars/xinnan-tech/device-server?color=ffcb47&labelColor=black" />
-  </a>
-</p>
+[简体中文](./README.md)
 
-<p align="center">
-Spearheaded by Professor Siyuan Liu's Team (South China University of Technology)
-</br>
-刘思源教授团队主导研发（华南理工大学）
-</br>
-<img src="./docs/images/hnlg.jpg" alt="South China University of Technology" width="50%">
-</p>
+</div>
 
 ---
 
-## Target Users 👥
+## Positioning
 
-This project requires ESP32 hardware devices to work. If you have purchased ESP32-related hardware, successfully connected to Brother Xia's deployed backend service, and want to build your own `xuanwu-esp32` backend service independently, then this project is perfect for you.
+The `XuanWu AI Device Platform` is the local platform layer of the XuanWu device ecosystem.
 
-Want to see the usage effects? Click the videos below 🎥
+Its purpose is not only to answer the question “how do devices connect?”, but a more important one:
 
-<table>
-  <tr>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1FMFyejExX" target="_blank">
-         <picture>
-           <img alt="响应速度感受" src="docs/images/demo9.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1vchQzaEse" target="_blank">
-         <picture>
-           <img alt="速度优化秘诀" src="docs/images/demo6.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1C1tCzUEZh" target="_blank">
-         <picture>
-           <img alt="复杂医疗场景" src="docs/images/demo1.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1zUW5zJEkq" target="_blank">
-         <picture>
-           <img alt="MQTT指令下发" src="docs/images/demo4.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1Exu3zqEDe" target="_blank">
-         <picture>
-           <img alt="声纹识别" src="docs/images/demo14.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1pNXWYGEx1" target="_blank">
-         <picture>
-           <img alt="控制家电开关" src="docs/images/demo5.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1ZQKUzYExM" target="_blank">
-         <picture>
-           <img alt="MCP接入点" src="docs/images/demo13.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-      <a href="https://www.bilibili.com/video/BV1TJ7WzzEo6" target="_blank">
-         <picture>
-           <img alt="多指令任务" src="docs/images/demo11.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1VC96Y5EMH" target="_blank">
-         <picture>
-           <img alt="播放音乐" src="docs/images/demo7.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1Z8XuYZEAS" target="_blank">
-         <picture>
-           <img alt="天气插件" src="docs/images/demo8.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://www.bilibili.com/video/BV12J7WzBEaH" target="_blank">
-         <picture>
-           <img alt="实时打断" src="docs/images/demo10.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-      <a href="https://www.bilibili.com/video/BV1Co76z7EvK" target="_blank">
-         <picture>
-           <img alt="拍照识物品" src="docs/images/demo12.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV1CDKWemEU6" target="_blank">
-         <picture>
-           <img alt="自定义音色" src="docs/images/demo2.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV12yA2egEaC" target="_blank">
-         <picture>
-           <img alt="使用粤语交流" src="docs/images/demo3.png" />
-         </picture>
-        </a>
-    </td>
-    <td>
-        <a href="https://www.bilibili.com/video/BV17LXWYvENb" target="_blank">
-         <picture>
-           <img alt="播报新闻" src="docs/images/demo0.png" />
-         </picture>
-        </a>
-    </td>
-  </tr>
-</table>
+> Once devices are connected, how can `XuanWu AI Agent` keep producing value in a stable and scalable way?
 
----
+In real scenarios, users express goals, not individual device commands. The system faces a complex environment of multiple devices, multiple channels, multiple gateways, and multiple protocols. This repository exists to reduce that complexity into clear platform boundaries so the Agent can form a closed loop around understanding, decision-making, execution, and operations.
 
-## Warnings ⚠️
+## What This Project Is
 
-1. This project is open-source software. This software has no commercial partnership with any third-party API service providers (including but not limited to speech recognition, large models, speech synthesis, and other platforms) that it interfaces with, and does not provide any form of guarantee for their service quality or financial security. It is recommended that users prioritize service providers with relevant business licenses and carefully read their service agreements and privacy policies. This software does not host any account keys, does not participate in fund flows, and does not bear the risk of recharge fund losses.
+This project is not just another device backend. It is the platform foundation that allows `XuanWu AI Agent` to operate in the real device world.
 
-2. The functionality of this project is not complete and has not passed network security assessment. Please do not use it in production environments. If you deploy this project for learning purposes in a public network environment, please ensure necessary protection measures are in place.
+The greatest value of `XuanWu AI Agent` is not simply answering a prompt. Its value is in turning user goals into real system actions:
 
----
+- understanding what the user is actually trying to achieve, not just parsing a single command
+- coordinating multiple devices, channels, and gateways toward one outcome
+- making continuous decisions with Knowledge, Workflow, Models, and rules
+- turning devices from passive endpoints into orchestrated, collaborative, and operable platform capabilities
 
-## Deployment Documentation
+This repository provides the platform layer that makes that possible. It brings together device ingress, device management, gateway execution, scheduling, a unified portal, operational read models, and observability into one coherent local platform.
 
-![Banners](docs/images/banner2.png)
+## What Problems It Solves
 
-This project provides two deployment methods. Please choose based on your specific needs:
+### Let the Agent work toward outcomes, not isolated commands
 
-#### 🚀 Deployment Method Selection
-| Deployment Method | Features | Applicable Scenarios | Deployment Docs | Configuration Requirements | Video Tutorials | 
-|---------|------|---------|---------|---------|---------|
-| **Simplified Installation** | Intelligent dialogue, single agent management | Low-configuration environments, data stored in config files, no database required | [①Docker Version](./docs/Deployment.md#%E6%96%B9%E5%BC%8F%E4%B8%80docker%E5%8F%AA%E8%BF%90%E8%A1%8Cserver) / [②Source Code Deployment](./docs/Deployment.md#%E6%96%B9%E5%BC%8F%E4%BA%8C%E6%9C%AC%E5%9C%B0%E6%BA%90%E7%A0%81%E5%8F%AA%E8%BF%90%E8%A1%8Cserver)| 2 cores 4GB if using `FunASR`, 2 cores 2GB if all APIs | - | 
-| **Full Module Installation** | Intelligent dialogue, multi-user management, multi-agent management, intelligent console interface operation | Complete functionality experience, data stored in database |[①Docker Version](./docs/Deployment_all.md#%E6%96%B9%E5%BC%8F%E4%B8%80docker%E8%BF%90%E8%A1%8C%E5%85%A8%E6%A8%A1%E5%9D%97) / [②Source Code Deployment](./docs/Deployment_all.md#%E6%96%B9%E5%BC%8F%E4%BA%8C%E6%9C%AC%E5%9C%B0%E6%BA%90%E7%A0%81%E8%BF%90%E8%A1%8C%E5%85%A8%E6%A8%A1%E5%9D%97) / [③Source Code Deployment Auto-Update Tutorial](./docs/dev-ops-integration.md) | 4 cores 8GB if using `FunASR`, 2 cores 4GB if all APIs| [Local Source Code Startup Video Tutorial](https://www.bilibili.com/video/BV1wBJhz4Ewe) |
+Users ask to get something done. The platform translates that into a series of executable device actions instead of stopping at one disconnected control instruction.
 
-For frequently asked questions and related tutorials, please refer to [this link](./docs/FAQ.md)
+### Make multi-device coordination a platform capability
 
-> 💡 Note: Below is a test platform deployed with the latest code. You can burn and test if needed. Concurrent users: 6, data will be cleared daily.
+Multiple devices, channels, and gateways can be orchestrated, routed, and executed within a unified platform boundary instead of being rebuilt in each business scenario.
 
-```
-Intelligent Control Console Address: https://2662r3426b.vicp.fun
-Intelligent Control Console Address (H5): https://2662r3426b.vicp.fun/h5/index.html
+### Move devices from “connectable” to “manageable, observable, operable”
 
-Service Test Tool: https://2662r3426b.vicp.fun/test/
-OTA Interface Address: https://2662r3426b.vicp.fun/xuanwu/ota/
-Websocket Interface Address: wss://2662r3426b.vicp.fun/xuanwu/v1/
+Devices are no longer temporary identifiers hidden inside protocols. They become formal platform objects that can be discovered, onboarded, bound, tracked, governed, and operated.
+
+### Keep a clear boundary between the Agent domain and the device platform domain
+
+`XuanWu` owns Agent, Workflow, Knowledge, and Model concerns. This repository owns devices, gateways, scheduling, operations, and observability. Clear boundaries allow the system to evolve cleanly.
+
+## Core Capabilities
+
+### 1. Unified device ingress
+
+The platform supports multiple device classes through one coherent platform model:
+
+- conversational devices
+- actuator devices
+- sensor devices
+- IoT / industrial devices
+- wireless edge devices such as Bluetooth and NearLink
+
+### 2. Unified device management
+
+The platform centralizes device management capabilities including:
+
+- device ownership and discovery
+- lifecycle and binding
+- channel mapping and capability routing
+- managed devices and discovered devices
+- telemetry, events, alarms, and OTA
+
+### 3. Centralized Agent collaboration
+
+`XuanWu` provides Agent-domain truth, user-facing intelligence, and execution decisions. This repository provides the local device platform. The two work together without collapsing their boundaries into one system.
+
+### 4. Multi-protocol, multi-gateway extensibility
+
+The platform expands through `xuanwu-device-gateway`, `xuanwu-iot-gateway`, `xuanwu-bluetooth-bridge`, and `xuanwu-nearlink-bridge`. New device types can be added by extending ingress and protocol boundaries instead of rebuilding the whole platform.
+
+### 5. Platform-grade operations
+
+The platform provides a unified portal, unified views, unified scheduling, and unified operational read models so the system can evolve from “connected devices” to “operated, governed, continuously improved devices”.
+
+## End-to-End Loop
+
+```mermaid
+flowchart LR
+    User["User Goals"]
+    Agent["XuanWu AI Agent"]
+    Platform["XuanWu AI Platform"]
+    Devices["Devices / Gateways / Edge Bridges"]
+    Ops["Operations & Governance"]
+
+    User -->|"Express intent"| Agent
+    Agent -->|"Understand, plan, orchestrate"| Platform
+    Platform -->|"Connect, manage, execute, schedule"| Devices
+    Devices -->|"State, events, telemetry, results"| Platform
+    Platform -->|"Observe, govern, operate"| Ops
+    Ops -->|"Continuously optimize"| Agent
+
+    classDef user fill:#fff4e8,stroke:#d98b2b,color:#5f3a08,stroke-width:1.5px;
+    classDef agent fill:#f4edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
+    classDef platform fill:#edf6ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
+    classDef devices fill:#edf9f2,stroke:#2f9b62,color:#17452c,stroke-width:1.5px;
+    classDef ops fill:#f5f6fa,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
+
+    class User user;
+    class Agent agent;
+    class Platform platform;
+    class Devices devices;
+    class Ops ops;
 ```
 
-#### 🚩 Configuration Description and Recommendations
-> [!Note]
-> This project provides two configuration schemes:
-> 
-> 1. `Entry Level Free Settings`: Suitable for personal and home use, all components use free solutions, no additional payment required.
-> 
-> 2. `Streaming Configuration`: Suitable for demonstrations, training, scenarios with more than 2 concurrent users, etc. Uses streaming processing technology for faster response speed and better experience.
-> 
-> Starting from version `0.5.2`, the project supports streaming configuration. Compared to earlier versions, response speed is improved by approximately `2.5 seconds`, significantly improving user experience.
+## Overall Architecture
 
-| Module Name | Entry Level Free Settings | Streaming Configuration |
-|:---:|:---:|:---:|
-| ASR(Speech Recognition) | FunASR(Local) | 👍XunfeiStreamASR(Xunfei Streaming) |
-| LLM(Large Model) | glm-4-flash(Zhipu) | 👍qwen-flash(Alibaba Bailian) |
-| VLLM(Vision Large Model) | glm-4v-flash(Zhipu) | 👍qwen2.5-vl-3b-instructh(Alibaba Bailian) |
-| TTS(Speech Synthesis) | ✅LinkeraiTTS(Lingxi streaming) | 👍HuoshanDoubleStreamTTS(Volcano Streaming) |
-| Intent(Intent Recognition) | function_call(Function calling) | function_call(Function calling) |
-| Memory(Memory function) | mem_local_short(Local short-term memory) | mem_local_short(Local short-term memory) |
+From top to bottom, the layers represent the unified entrypoint, platform core, ingress gateways, wireless bridges, and the device world. `XuanWu AI Agent` sits above the platform, interacts directly with the portal, and collaborates with the management, scheduling, and gateway services to complete execution loops.
 
-If you are concerned about the latency of each component, please refer to the [Xuanwu Component Performance Test Report](https://github.com/xinnan-tech/xuanwu-performance-research), and test in your own environment following the test methods in the report.
+```mermaid
+flowchart TB
+    Portal["xuanwu-portal"]
 
-#### 🔧 Testing Tools
-This project provides the following testing tools to help you verify the system and choose suitable models:
+    XW["XuanWu AI Agent"]
 
-| Tool Name | Location | Usage Method | Function Description |
-|:---:|:---|:---:|:---:|
-| Audio Interaction Test Tool | main》xuanwu-device-gateway》test》test_page.html | Open directly with Google Chrome | Tests audio playback and reception functions, verifies if Python-side audio processing is normal |
-| Model Response Test Tool | main》xuanwu-device-gateway》performance_tester.py | Execute `python performance_tester.py` | Tests response speed of three core modules: ASR(speech recognition), LLM(large model), VLLM(vision model), TTS(speech synthesis) |
+    subgraph Control["Platform Core"]
+        direction LR
+        Mgmt["xuanwu-management-server"]
+        Jobs["xuanwu-jobs"]
+    end
 
-> 💡 Note: When testing model speed, only models with configured keys will be tested.
+    subgraph Ingress["Ingress Layer"]
+        direction LR
+        Device["xuanwu-device-gateway"]
+        IoT["xuanwu-iot-gateway"]
+    end
 
----
-## Feature List ✨
-### Implemented ✅
-![请参考-全模块安装架构图](docs/images/deploy2.png)
-| Feature Module | Description |
-|:---:|:---|
-| Core Architecture | Based on [MQTT+UDP gateway](https://github.com/GrissonWu07/ai-assist-deviceserver/blob/main/docs/mqtt-gateway-integration.md), WebSocket and HTTP servers, provides complete console management and authentication system |
-| Voice Interaction | Supports streaming ASR(speech recognition), streaming TTS(speech synthesis), VAD(voice activity detection), supports multi-language recognition and voice processing |
-| Voiceprint Recognition | Supports multi-user voiceprint registration, management, and recognition, processes in parallel with ASR, real-time speaker identity recognition and passes to LLM for personalized responses |
-| Intelligent Dialogue | Supports multiple LLM(large language models), implements intelligent dialogue |
-| Visual Perception | Supports multiple VLLM(vision large models), implements multimodal interaction |
-| Intent Recognition | Supports LLM intent recognition, Function Call function calling, provides plugin-based intent processing mechanism |
-| Memory System | Supports local short-term memory, mem0ai interface memory, PowerMem intelligent memory, with memory summarization functionality |
-| Knowledge Base | Supports RAGFlow knowledge base, enabling LLM to judge whether to schedule the knowledge base after receiving the user's question, and then answer the question |
-| Tool Calling | Supports client IOT protocol, client MCP protocol, server MCP protocol, MCP endpoint protocol, custom tool functions |
-| Command Delivery | Supports MCP command delivery to ESP32 devices via MQTT protocol from Smart Console |
-| Management Backend | Provides Web management interface, supports user management, system configuration and device management; Supports Simplified Chinese, Traditional Chinese and English display |
-| Testing Tools | Provides performance testing tools, vision model testing tools, and audio interaction testing tools |
-| Deployment Support | Supports Docker deployment and local deployment, provides complete configuration file management |
-| Plugin System | Supports functional plugin extensions, custom plugin development, and plugin hot-loading |
+    subgraph Bridge["Wireless Bridge Layer"]
+        direction LR
+        BT["xuanwu-bluetooth-bridge"]
+        NL["xuanwu-nearlink-bridge"]
+    end
 
-### Under Development 🚧
+    subgraph World["Device World"]
+        direction LR
+        Conv["Conversational Devices"]
+        IotDev["IoT / Industrial Devices"]
+        Wireless["Bluetooth / NearLink Devices"]
+    end
 
-To learn about specific development plan progress, [click here](https://github.com/users/xinnan-tech/projects/3). For frequently asked questions and related tutorials, please refer to [this link](./docs/FAQ.md)
+    Portal --> Mgmt
+    Portal --> XW
 
-If you are a software developer, here is an [Open Letter to Developers](docs/contributor_open_letter.md). Welcome to join!
+    Jobs --> Mgmt
+    Jobs --> Device
+    Jobs --> IoT
 
----
+    Mgmt --> Device
+    Mgmt --> IoT
+    Mgmt --> XW
 
-## Product Ecosystem 👬
-Xuanwu is an ecosystem. When using this product, you can also check out other [excellent projects](https://github.com/78/xuanwu-esp32/blob/main/README_zh.md#%E7%9B%B8%E5%85%B3%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE) in this ecosystem
+    Conv --> Device
+    IotDev --> IoT
+    Wireless --> BT
+    Wireless --> NL
 
----
+    BT --> IoT
+    NL --> IoT
 
-## Supported Platforms/Components List 📋
-### LLM Language Models
+    Device --> Mgmt
+    IoT --> Mgmt
+    XW --> Jobs
+    XW -.-> Device
+    XW --> IoT
 
-| Usage Method | Supported Platforms | Free Platforms |
-|:---:|:---:|:---:|
-| OpenAI interface calls | Alibaba Bailian, Volcano Engine, DeepSeek, Zhipu, Gemini, iFLYTEK | Zhipu, Gemini |
-| Ollama interface calls | Ollama | - |
-| Dify interface calls | Dify | - |
-| FastGPT interface calls | FastGPT | - |
-| Coze interface calls | Coze | - |
-| Xinference interface calls | Xinference | - |
-| HomeAssistant interface calls | HomeAssistant | - |
+    classDef ux fill:#f7edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
+    classDef control fill:#eef5ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
+    classDef ingress fill:#edf9f2,stroke:#2f9b62,color:#17452c,stroke-width:1.5px;
+    classDef bridge fill:#fff7e8,stroke:#d98b2b,color:#5f3a08,stroke-width:1.5px;
+    classDef world fill:#f7f8fc,stroke:#7b8190,color:#1f2937,stroke-width:1.5px;
+    classDef agent fill:#fff0f5,stroke:#d4577f,color:#5b1830,stroke-width:1.5px;
 
-In fact, any LLM that supports OpenAI interface calls can be integrated and used.
+    class Portal ux;
+    class Mgmt,Jobs control;
+    class Device,IoT ingress;
+    class BT,NL bridge;
+    class Conv,IotDev,Wireless world;
+    class XW agent;
+```
 
----
+Notes:
+- `xuanwu-portal` connects both to the platform core and directly to `XuanWu AI Agent`
+- conversational devices always connect through `xuanwu-device-gateway`
+- IoT, industrial, and wireless devices connect through `xuanwu-iot-gateway` and the bridge layer
+- the dotted line from `XuanWu` to `xuanwu-device-gateway` represents runtime collaboration, not physical ingress
 
-### VLLM Vision Models
+## Service Composition
 
-| Usage Method | Supported Platforms | Free Platforms |
-|:---:|:---:|:---:|
-| OpenAI interface calls | Alibaba Bailian, Zhipu ChatGLMVLLM | Zhipu ChatGLMVLLM |
+| Service | Role | Key Responsibilities |
+| --- | --- | --- |
+| `xuanwu-management-server` | Platform truth and operational truth | users, channels, managed devices, discovered devices, mappings, telemetry, events, alarms, OTA, schedule records, portal read models |
+| `xuanwu-device-gateway` | Conversational device ingress | runtime connection, session handling, heartbeat and discovery, OTA ingress, execution entrypoints, including `/xuanwu/v1/` and `/xuanwu/ota/` |
+| `xuanwu-iot-gateway` | IoT / industrial ingress and execution | protocol adaptation, device command execution, ingest normalization, gateway-side discovery / heartbeat, industrial and wireless-bridge-backed device ingress |
+| `xuanwu-jobs` | Job scheduling and dispatch | due schedule polling, claim / dispatch, cron progression, retry, queued runs |
+| `xuanwu-portal` | Unified operations workspace | Overview, Devices, Agents, Jobs, Alerts, users and roles, channels and gateways, AI config proxy, telemetry and alarms, settings |
+| `xuanwu-bluetooth-bridge` | Bluetooth bridge service | wireless device connection, system-level packaging, callback integration into `xuanwu-iot-gateway` |
+| `xuanwu-nearlink-bridge` | NearLink bridge service | NearLink device bridging, system environment decoupling, callback integration into `xuanwu-iot-gateway` |
+| `XuanWu` | Agent-domain truth and decision layer | Agent, Workflow, Knowledge, Model, user-facing intelligence, execution decisions, and collaboration with `xuanwu-portal`, `xuanwu-management-server`, `xuanwu-jobs`, `xuanwu-device-gateway`, and `xuanwu-iot-gateway` |
 
-In fact, any VLLM that supports OpenAI interface calls can be integrated and used.
+## Supported Device and Protocol Coverage
 
----
+### Supported device classes
 
-### TTS Speech Synthesis
+| Device Class | Ingress Entry | Description |
+| --- | --- | --- |
+| Conversational Devices | `xuanwu-device-gateway` | voice terminals, conversational primary devices, runtime-online devices |
+| Actuator Devices | `xuanwu-iot-gateway` | switches, lighting, controllers, and command-driven devices |
+| Sensor Devices | `xuanwu-iot-gateway` | telemetry, sensing, and event-reporting devices |
+| IoT Devices | `xuanwu-iot-gateway` | common connected peripherals and smart IoT devices |
+| Industrial Devices | `xuanwu-iot-gateway` | PLC, building control, industrial buses, and industrial protocol scenarios |
+| Bluetooth Devices | `xuanwu-bluetooth-bridge` -> `xuanwu-iot-gateway` | BLE peripherals and near-field wireless devices |
+| NearLink Devices | `xuanwu-nearlink-bridge` -> `xuanwu-iot-gateway` | NearLink devices and bridge-based wireless scenarios |
 
-| Usage Method | Supported Platforms | Free Platforms |
-|:---:|:---:|:---:|
-| Interface calls | EdgeTTS, iFLYTEK, Volcano Engine, Tencent Cloud, Alibaba Cloud and Bailian, CosyVoiceSiliconflow, TTS302AI, CozeCnTTS, GizwitsTTS, ACGNTTS, OpenAITTS, Lingxi Streaming TTS, MinimaxTTS | Lingxi Streaming TTS, EdgeTTS, CosyVoiceSiliconflow(partial) |
-| Local services | FishSpeech, GPT_SOVITS_V2, GPT_SOVITS_V3, Index-TTS, PaddleSpeech | Index-TTS, PaddleSpeech, FishSpeech, GPT_SOVITS_V2, GPT_SOVITS_V3 |
+### Supported protocols and ingress styles
 
----
+| Protocol / Mode | Entry Module | Typical Usage |
+| --- | --- | --- |
+| WebSocket `/xuanwu/v1/` | `xuanwu-device-gateway` | primary ingress for conversational devices |
+| OTA `/xuanwu/ota/` | `xuanwu-device-gateway` | device config discovery and OTA |
+| HTTP | `xuanwu-iot-gateway` | actuator control and external API style device access |
+| MQTT | `xuanwu-iot-gateway` | device commands, message ingest, broker-based connectivity |
+| Home Assistant | `xuanwu-iot-gateway` | HA service calls, state reading, and integration |
+| HTTP Push | `xuanwu-iot-gateway` | active sensor ingest |
+| Modbus TCP | `xuanwu-iot-gateway` | industrial register, coil, and input operations |
+| OPC UA | `xuanwu-iot-gateway` | industrial node access and browse |
+| BACnet/IP | `xuanwu-iot-gateway` | building automation and property access |
+| CAN Bridge | `xuanwu-iot-gateway` | CAN bridge devices and frame operations |
+| Bluetooth Bridge | `xuanwu-bluetooth-bridge` | Bluetooth connectivity and callback integration |
+| NearLink Bridge | `xuanwu-nearlink-bridge` | NearLink connectivity and callback integration |
 
-### VAD Voice Activity Detection
+## Supported Capability Domains
 
-| Type | Platform Name | Usage Method | Pricing Model | Notes |
-|:---:|:---------:|:----:|:----:|:--:|
-| VAD | SileroVAD | Local use | Free | |
+### Conversational device platform
 
----
+- conversational device ingress
+- runtime session management
+- OTA and runtime config delivery
+- voice and multimodal terminal support
+- conversational device onboarding
 
-### ASR Speech Recognition
+### IoT and industrial platform
 
-| Usage Method | Supported Platforms | Free Platforms |
-|:---:|:---:|:---:|
-| Local use | FunASR, SherpaASR | FunASR, SherpaASR |
-| Interface calls | FunASRServer, Volcano Engine, iFLYTEK, Tencent Cloud, Alibaba Cloud, Baidu Cloud, OpenAI ASR | FunASRServer |
+- actuator control
+- sensor ingest
+- industrial protocol access
+- wireless edge bridging
+- gateway-based execution
 
----
+### Unified management platform
 
-### Voiceprint Recognition
+- users
+- channels
+- managed devices
+- discovered devices
+- lifecycle and binding
+- Agent / Model / Knowledge / Workflow mappings
+- telemetry, events, alarms, OTA
+- jobs, schedules, and operational read models
 
-| Usage Method | Supported Platforms | Free Platforms |
-|:---:|:---:|:---:|
-| Local use | 3D-Speaker | 3D-Speaker |
+### Unified operations entrypoint
 
----
+- single portal entrypoint
+- Overview dashboard
+- Devices / Agents / Jobs / Alerts workspaces
+- users, channels, gateways, AI config proxy, telemetry, and alarm views
 
-### Memory Storage
+## Project Boundary
 
-| Type | Platform Name | Usage Method | Pricing Model | Notes |
-|:------:|:---------------:|:----:|:---------:|:--:|
-| Memory | mem0ai | Interface calls | 1000 times/month quota | |
-| Memory | [powermem](./docs/powermem-integration.md) | Local summarization | Depends on LLM and DB | OceanBase open source, supports intelligent retrieval |
-| Memory | mem_local_short | Local summarization | Free | |
-| Memory | nomem | No memory mode | Free | |
+This repository focuses on the local platform layer:
 
----
+- device ingress
+- gateway capability hosting
+- unified device management
+- job scheduling and dispatch
+- portal and operational views
+- telemetry, events, alarms, OTA
+- Bluetooth / NearLink bridge integration
 
-### Intent Recognition
+`XuanWu` focuses on Agent-domain truth, user interaction, and execution decisions:
 
-| Type | Platform Name | Usage Method | Pricing Model | Notes |
-|:------:|:-------------:|:----:|:-------:|:---------------------:|
-| Intent | intent_llm | Interface calls | Based on LLM pricing | Recognizes intent through large models, strong generalization |
-| Intent | function_call | Interface calls | Based on LLM pricing | Completes intent through large model function calling, fast speed, good effect |
-| Intent | nointent | No intent mode | Free | Does not perform intent recognition, directly returns dialogue result |
+- Agent
+- Workflow
+- Knowledge
+- Model
+- user-facing intelligent interaction
+- upstream management APIs
+- upstream execution APIs
+- intelligent orchestration and decision-making for the device world
 
----
+## Documentation
 
-### Rag Retrieval-Augmented Generation
+Recommended reading order:
 
-| Type | Platform Name | Usage Method | Pricing Model | Notes |
-|:------:|:-------------:|:----:|:-------:|:---------------------:|
-| Rag | ragflow | Interface calls | Charged based on tokens consumed for slicing and word segmentation | Utilizes RagFlow's retrieval-augmented generation feature to provide more accurate dialog responses |
+- [Platform Delivery Overview](./docs/platform-delivery-overview.md)
+- [Current Platform Capabilities](./docs/current-platform-capabilities.md)
+- [Current API Surfaces](./docs/current-api-surfaces.md)
+- [Device Ingress and Management Guide](./docs/device-ingress-and-management-guide.md)
+- [Current Project State](./docs/project/state/current.md)
+- [Spec Index](./docs/superpowers/specs/README.md)
 
----
+Core design references:
 
-## Acknowledgments 🙏
+- [Platform Blueprint](./docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
+- [Device Management, Device Gateway, and IoT Gateway Integration](./docs/superpowers/specs/2026-04-01-device-management-gateway-device-server-integration-spec.md)
+- [Unified Upstream Requirements for XuanWu](./docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
 
-| Logo | Project/Company | Description |
-|:---:|:---:|:---|
-| <img src="./docs/images/logo_bailing.png" width="160"> | [Bailing Voice Dialogue Robot](https://github.com/wwbin2017/bailing) | This project is inspired by [Bailing Voice Dialogue Robot](https://github.com/wwbin2017/bailing) and implemented on its basis |
-| <img src="./docs/images/logo_tenclass.png" width="160"> | [Tenclass](https://www.tenclass.com/) | Thanks to [Tenclass](https://www.tenclass.com/) for formulating standard communication protocols, multi-device compatibility solutions, and high-concurrency scenario practice demonstrations for the Xuanwu ecosystem; providing full-link technical documentation support for this project |
-| <img src="./docs/images/logo_xuanfeng.png" width="160"> | [Xuanfeng Technology](https://github.com/Eric0308) | Thanks to [Xuanfeng Technology](https://github.com/Eric0308) for contributing function calling framework, MCP communication protocol, and plugin-based calling mechanism implementation code. Through standardized instruction scheduling system and dynamic expansion capabilities, it significantly improves the interaction efficiency and functional extensibility of frontend devices (IoT) |
-| <img src="./docs/images/logo_junsen.png" width="160"> | [huangjunsen](https://github.com/huangjunsen0406) | Thanks to [huangjunsen](https://github.com/huangjunsen0406) for contributing the `Smart Control Console Mobile` module, which enables efficient control and real-time interaction across mobile devices, significantly enhancing the system's operational convenience and management efficiency in mobile scenarios. |
-| <img src="./docs/images/logo_huiyuan.png" width="160"> | [Huiyuan Design](http://ui.kwd988.net/) | Thanks to [Huiyuan Design](http://ui.kwd988.net/) for providing professional visual solutions for this project, using their design practical experience serving over a thousand enterprises to empower this project's product user experience |
-| <img src="./docs/images/logo_qinren.png" width="160"> | [Xi'an Qinren Information Technology](https://www.029app.com/) | Thanks to [Xi'an Qinren Information Technology](https://www.029app.com/) for deepening this project's visual system, ensuring consistency and extensibility of overall design style in multi-scenario applications |
-| <img src="./docs/images/logo_contributors.png" width="160"> | [Code Contributors](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors) | Thanks to [all code contributors](https://github.com/GrissonWu07/ai-assist-deviceserver/graphs/contributors), your efforts have made the project more robust and powerful. |
+## Direction
 
+The next focus areas are:
 
-<a href="https://star-history.com/#xinnan-tech/device-server&Date">
+- expanding protocol coverage and wireless bridge capabilities
+- strengthening unified operations, observability, and governance
+- improving collaboration efficiency between the Agent layer and the device platform
 
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xinnan-tech/device-server&type=Date" />
- </picture>
-</a>
+## One-Line Summary
 
-
+The XuanWu AI Device Platform is not only a way to manage many types of devices in one place, but the local platform foundation that allows `XuanWu AI Agent` to reliably drive the device world and continuously create business value.
