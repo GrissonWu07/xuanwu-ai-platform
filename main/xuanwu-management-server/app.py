@@ -29,6 +29,15 @@ def load_runtime_config() -> dict:
         os.environ.get("XUANWU_CONTROL_PLANE_SECRET", "").strip()
         or "xuanwu-management-to-xuanwu"
     )
+    pg_host = os.environ.get("XUANWU_PG_HOST", "postgres").strip() or "postgres"
+    pg_port = int(os.environ.get("XUANWU_PG_PORT", "5432"))
+    pg_db = os.environ.get("XUANWU_PG_DB", "xuanwu_platform").strip() or "xuanwu_platform"
+    pg_user = os.environ.get("XUANWU_PG_USER", "xuanwu").strip() or "xuanwu"
+    pg_password = (
+        os.environ.get("XUANWU_PG_PASSWORD", "xuanwu_local_password").strip()
+        or "xuanwu_local_password"
+    )
+    pg_schema = os.environ.get("XUANWU_MGMT_PG_SCHEMA", "xw_mgmt").strip() or "xw_mgmt"
 
     return {
         "server": {
@@ -38,6 +47,16 @@ def load_runtime_config() -> dict:
         },
         "control-plane": {
             "secret": auth_key,
+            "backend": os.environ.get("XUANWU_CONTROL_PLANE_BACKEND", "postgres").strip()
+            or "postgres",
+            "postgres": {
+                "host": pg_host,
+                "port": pg_port,
+                "database": pg_db,
+                "user": pg_user,
+                "password": pg_password,
+                "schema": pg_schema,
+            },
         },
         "xuanwu": {
             "base_url": xuanwu_base_url,

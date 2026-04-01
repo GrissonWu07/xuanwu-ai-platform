@@ -88,7 +88,18 @@ def test_main_uses_environment_overrides_for_runtime_config(
             "http_port": 19082,
             "auth_key": "mgmt-secret-19082",
         },
-        "control-plane": {"secret": "mgmt-secret-19082"},
+        "control-plane": {
+            "secret": "mgmt-secret-19082",
+            "backend": "postgres",
+            "postgres": {
+                "host": "postgres",
+                "port": 5432,
+                "database": "xuanwu_platform",
+                "user": "xuanwu",
+                "password": "xuanwu_local_password",
+                "schema": "xw_mgmt",
+            },
+        },
         "xuanwu": {
             "base_url": "http://127.0.0.1:18000",
             "control_plane_secret": "cp-to-xuanwu-19082",
