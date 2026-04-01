@@ -154,9 +154,8 @@ deploy/data/
 !deploy/data/
 !deploy/data/device-gateway/
 !deploy/data/device-gateway/.gitkeep
-deploy/postgres/
-!deploy/postgres/
-!deploy/postgres/.gitkeep
+!deploy/data/pg/
+!deploy/data/pg/.gitkeep
 
 main/manager-web/node_modules
 main/xuanwu-portal/node_modules/

@@ -71,4 +71,4 @@ def test_docs_describe_postgres_first_persistence():
         assert "PostgreSQL" in text
         assert "xw_mgmt" in text
         assert "xw_iot" in text
-        assert "deploy/postgres" in text
+        assert "deploy/data/pg" in text

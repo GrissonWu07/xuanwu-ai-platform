@@ -13,7 +13,7 @@ services:
       - POSTGRES_USER=${XUANWU_PG_USER:-xuanwu}
       - POSTGRES_PASSWORD=${XUANWU_PG_PASSWORD:-xuanwu_local_password}
     volumes:
-      - ./deploy/postgres:/var/lib/postgresql/data
+      - ./deploy/data/pg:/var/lib/postgresql/data
 
   mosquitto:
     image: eclipse-mosquitto:2

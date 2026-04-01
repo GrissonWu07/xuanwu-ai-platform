@@ -26,7 +26,7 @@ def test_root_compose_uses_root_deploy_mounts() -> None:
     content = compose_file.read_text(encoding="utf-8")
 
     assert "./deploy/data/device-gateway:/opt/xuanwu-device-gateway/data" in content
-    assert "./deploy/postgres:/var/lib/postgresql/data" in content
+    assert "./deploy/data/pg:/var/lib/postgresql/data" in content
     assert (
         "./deploy/models/SenseVoiceSmall/model.pt:"
         "/opt/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt"
@@ -42,7 +42,7 @@ def test_root_setup_script_bootstraps_repo_root() -> None:
     assert "/opt/xuanwu-ai-platform" in setup_script
     assert 'COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"' in setup_script
     assert 'DATA_DIR="$PROJECT_ROOT/deploy/data/device-gateway"' in setup_script
-    assert 'POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/postgres"' in setup_script
+    assert 'POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/data/pg"' in setup_script
     assert 'MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"' in setup_script
     assert "git clone https://github.com/GrissonWu07/xuanwu-ai-platform.git" in setup_script
     assert 'ENV_PATH="$PROJECT_ROOT/.env"' in setup_script
@@ -64,6 +64,6 @@ def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:
     assert "deploy/data/" in gitignore_text
     assert "!deploy/data/device-gateway/" in gitignore_text
     assert "!deploy/data/device-gateway/.gitkeep" in gitignore_text
-    assert "deploy/postgres/" in gitignore_text
-    assert "!deploy/postgres/.gitkeep" in gitignore_text
+    assert "!deploy/data/pg/" in gitignore_text
+    assert "!deploy/data/pg/.gitkeep" in gitignore_text
     assert "deploy/models/SenseVoiceSmall/model.pt" in gitignore_text

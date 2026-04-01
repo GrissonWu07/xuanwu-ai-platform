@@ -25,7 +25,7 @@
 
 - `xuanwu-management-server` 使用 schema `xw_mgmt`
 - `xuanwu-iot-gateway` 使用 schema `xw_iot`
-- PostgreSQL 宿主机数据目录为 `deploy/postgres`
+- PostgreSQL 宿主机数据目录为 `deploy/data/pg`
 
 推荐在这些场景使用全模块部署：
 

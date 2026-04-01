@@ -22,7 +22,7 @@ The platform now defaults to PostgreSQL-backed persistence:
 
 - `xuanwu-management-server` uses schema `xw_mgmt`
 - `xuanwu-iot-gateway` uses schema `xw_iot`
-- root Docker deployment stores PostgreSQL data under `deploy/postgres`
+- root Docker deployment stores PostgreSQL data under `deploy/data/pg`
 
 ## Management Capabilities
 

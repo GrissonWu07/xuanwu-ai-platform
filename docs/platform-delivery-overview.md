@@ -18,7 +18,7 @@ Current delivery is PostgreSQL-first:
 
 - `xuanwu-management-server` persists platform truth in `xw_mgmt`
 - `xuanwu-iot-gateway` persists device shadow/state in `xw_iot`
-- root Docker deployment mounts database files to `deploy/postgres`
+- root Docker deployment mounts database files to `deploy/data/pg`
 
 ## Active Local Services
 

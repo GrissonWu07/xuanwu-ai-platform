@@ -10,7 +10,7 @@ These API surfaces now sit on PostgreSQL-backed persistence by default:
 
 - management control-plane truth -> `xw_mgmt`
 - IoT gateway device shadow/state -> `xw_iot`
-- root deployment database files -> `deploy/postgres`
+- root deployment database files -> `deploy/data/pg`
 
 ## `xuanwu-management-server`
 

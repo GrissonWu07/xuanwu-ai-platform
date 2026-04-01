@@ -4,7 +4,7 @@ set -eu
 
 PROJECT_ROOT="/opt/xuanwu-ai-platform"
 DATA_DIR="$PROJECT_ROOT/deploy/data/device-gateway"
-POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/postgres"
+POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/data/pg"
 MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
 COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"
