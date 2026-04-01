@@ -119,43 +119,48 @@ flowchart LR
 
 ## 总体架构
 
+从上到下分别对应统一入口、平台核心、设备接入层、无线桥接层与设备世界；`XuanWu` 作为智能体域，与平台管理面协同，并通过 IoT 网关面向设备世界执行能力。
+
 ```mermaid
 flowchart TB
-    subgraph UX["统一运营入口"]
-        Portal["xuanwu-portal"]
+    Portal["xuanwu-portal<br/>统一运营入口"]
+
+    subgraph Control["平台核心"]
+        direction LR
+        Mgmt["xuanwu-management-server<br/>统一真源与运营真源"]
+        Jobs["xuanwu-jobs<br/>调度与任务分发"]
     end
 
-    subgraph Control["控制面与调度面"]
-        Mgmt["xuanwu-management-server"]
-        Jobs["xuanwu-jobs"]
+    subgraph Ingress["设备接入层"]
+        direction LR
+        Device["xuanwu-device-gateway<br/>会话型设备接入"]
+        IoT["xuanwu-iot-gateway<br/>IoT / 工业设备接入与执行"]
     end
 
-    subgraph Ingress["设备接入与执行面"]
-        Device["xuanwu-device-gateway"]
-        IoT["xuanwu-iot-gateway"]
-    end
-
-    subgraph Bridge["无线桥接面"]
-        BT["xuanwu-bluetooth-bridge"]
-        NL["xuanwu-nearlink-bridge"]
+    subgraph Bridge["无线桥接层"]
+        direction LR
+        BT["xuanwu-bluetooth-bridge<br/>蓝牙桥接"]
+        NL["xuanwu-nearlink-bridge<br/>星闪桥接"]
     end
 
     subgraph World["设备世界"]
+        direction LR
         Conv["会话型设备"]
         IotDev["IoT / 工业设备"]
         Wireless["蓝牙 / 星闪设备"]
     end
 
-    subgraph AgentLayer["智能体域"]
-        XW["XuanWu"]
-    end
+    XW["XuanWu<br/>Agent 域真源与执行决策"]
 
-    Portal --> Mgmt
-    Portal --> Jobs
+    Portal -->|"统一运营入口"| Mgmt
+    Portal -->|"任务视图与操作"| Jobs
 
-    Jobs --> Mgmt
-    Jobs --> Device
-    Jobs --> IoT
+    Jobs -->|"调度状态与运行记录"| Mgmt
+    Jobs -->|"运行时任务"| Device
+    Jobs -->|"设备任务"| IoT
+
+    Mgmt -->|"配置、映射、读模型"| Device
+    Mgmt -->|"设备真源、事件、遥测"| IoT
 
     Conv --> Device
     IotDev --> IoT
@@ -165,16 +170,16 @@ flowchart TB
     BT --> IoT
     NL --> IoT
 
-    Device --> Mgmt
-    IoT --> Mgmt
-    Mgmt --> XW
-    XW --> IoT
+    Device -->|"发现、心跳、运行时回写"| Mgmt
+    IoT -->|"发现、事件、遥测、结果回写"| Mgmt
+    Mgmt -->|"管理与配置代理"| XW
+    XW -->|"面向设备世界执行能力"| IoT
 
     classDef ux fill:#f7edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
-    classDef control fill:#edf6ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
+    classDef control fill:#eef5ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
     classDef ingress fill:#edf9f2,stroke:#2f9b62,color:#17452c,stroke-width:1.5px;
     classDef bridge fill:#fff7e8,stroke:#d98b2b,color:#5f3a08,stroke-width:1.5px;
-    classDef world fill:#f5f6fa,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
+    classDef world fill:#f7f8fc,stroke:#7b8190,color:#1f2937,stroke-width:1.5px;
     classDef agent fill:#fff0f5,stroke:#d4577f,color:#5b1830,stroke-width:1.5px;
 
     class Portal ux;
