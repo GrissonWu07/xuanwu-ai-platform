@@ -43,6 +43,29 @@ Spearheaded by Professor Siyuan Liu's Team (South China University of Technology
 
 ---
 
+## Current Platform Status
+
+The active local platform now consists of:
+
+- `xuanwu-management-server`
+- `xuanwu-device-gateway`
+- `xuanwu-iot-gateway`
+- `xuanwu-jobs`
+- `xuanwu-portal`
+- `xuanwu-bluetooth-bridge`
+- `xuanwu-nearlink-bridge`
+
+Current repository-local implementation is complete for the active spec set. The remaining major blocker is upstream `XuanWu` integration.
+
+Recommended current documentation:
+
+- [Current Platform Capabilities](./docs/current-platform-capabilities.md)
+- [Current API Surfaces](./docs/current-api-surfaces.md)
+- [Device Ingress and Management Guide](./docs/device-ingress-and-management-guide.md)
+- [Current State](./docs/project/state/current.md)
+
+---
+
 ## 适用人群 👥
 
 本项目需要配合 ESP32 硬件设备使用。如果您已经购买了 ESP32 相关硬件，且成功对接过虾哥部署的后端服务，并希望独立搭建自己的

@@ -1,21 +1,52 @@
 # `xuanwu-portal`
 
-`xuanwu-portal` is the unified Vue 3 frontend entrypoint for the local XuanWu platform.
+`xuanwu-portal` is the unified Vue 3 frontend entrypoint for the local platform.
 
-## Current Scope
+## Current Live Scope
+
+Primary workspaces:
 
 - `Overview`
 - `Devices`
 - `Agents`
 - `Jobs`
 - `Alerts`
-- profile menu destinations:
-  - `Users & Roles`
-  - `Channels & Gateways`
-  - `AI Config Proxy`
-  - `Telemetry & Alarms`
-  - `Settings`
-  - `Sign out`
+
+Profile-menu workspaces:
+
+- `Users & Roles`
+- `Channels & Gateways`
+- `AI Config Proxy`
+- `Telemetry & Alarms`
+- `Settings`
+- `Sign out`
+
+## Current Live Actions
+
+Implemented interactive flows include:
+
+- device discovered-item promote and ignore
+- device lifecycle actions
+- job pause, resume, trigger, and retry
+- alarm acknowledge
+- channel and gateway state actions
+- detail drilldowns backed by live management APIs
+
+## API Dependencies
+
+The portal uses same-origin proxy paths:
+
+- `/control-plane`
+- `/gateway`
+- `/runtime`
+- `/jobs`
+
+During Docker delivery, Nginx proxies these to:
+
+- `xuanwu-management-server`
+- `xuanwu-iot-gateway`
+- `xuanwu-device-gateway`
+- `xuanwu-jobs`
 
 ## Local Development
 
@@ -24,42 +55,27 @@ npm ci
 npm run dev
 ```
 
-By default the portal calls same-origin API paths such as:
-
-- `/control-plane`
-- `/gateway`
-- `/runtime`
-- `/jobs`
-
-If you need to point the portal at another host during development, set:
+Override the API base host if needed:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:18082
 ```
 
-For container or runtime overrides, the portal can also read:
+Runtime override is also supported:
 
 ```js
 window.__XUANWU_PORTAL_API_BASE_URL__ = 'http://localhost:18082'
 ```
 
-## Docker Delivery
+## Verification
 
-The portal has a dedicated Docker image at:
+```bash
+npm test -- --run
+npm run build
+```
 
-- [C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\xuanwu-portal-deployment\main\xuanwu-portal\Dockerfile](C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\xuanwu-portal-deployment\main\xuanwu-portal\Dockerfile)
+## Delivery Notes
 
-In the full local Docker stack it is exposed as:
-
-- `http://localhost:18081`
-
-Nginx forwards platform APIs to the local services:
-
-- `/control-plane` -> `xuanwu-management-server`
-- `/gateway` -> `xuanwu-iot-gateway`
-- `/runtime` -> `xuanwu-device-gateway`
-- `/jobs` -> `xuanwu-jobs`
-
-The portal container injects `X-Xuanwu-Control-Secret` into proxied API requests
-through the `XUANWU_PORTAL_CONTROL_SECRET` environment variable so the browser
-does not need direct access to the management secret.
+- `xuanwu-portal` is the only frontend entrypoint.
+- The browser does not need direct access to the management control secret.
+- The portal container injects the control secret into proxied requests through the Nginx layer.

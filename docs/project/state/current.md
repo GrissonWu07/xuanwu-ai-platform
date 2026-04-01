@@ -1,178 +1,109 @@
 # Current State
 
 ## Objective
-- Implement the local platform side of the four-layer architecture:
-  - `xuanwu-device-gateway`
-  - `xuanwu-management-server`
-  - `xuanwu-iot-gateway`
-  - `XuanWu` integration by contract only
-- Keep all Agent-domain truth in `XuanWu`.
-- Finish every locally completable spec item in this repository without reintroducing legacy Java management paths.
 
-## Completed
-- Platform blueprint and active spec index are in place under `docs/superpowers/specs/`.
-- `xuanwu-portal` now exists as the unified Vue 3 frontend entrypoint in `main/xuanwu-portal`.
-- `xuanwu-portal` Phase 1 is complete with:
-  - shared shell
-  - `Overview`
-  - `Devices`
-  - `Agents`
-  - `Jobs`
-  - `Alerts`
-- `xuanwu-portal` Phase 2 is complete with profile-menu destinations for:
-  - `Users & Roles`
-  - `Channels & Gateways`
-  - `AI Config Proxy`
-  - `Settings`
-  - `Sign out`
-- `xuanwu-portal` has also completed `Telemetry & Alarms` as a live profile-menu workspace backed by existing management read APIs.
-- `xuanwu-portal` now has a dedicated Docker delivery path and Nginx reverse-proxy entrypoint for:
-  - `/control-plane`
-  - `/gateway`
-  - `/runtime`
-  - `/jobs`
-- `xuanwu-portal` now includes a module-local README and build/runtime guidance for the Docker delivery path.
-- `xuanwu-portal` shell now hydrates the profile menu and top status cluster from `auth/me` and `dashboard/overview`, while keeping safe local fallbacks.
-- `xuanwu-portal` `Jobs` and `Alerts` pages now consume item-detail read models instead of relying only on overview payloads:
-  - `/control-plane/v1/jobs/schedules/{schedule_id}`
-  - `/control-plane/v1/jobs/runs/{job_run_id}`
-  - `/control-plane/v1/alarms/{alarm_id}`
-- `xuanwu-portal` `Overview` quick cards now route directly into the primary workspaces instead of acting as static summary tiles.
-- `xuanwu-portal` primary workspaces now preserve selected context in the URL for:
-  - `/devices?deviceId=...`
-  - `/agents?agentId=...`
-  - `/jobs?scheduleId=...`
-  - `/alerts?alarmId=...`
-- `xuanwu-portal` `Overview` live activity items now deep-link into object workspaces instead of staying as passive feed text.
-- `xuanwu-portal` `Channels & Gateways` now consumes the management gateway aggregation read model and surfaces protocol/site distribution alongside the raw inventories.
-- `xuanwu-portal` profile-menu destinations now support query-backed detail selection for:
-  - `Users & Roles` via `?userId=...&roleId=...`
-  - `Channels & Gateways` via `?channelId=...&gatewayId=...`
-  - `AI Config Proxy` via `?agentId=...&providerId=...&modelId=...`
-  - `Settings` via `?featureId=...&endpointId=...`
-  - `Telemetry & Alarms` via `?telemetryId=...&eventId=...&alarmId=...`
-- `xuanwu-portal` profile-menu destinations now expose detail panels for:
-  - selected user and role
-  - selected channel and gateway
-  - selected proxied agent, provider, and model
-  - selected feature flag and service endpoint
-  - selected telemetry sample, event, and alarm
-- `xuanwu-management-server` now exposes the portal-facing read models required by the current portal delivery:
-  - `/control-plane/v1/auth/me`
-  - `/control-plane/v1/roles`
-  - `/control-plane/v1/dashboard/overview`
-  - `/control-plane/v1/portal/config`
-  - `/control-plane/v1/jobs/overview`
-  - `/control-plane/v1/alerts/overview`
-  - `/control-plane/v1/gateway/overview`
-  - `/control-plane/v1/devices/{device_id}/detail`
-  - `/control-plane/v1/alarms/{alarm_id}`
-  - `/control-plane/v1/jobs/schedules/{schedule_id}`
-  - `/control-plane/v1/jobs/runs/{job_run_id}`
-- `xuanwu-management-server` now provides:
-  - server config APIs
-  - auth login/logout
-  - user, channel, and device CRUD
-  - device lifecycle actions: `claim`, `bind`, `suspend`, `retire`
-  - batch device import
-  - mapping APIs for:
-    - `user -> device`
-    - `user -> channel`
-    - `channel -> device`
-    - `device -> agent`
-    - `agent -> model provider`
-    - `agent -> model config`
-    - `agent -> knowledge`
-    - `agent -> workflow`
-  - capability, capability route, gateway, OTA firmware, OTA campaign APIs
-  - runtime resolve, binding view, and capability routing view
-  - chat history report and summary request persistence
-  - unified event, telemetry, alarm, and gateway ingress APIs
-  - query-dimension filtering for event and telemetry listing
-  - command-result persistence plus mirrored `command.result` event creation
-  - `XuanWu` proxy surfaces for agents, model providers, and models
-  - discovered-device APIs and promotion flow
-  - device heartbeat updates and richer device detail aggregation
-- `xuanwu-iot-gateway` now provides:
-  - standalone service bootstrap
-  - adapter registry
-  - adapter directory implementation by device/protocol class
-  - `/gateway/v1/adapters`
-  - `/gateway/v1/commands`
-  - `/gateway/v1/commands:dispatch`
-  - `/gateway/v1/health`
-  - `/gateway/v1/config`
-  - `/gateway/v1/ingest/http-push`
-  - `/gateway/v1/ingest/mqtt`
-  - `/gateway/v1/devices/{device_id}/state`
-  - `/gateway/v1/jobs:execute`
-  - implemented adapter families:
-    - `http`
-    - `mqtt`
-    - `home_assistant`
-    - `sensor_http_push`
-    - `sensor_mqtt`
-    - `modbus_tcp`
-    - `opc_ua`
-    - `bacnet_ip`
-    - `can_gateway`
-    - `bluetooth`
-    - `nearlink`
-  - gateway callbacks for discovered devices and device heartbeat updates into management
-- `xuanwu-device-gateway` boundary work is complete for the local phase:
-  - `XuanWu` runtime naming is aligned
-  - runtime context exposes `xuanwu_session_key`
-  - control-plane hosting is no longer embedded back into the runtime service
-  - local Python management path is the default path
-  - non-upstream local test suite is now the active verification baseline
-  - upstream-only `XuanWu` integration tests were removed from the local completion gate
-  - `/runtime/v1/jobs:execute` now exposes local runtime job execution
-  - unknown runtime devices now report first-contact discovery into management
-  - runtime activity now reports heartbeat back into management
-- `xuanwu-jobs` now provides:
-  - a single lightweight scheduler-dispatcher service
-  - due-schedule polling and claim against `xuanwu-management-server`
-  - direct API dispatch for `platform`, `gateway`, and `device` executors
-  - dispatchable queued run polling and claim
-  - cron progression plus retry scheduling metadata
-  - no Redis dependency in the local execution path
-  - current local-only coverage baseline is:
-    - `config_loader.py`: 88%
-    - `control_plane_handler.py`: 62%
-    - `xuanwu-jobs/core/scheduler.py`: active scheduler coverage is tracked in the local suite
-    - `xuanwu-jobs/core/dispatcher.py`: active dispatcher coverage is tracked in the local suite
-    - `xuanwu-jobs/core/clients/management_client.py`: 91%
-    - current full local platform suite total: 62%
-- device ingress integration is now complete locally:
-  - discovered devices
-  - promote/ignore workflow
-  - gateway first-seen discovery
-  - device-server first-contact discovery
-  - unified device recency and heartbeat updates
-  - portal device discovery workspace
-- standalone wireless bridges are now implemented locally:
-  - `main/xuanwu-bluetooth-bridge`
-  - `main/xuanwu-nearlink-bridge`
-  - Linux RPM packaging assets
-  - Windows Service packaging assets
+Finish every repository-local platform capability in this repository while keeping all Agent-domain truth in `XuanWu`.
 
-## In Progress
-- Remaining unfinished work is now concentrated in contract integration with `XuanWu`.
-- The current local spec set is complete; any further local work is optional enhancement rather than a required blocker.
+The active local platform now consists of:
 
-## Risks / Decisions
-- Decision: all Agent-domain truth remains in `XuanWu`.
-- Decision: `user -> device` is the primary ownership line.
-- Decision: `channel` is a user control surface, not a device owner.
-- Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-iot-gateway`.
-- Decision: schedule truth stays in `xuanwu-management-server`.
-- Decision: `xuanwu-jobs` owns due-schedule triggering and direct execution dispatch.
-- Decision: this phase is Docker-first; Kubernetes is deferred.
-- Risk: `xuanwu-device-gateway` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-iot-gateway` contract is live.
-- Risk: upstream `XuanWu` still needs to consume the final gateway contract end-to-end before local runtime compatibility paths can be removed.
+- `xuanwu-management-server`
+- `xuanwu-device-gateway`
+- `xuanwu-iot-gateway`
+- `xuanwu-jobs`
+- `xuanwu-portal`
+- `xuanwu-bluetooth-bridge`
+- `xuanwu-nearlink-bridge`
 
-## Next Step
-- Validate final upstream contracts and then retire the remaining local compatibility paths:
-  - stable management proxy responses from `XuanWu`
-  - stable execution contract from `XuanWu` into `xuanwu-iot-gateway`
-  - end-to-end agent-driven device invocation validation
+## What Is Complete Locally
+
+### Unified platform structure
+
+- `xuanwu-management-server` is the local source of truth for users, devices, channels, mappings, events, telemetry, alarms, OTA, schedules, and portal read models.
+- `xuanwu-device-gateway` is the runtime ingress for conversational devices.
+- `xuanwu-iot-gateway` is the ingress and execution layer for IoT, industrial, sensor, and wireless devices.
+- `xuanwu-jobs` is the lightweight scheduler-dispatcher.
+- `xuanwu-portal` is the single frontend entrypoint.
+
+### Device management and ingress
+
+- Managed-device records are live in `xuanwu-management-server`.
+- Discovered-device records are live for first-contact devices from both ingress paths.
+- `xuanwu-iot-gateway` reports discovery, telemetry, events, command results, and heartbeat into management.
+- `xuanwu-device-gateway` reports first-contact discovery and runtime heartbeat into management.
+- Portal now supports discovered-device review and promote or ignore actions.
+
+### Gateway and protocol support
+
+`xuanwu-iot-gateway` now implements the current local protocol surface for:
+
+- `http`
+- `mqtt`
+- `home_assistant`
+- `sensor_http_push`
+- `sensor_mqtt`
+- `modbus_tcp`
+- `opc_ua`
+- `bacnet_ip`
+- `can_gateway`
+- `bluetooth`
+- `nearlink`
+
+Wireless bridge services also exist locally:
+
+- `xuanwu-bluetooth-bridge`
+- `xuanwu-nearlink-bridge`
+
+Both have Linux RPM packaging assets and Windows Service packaging assets.
+
+### Jobs and scheduling
+
+`xuanwu-jobs` now supports:
+
+- due-schedule polling
+- claim against management
+- direct dispatch to platform, gateway, and device execution APIs
+- cron progression
+- queued dispatchable runs
+- retry scheduling and operator-triggered retry
+
+### Portal delivery
+
+`xuanwu-portal` now provides these live workspaces:
+
+- `Overview`
+- `Devices`
+- `Agents`
+- `Jobs`
+- `Alerts`
+- `Users & Roles`
+- `Channels & Gateways`
+- `AI Config Proxy`
+- `Telemetry & Alarms`
+- `Settings`
+- `Sign out`
+
+Portal delivery is Docker-first and uses Nginx proxying for:
+
+- `/control-plane`
+- `/gateway`
+- `/runtime`
+- `/jobs`
+
+## What Is Not Complete Locally
+
+The remaining major work is upstream, not repository-local:
+
+- stable `XuanWu` management APIs by contract
+- stable `XuanWu -> xuanwu-iot-gateway` execution contract
+- final end-to-end validation of agent-driven device invocation
+
+## Current Boundary
+
+- Local repository owns device management, ingress, gateway routing, scheduling, and portal delivery.
+- `XuanWu` owns Agent truth, workflow truth, model truth, and final agent-driven execution decisions.
+
+## Current Delivery Status
+
+Repository-local implementation for the active spec set is complete.
+
+Further local changes are optional enhancements unless they directly unblock upstream `XuanWu` integration.

@@ -1,58 +1,58 @@
 # Spec Index
 
-Active entry: [XuanWu Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
+## Start Here
 
-This directory holds the active platform architecture and implementation specs.
+Primary architecture entrypoint:
 
-If you only want one document to start from, read:
+- [XuanWu Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
 
-- [XuanWu Central Agent IoT Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
+Current implementation status:
+
+- [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
 
 ## Recommended Reading Order
 
+### Platform and architecture
+
 1. [XuanWu Central Agent IoT Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-blueprint.md)
 2. [XuanWu Central Agent IoT Platform Target Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-target-design.md)
-3. [XuanWu Management Mapping Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-mapping-model-spec.md)
-4. [Unified Device Capability Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-unified-device-capability-model-spec.md)
-5. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
-6. [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
-7. [xuanwu-device-gateway Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-gateway-boundary-blueprint.md)
-8. [xuanwu-iot-gateway Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-contract-spec.md)
-9. [xuanwu-iot-gateway Module Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-module-blueprint.md)
-10. [Telemetry and Event Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-telemetry-and-event-model-spec.md)
-11. [Device Lifecycle and Provisioning Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-device-lifecycle-and-provisioning-spec.md)
-12. [Distributed Deployment and Scaling Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-distributed-deployment-and-scaling-spec.md)
-13. [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
-14. [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
-15. [xuanwu-portal Frontend Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-frontend-spec.md)
-16. [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
-17. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
-18. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
-19. [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
-20. [xuanwu-iot-gateway Adapter Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-iot-gateway-adapter-completion-spec.md)
-21. [xuanwu-bluetooth-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-bluetooth-bridge-spec.md)
-22. [xuanwu-nearlink-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-nearlink-bridge-spec.md)
-23. [XuanWu Central Agent IoT Platform Assessment](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-central-agent-iot-platform-assessment.md)
-24. [Device Management, Gateway, and Device-Server Integration Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-04-01-device-management-gateway-device-server-integration-spec.md)
+3. [XuanWu Platform Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
+4. [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
 
-## Current Implementation Blueprints
+### Management and device model
 
-- [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
-- [xuanwu-device-gateway Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-gateway-boundary-blueprint.md)
-- [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
-- [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
-- [xuanwu-portal Frontend Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-frontend-spec.md)
-- [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
-- [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
-- [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+5. [XuanWu Management Mapping Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-mapping-model-spec.md)
+6. [Unified Device Capability Model Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-unified-device-capability-model-spec.md)
+7. [xuanwu-management-server API Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-management-server-api-blueprint.md)
+8. [Device Management, Gateway, and Device-Server Integration Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-04-01-device-management-gateway-device-server-integration-spec.md)
+
+### Gateway and ingress
+
+9. [xuanwu-device-gateway Boundary Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-device-gateway-boundary-blueprint.md)
+10. [xuanwu-iot-gateway Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-contract-spec.md)
+11. [xuanwu-iot-gateway Module Blueprint](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-iot-gateway-module-blueprint.md)
+12. [xuanwu-iot-gateway Adapter Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-iot-gateway-adapter-completion-spec.md)
+13. [xuanwu-bluetooth-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-bluetooth-bridge-spec.md)
+14. [xuanwu-nearlink-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-nearlink-bridge-spec.md)
+
+### Jobs, portal, and operations
+
+15. [xuanwu-jobs Foundation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-jobs-foundation-design.md)
+16. [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
+17. [xuanwu-portal Frontend Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-frontend-spec.md)
+18. [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
+
+### Upstream contracts
+
+19. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
+20. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
+21. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+
+## What To Read For Current Delivery
+
+If you want to understand what is already implemented in this repository, read these first:
+
 - [Spec Completion Status](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-spec-completion-status.md)
-- [xuanwu-iot-gateway Adapter Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-iot-gateway-adapter-completion-spec.md)
-- [xuanwu-bluetooth-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-bluetooth-bridge-spec.md)
-- [xuanwu-nearlink-bridge Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-nearlink-bridge-spec.md)
-- [Device Management, Gateway, and Device-Server Integration Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-04-01-device-management-gateway-device-server-integration-spec.md)
-
-## Notes
-
-- The blueprint is the main entrypoint.
-- Child specs deepen one focused area each.
-- New implementation topics should be linked here after they become active.
+- [Current Platform Capabilities](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/current-platform-capabilities.md)
+- [Current API Surfaces](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/current-api-surfaces.md)
+- [Device Ingress and Management Guide](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/device-ingress-and-management-guide.md)
