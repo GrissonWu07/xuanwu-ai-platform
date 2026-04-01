@@ -4,7 +4,7 @@
 
 **Goal:** Build the first Docker-ready `xuanwu-jobs` service as a lightweight scheduler-dispatcher without a separate jobs-worker deployment.
 
-**Architecture:** Add a dedicated async Python jobs service that polls due schedules from `xuanwu-management-server`, claims them, and dispatches them directly to local service execution APIs. Keep schedule truth in `xuanwu-management-server`, keep actual execution inside `xuanwu-management-server` / `xuanwu-gateway` / `xuanwu-device-server`, and leave `XuanWu` execution as an upstream contract.
+**Architecture:** Add a dedicated async Python jobs service that polls due schedules from `xuanwu-management-server`, claims them, and dispatches them directly to local service execution APIs. Keep schedule truth in `xuanwu-management-server`, keep actual execution inside `xuanwu-management-server` / `xuanwu-iot-gateway` / `xuanwu-device-gateway`, and leave `XuanWu` execution as an upstream contract.
 
 **Tech Stack:** Python 3, aiohttp, httpx, pytest
 
@@ -46,12 +46,12 @@
 - Modify: `main/xuanwu-management-server/core/api/control_plane_handler.py`
 - Modify: `main/xuanwu-management-server/core/http_server.py`
 - Modify: `main/xuanwu-management-server/tests/test_http_routes.py`
-- Modify: `main/xuanwu-gateway/core/api/gateway_handler.py`
-- Modify: `main/xuanwu-gateway/core/http_server.py`
-- Modify: `main/xuanwu-gateway/tests/test_dispatch.py`
-- Modify: `main/xuanwu-device-server/core/api/runtime_handler.py`
-- Modify: `main/xuanwu-device-server/core/http_server.py`
-- Modify: `main/xuanwu-device-server/tests/test_runtime_handler_unit.py`
+- Modify: `main/xuanwu-iot-gateway/core/api/gateway_handler.py`
+- Modify: `main/xuanwu-iot-gateway/core/http_server.py`
+- Modify: `main/xuanwu-iot-gateway/tests/test_dispatch.py`
+- Modify: `main/xuanwu-device-gateway/core/api/runtime_handler.py`
+- Modify: `main/xuanwu-device-gateway/core/http_server.py`
+- Modify: `main/xuanwu-device-gateway/tests/test_runtime_handler_unit.py`
 
 - [ ] **Step 1: Write failing execution-endpoint tests for `platform`, `gateway`, and `device` dispatch**
 - [ ] **Step 2: Run the tests and confirm the endpoints are missing**
@@ -73,7 +73,7 @@
 ### Task 5: Simplify Docker and docs to a single `xuanwu-jobs` service
 
 **Files:**
-- Modify: `main/xuanwu-device-server/docker-compose_all.yml`
+- Modify: `main/xuanwu-device-gateway/docker-compose_all.yml`
 - Modify: `docker-setup.sh`
 - Modify: `main/xuanwu-jobs/README.md`
 - Modify: `main/README.md`
@@ -93,9 +93,9 @@
 - Modify: `docs/superpowers/specs/README.md`
 
 - [ ] **Step 1: Run target tests**
-  - `python -m pytest main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py tests/test_xuanwu_jobs_docker.py -q`
+  - `python -m pytest main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-iot-gateway/tests/test_bootstrap.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_runtime_handler_unit.py tests/test_xuanwu_jobs_docker.py -q`
 - [ ] **Step 2: Run broader verification**
-  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
+  - `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-iot-gateway/tests/test_bootstrap.py main/xuanwu-iot-gateway/tests/test_registry.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-device-gateway/tests/test_local_control_plane.py main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_runtime_handler_unit.py main/xuanwu-jobs/tests/test_xuanwu_jobs_bootstrap.py main/xuanwu-jobs/tests/test_scheduler_contract.py main/xuanwu-jobs/tests/test_scheduler_routing.py main/xuanwu-jobs/tests/test_dispatcher_contract.py main/xuanwu-jobs/tests/test_end_to_end_jobs.py tests/test_active_spec_index.py tests/test_xuanwu_jobs_docker.py -q`
 - [ ] **Step 3: Run syntax validation**
   - `python -m py_compile main/xuanwu-jobs/app.py main/xuanwu-jobs/core/http_server.py main/xuanwu-jobs/core/scheduler.py main/xuanwu-jobs/core/dispatcher.py main/xuanwu-jobs/core/clients/management_client.py main/xuanwu-jobs/core/clients/gateway_client.py main/xuanwu-jobs/core/clients/device_client.py`
 - [ ] **Step 4: Update state and spec index**

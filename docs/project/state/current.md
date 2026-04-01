@@ -2,9 +2,9 @@
 
 ## Objective
 - Implement the local platform side of the four-layer architecture:
-  - `xuanwu-device-server`
+  - `xuanwu-device-gateway`
   - `xuanwu-management-server`
-  - `xuanwu-gateway`
+  - `xuanwu-iot-gateway`
   - `XuanWu` integration by contract only
 - Keep all Agent-domain truth in `XuanWu`.
 - Finish every locally completable spec item in this repository without reintroducing legacy Java management paths.
@@ -93,7 +93,7 @@
   - `XuanWu` proxy surfaces for agents, model providers, and models
   - discovered-device APIs and promotion flow
   - device heartbeat updates and richer device detail aggregation
-- `xuanwu-gateway` now provides:
+- `xuanwu-iot-gateway` now provides:
   - standalone service bootstrap
   - adapter registry
   - adapter directory implementation by device/protocol class
@@ -119,7 +119,7 @@
     - `bluetooth`
     - `nearlink`
   - gateway callbacks for discovered devices and device heartbeat updates into management
-- `xuanwu-device-server` boundary work is complete for the local phase:
+- `xuanwu-device-gateway` boundary work is complete for the local phase:
   - `XuanWu` runtime naming is aligned
   - runtime context exposes `xuanwu_session_key`
   - control-plane hosting is no longer embedded back into the runtime service
@@ -164,15 +164,15 @@
 - Decision: all Agent-domain truth remains in `XuanWu`.
 - Decision: `user -> device` is the primary ownership line.
 - Decision: `channel` is a user control surface, not a device owner.
-- Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-gateway`.
+- Decision: actual device invocation is owned by `XuanWu`, executed through `xuanwu-iot-gateway`.
 - Decision: schedule truth stays in `xuanwu-management-server`.
 - Decision: `xuanwu-jobs` owns due-schedule triggering and direct execution dispatch.
 - Decision: this phase is Docker-first; Kubernetes is deferred.
-- Risk: `xuanwu-device-server` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-gateway` contract is live.
+- Risk: `xuanwu-device-gateway` still contains local IoT/Home Assistant compatibility code paths that should be retired only after the upstream `XuanWu -> xuanwu-iot-gateway` contract is live.
 - Risk: upstream `XuanWu` still needs to consume the final gateway contract end-to-end before local runtime compatibility paths can be removed.
 
 ## Next Step
 - Validate final upstream contracts and then retire the remaining local compatibility paths:
   - stable management proxy responses from `XuanWu`
-  - stable execution contract from `XuanWu` into `xuanwu-gateway`
+  - stable execution contract from `XuanWu` into `xuanwu-iot-gateway`
   - end-to-end agent-driven device invocation validation

@@ -32,13 +32,13 @@ This phase is intentionally small:
 - claim due schedules
 - dispatch claimed jobs to the correct local service API
 - leave Agent-domain execution to `XuanWu`
-- leave device southbound execution to `xuanwu-gateway`
+- leave device southbound execution to `xuanwu-iot-gateway`
 
 This keeps the boundary clean:
 
 - `xuanwu-management-server`: what, who, state
 - `xuanwu-jobs`: when and where
-- `XuanWu` / `xuanwu-gateway` / `xuanwu-device-server`: how
+- `XuanWu` / `xuanwu-iot-gateway` / `xuanwu-device-gateway`: how
 
 ## Scope
 
@@ -73,9 +73,9 @@ This keeps the boundary clean:
 - `xuanwu-jobs`
   - scheduler process
   - direct dispatcher process
-- `xuanwu-gateway`
+- `xuanwu-iot-gateway`
   - executes gateway jobs through its own execution API
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
   - executes runtime maintenance jobs through its own execution API
 - future:
   - upstream `XuanWu` execution API for agent jobs

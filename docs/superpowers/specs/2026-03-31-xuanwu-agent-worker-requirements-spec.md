@@ -116,7 +116,7 @@ The required path is:
 
 1. `xuanwu-agent-worker` or `xuanwu-workflow-worker` decides what should happen
 2. `XuanWu` emits a standard device-command plan
-3. `xuanwu-gateway` executes the actual southbound command through its execution API
+3. `xuanwu-iot-gateway` executes the actual southbound command through its execution API
 4. execution results flow back to `xuanwu-management-server`
 
 ## Schedule Rule

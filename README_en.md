@@ -1,6 +1,6 @@
 [![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Xuanwu Backend Service xuanwu-device-server</h1>
+<h1 align="center">Xuanwu Backend Service xuanwu-device-gateway</h1>
 
 <p align="center">
 This project is based on human-machine symbiotic intelligence theory and technology to develop intelligent terminal hardware and software systems<br/>providing backend services for the open-source intelligent hardware project
@@ -224,8 +224,8 @@ This project provides the following testing tools to help you verify the system 
 
 | Tool Name | Location | Usage Method | Function Description |
 |:---:|:---|:---:|:---:|
-| Audio Interaction Test Tool | main》xuanwu-device-server》test》test_page.html | Open directly with Google Chrome | Tests audio playback and reception functions, verifies if Python-side audio processing is normal |
-| Model Response Test Tool | main》xuanwu-device-server》performance_tester.py | Execute `python performance_tester.py` | Tests response speed of three core modules: ASR(speech recognition), LLM(large model), VLLM(vision model), TTS(speech synthesis) |
+| Audio Interaction Test Tool | main》xuanwu-device-gateway》test》test_page.html | Open directly with Google Chrome | Tests audio playback and reception functions, verifies if Python-side audio processing is normal |
+| Model Response Test Tool | main》xuanwu-device-gateway》performance_tester.py | Execute `python performance_tester.py` | Tests response speed of three core modules: ASR(speech recognition), LLM(large model), VLLM(vision model), TTS(speech synthesis) |
 
 > 💡 Note: When testing model speed, only models with configured keys will be tested.
 

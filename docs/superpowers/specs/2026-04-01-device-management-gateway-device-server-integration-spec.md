@@ -5,8 +5,8 @@
 This spec defines the end-to-end integration model between:
 
 - `xuanwu-management-server`
-- `xuanwu-gateway`
-- `xuanwu-device-server`
+- `xuanwu-iot-gateway`
+- `xuanwu-device-gateway`
 
 It clarifies:
 
@@ -23,8 +23,8 @@ This document is the authoritative local design for device registration, discove
 
 The platform has two different device ingress paths that must converge into one unified device-management model:
 
-- `xuanwu-device-server` handles conversational devices and runtime session devices
-- `xuanwu-gateway` handles IoT, industrial, actuator, and sensor devices
+- `xuanwu-device-gateway` handles conversational devices and runtime session devices
+- `xuanwu-iot-gateway` handles IoT, industrial, actuator, and sensor devices
 
 Both paths must converge into `xuanwu-management-server`, which is the only local source of truth for managed devices.
 
@@ -58,7 +58,7 @@ Does not own:
 - runtime WebSocket session handling
 - model or agent-domain reasoning
 
-### `xuanwu-gateway`
+### `xuanwu-iot-gateway`
 
 Owns:
 
@@ -74,7 +74,7 @@ Does not own:
 - user ownership
 - claim/bind/lifecycle truth
 
-### `xuanwu-device-server`
+### `xuanwu-device-gateway`
 
 Owns:
 
@@ -127,9 +127,9 @@ Field intent:
   - `device_server`
   - `gateway`
 - `gateway_id`
-  - present when a device is managed through `xuanwu-gateway`
+  - present when a device is managed through `xuanwu-iot-gateway`
 - `runtime_endpoint`
-  - present when a device is managed through `xuanwu-device-server`
+  - present when a device is managed through `xuanwu-device-gateway`
 
 ### Discovered Device
 
@@ -194,13 +194,13 @@ Ingress relationship model:
 ### Flow A: Gateway Device Discovery
 
 1. A physical IoT or industrial device is discovered or referenced through a gateway adapter.
-2. `xuanwu-gateway` normalizes the identity into:
+2. `xuanwu-iot-gateway` normalizes the identity into:
    - `device_id`
    - `gateway_id`
    - `protocol_type`
    - `adapter_type`
    - `device_kind`
-3. `xuanwu-gateway` calls `xuanwu-management-server` discovery API.
+3. `xuanwu-iot-gateway` calls `xuanwu-management-server` discovery API.
 4. `xuanwu-management-server` stores or updates a `discovered_device`.
 5. Portal shows the device in a `Pending Devices` or equivalent discovery view.
 6. User claims or promotes the device into a managed device.
@@ -208,9 +208,9 @@ Ingress relationship model:
 
 ### Flow B: Conversational Device First Contact
 
-1. A conversational device connects through `xuanwu-device-server`.
-2. `xuanwu-device-server` identifies the device and runtime context.
-3. If the device is unknown, `xuanwu-device-server` calls management discovery API using `ingress_type=device_server`.
+1. A conversational device connects through `xuanwu-device-gateway`.
+2. `xuanwu-device-gateway` identifies the device and runtime context.
+3. If the device is unknown, `xuanwu-device-gateway` calls management discovery API using `ingress_type=device_server`.
 4. Management creates or updates a `discovered_device`.
 5. User claims or binds the device.
 6. Runtime config resolution then proceeds against the formal managed device record.
@@ -230,8 +230,8 @@ Ingress relationship model:
 
 1. Portal or future `XuanWu` execution identifies a managed device.
 2. Management resolves routing:
-   - if `ingress_type=gateway`, command path is `xuanwu-gateway`
-   - if `ingress_type=device_server`, runtime command path is `xuanwu-device-server`
+   - if `ingress_type=gateway`, command path is `xuanwu-iot-gateway`
+   - if `ingress_type=device_server`, runtime command path is `xuanwu-device-gateway`
 3. Execution result returns through gateway or device-server callback APIs.
 4. Management stores command results and mirrors `command.result` event.
 
@@ -360,7 +360,7 @@ Payload:
   "device_id": "esp32-voice-01",
   "ingress_type": "device_server",
   "device_kind": "conversational",
-  "runtime_endpoint": "ws://xuanwu-device-server:8000/xuanwu/v1/",
+  "runtime_endpoint": "ws://xuanwu-device-gateway:8000/xuanwu/v1/",
   "source_payload": {
     "client_id": "esp32-voice-01",
     "firmware_version": "1.2.0"
@@ -549,7 +549,7 @@ Implemented locally in this order:
 This spec does not cover:
 
 - `XuanWu` agent-domain execution
-- final `XuanWu -> xuanwu-gateway` invocation contract
+- final `XuanWu -> xuanwu-iot-gateway` invocation contract
 - standalone wireless bridge service implementation
 
 Those remain covered by the upstream and bridge-specific specs.

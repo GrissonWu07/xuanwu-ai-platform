@@ -1,4 +1,4 @@
-﻿# 天气插件使用指南
+# 天气插件使用指南
 
 ## 概述
 
@@ -46,7 +46,7 @@
 8. 将复制过来的第二个关键配置`API Host`,填入到`开发者 API Host`里
 9. 保存配置，再保存智能体配置
 
-### 方式2. 如果你只是单模块xuanwu-device-server部署
+### 方式2. 如果你只是单模块xuanwu-device-gateway部署
 
 在 `data/.config.yaml` 中配置：
 

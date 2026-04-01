@@ -146,8 +146,8 @@ export const phasePages = {
     tableTitle: 'Alert list',
     tableColumns: ['Alert', 'Severity', 'State', 'Source'],
     tableRows: [
-      ['Gateway latency spike', 'High', 'Active', 'xuanwu-gateway'],
-      ['Device heartbeat lag', 'Medium', 'Acknowledged', 'xuanwu-device-server'],
+      ['Gateway latency spike', 'High', 'Active', 'xuanwu-iot-gateway'],
+      ['Device heartbeat lag', 'Medium', 'Acknowledged', 'xuanwu-device-gateway'],
       ['Proxy timeout', 'Critical', 'Active', 'XuanWu'],
     ],
     activityTitle: 'Operational signals',

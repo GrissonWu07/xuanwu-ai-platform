@@ -14,7 +14,7 @@ def load_runtime_config() -> dict:
     )
     gateway_base_url = (
         os.environ.get("XUANWU_GATEWAY_URL", "").strip()
-        or "http://xuanwu-gateway:18084"
+        or "http://xuanwu-iot-gateway:18084"
     )
     gateway_secret = (
         os.environ.get("XUANWU_GATEWAY_SECRET", "").strip()
@@ -22,7 +22,7 @@ def load_runtime_config() -> dict:
     )
     device_base_url = (
         os.environ.get("XUANWU_DEVICE_RUNTIME_URL", "").strip()
-        or "http://xuanwu-device-server:8003"
+        or "http://xuanwu-device-gateway:8003"
     )
     device_runtime_secret = (
         os.environ.get("XUANWU_DEVICE_RUNTIME_SECRET", "").strip()

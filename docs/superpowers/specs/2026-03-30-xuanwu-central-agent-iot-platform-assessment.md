@@ -18,7 +18,7 @@
 
 当前已经正确建立的方向：
 
-- `xuanwu-device-server` 已经在承担运行时接入层
+- `xuanwu-device-gateway` 已经在承担运行时接入层
 - `xuanwu-management-server` 已经在承担控制面和管理面宿主
 - `XuanWu` 已经被定义为中心化 Agent 与模型管理域
 - 运行链路已经具备“设备 -> 管理面解析 -> Agent 路由”的基础能力
@@ -38,7 +38,7 @@
 
 当前三层划分是合理的：
 
-- `main/xuanwu-device-server`
+- `main/xuanwu-device-gateway`
   - 设备运行时接入层
   - 设备会话处理
   - 音频/对话运行时
@@ -56,8 +56,8 @@
 
 当前代码里已经能看到这条分层主线，关键位置包括：
 
-- `main/xuanwu-device-server/config/xuanwu_management_client.py`
-- `main/xuanwu-device-server/core/connection.py`
+- `main/xuanwu-device-gateway/config/xuanwu_management_client.py`
+- `main/xuanwu-device-gateway/core/connection.py`
 - `main/xuanwu-management-server/core/api/control_plane_handler.py`
 - `main/xuanwu-management-server/core/store/local_store.py`
 
@@ -71,7 +71,7 @@
   - 非常适合中心化 Agent
   - 设备本身是终端
   - Agent 在 `XuanWu` 中央运行
-  - 设备运行时留在 `xuanwu-device-server`
+  - 设备运行时留在 `xuanwu-device-gateway`
 - 执行型 IoT 设备
   - 更适合“中心 Agent + 设备能力网关”
   - 设备暴露能力、动作、状态
@@ -329,7 +329,7 @@
 
 如果要实现你要求的目标，最终平台应演进成以下结构。
 
-### 1. 运行时层：`xuanwu-device-server`
+### 1. 运行时层：`xuanwu-device-gateway`
 
 职责：
 

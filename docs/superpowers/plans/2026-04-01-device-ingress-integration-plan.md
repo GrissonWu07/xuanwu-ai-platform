@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement unified device discovery, registration, heartbeat, and promotion flows across `xuanwu-management-server`, `xuanwu-gateway`, `xuanwu-device-server`, and `xuanwu-portal`.
+**Goal:** Implement unified device discovery, registration, heartbeat, and promotion flows across `xuanwu-management-server`, `xuanwu-iot-gateway`, `xuanwu-device-gateway`, and `xuanwu-portal`.
 
 **Architecture:** Add a new `discovered_device` layer inside `xuanwu-management-server`, wire ingress callbacks from gateway and device-server into that store, expand managed device aggregation with recency and provenance fields, then expose portal surfaces for pending-device review and promotion into managed devices. Keep execution ownership unchanged: ingress services discover and report, management owns durable truth.
 
@@ -132,10 +132,10 @@ git commit -m "feat: add device discovery management APIs"
 ### Task 3: Add gateway discovery and heartbeat callbacks
 
 **Files:**
-- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-gateway\core\clients\management_client.py`
-- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-gateway\core\api\gateway_handler.py`
-- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-gateway\tests\test_dispatch.py`
-- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-gateway\tests\test_sensor_ingest.py`
+- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-iot-gateway\core\clients\management_client.py`
+- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-iot-gateway\core\api\gateway_handler.py`
+- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-iot-gateway\tests\test_dispatch.py`
+- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-iot-gateway\tests\test_sensor_ingest.py`
 
 - [ ] **Step 1: Write failing gateway tests**
 
@@ -150,7 +150,7 @@ Add tests for:
 Run:
 
 ```powershell
-python -m pytest main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-gateway/tests/test_sensor_ingest.py -q
+python -m pytest main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-iot-gateway/tests/test_sensor_ingest.py -q
 ```
 
 Expected: failures for missing management client methods and missing callback usage.
@@ -171,7 +171,7 @@ Update `gateway_handler.py` to:
 Run:
 
 ```powershell
-python -m pytest main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-gateway/tests/test_sensor_ingest.py -q
+python -m pytest main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-iot-gateway/tests/test_sensor_ingest.py -q
 ```
 
 Expected: pass.
@@ -179,17 +179,17 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add main/xuanwu-gateway/core/clients/management_client.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-gateway/tests/test_sensor_ingest.py
+git add main/xuanwu-iot-gateway/core/clients/management_client.py main/xuanwu-iot-gateway/core/api/gateway_handler.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-iot-gateway/tests/test_sensor_ingest.py
 git commit -m "feat: add gateway device discovery callbacks"
 ```
 
 ### Task 4: Add device-server discovery and heartbeat callbacks
 
 **Files:**
-- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-server\config\xuanwu_management_client.py`
-- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-server\core\api\runtime_handler.py`
-- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-server\tests\test_runtime_http_routes.py`
-- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-server\tests\test_local_control_plane.py`
+- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-gateway\config\xuanwu_management_client.py`
+- Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-gateway\core\api\runtime_handler.py`
+- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-gateway\tests\test_runtime_http_routes.py`
+- Test: `C:\Projects\githubs\myaiagent\ai-assist-device\.worktrees\device-ingress-integration\main\xuanwu-device-gateway\tests\test_local_control_plane.py`
 
 - [ ] **Step 1: Write failing device-server tests**
 
@@ -203,7 +203,7 @@ Add tests for:
 Run:
 
 ```powershell
-python -m pytest main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_local_control_plane.py -q
+python -m pytest main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_local_control_plane.py -q
 ```
 
 Expected: failures for missing callback client methods or missing hook usage.
@@ -221,7 +221,7 @@ Update runtime-side logic so first-contact and runtime activity can report into 
 Run:
 
 ```powershell
-python -m pytest main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_local_control_plane.py -q
+python -m pytest main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_local_control_plane.py -q
 ```
 
 Expected: pass.
@@ -229,7 +229,7 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add main/xuanwu-device-server/config/xuanwu_management_client.py main/xuanwu-device-server/core/api/runtime_handler.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_local_control_plane.py
+git add main/xuanwu-device-gateway/config/xuanwu_management_client.py main/xuanwu-device-gateway/core/api/runtime_handler.py main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_local_control_plane.py
 git commit -m "feat: add runtime device discovery callbacks"
 ```
 
@@ -301,9 +301,9 @@ git commit -m "feat: add portal discovered device workflows"
 Run:
 
 ```powershell
-python -m pytest main/xuanwu-management-server/tests main/xuanwu-gateway/tests main/xuanwu-device-server/tests tests/test_xuanwu_portal_docker.py -q
+python -m pytest main/xuanwu-management-server/tests main/xuanwu-iot-gateway/tests main/xuanwu-device-gateway/tests tests/test_xuanwu_portal_docker.py -q
 cd main/xuanwu-portal; npm test; npm run build
-python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/store/local_store.py main/xuanwu-gateway/app.py main/xuanwu-gateway/core/api/gateway_handler.py main/xuanwu-gateway/core/clients/management_client.py main/xuanwu-device-server/app.py main/xuanwu-device-server/config/xuanwu_management_client.py main/xuanwu-device-server/core/api/runtime_handler.py
+python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/store/local_store.py main/xuanwu-iot-gateway/app.py main/xuanwu-iot-gateway/core/api/gateway_handler.py main/xuanwu-iot-gateway/core/clients/management_client.py main/xuanwu-device-gateway/app.py main/xuanwu-device-gateway/config/xuanwu_management_client.py main/xuanwu-device-gateway/core/api/runtime_handler.py
 ```
 
 Expected: all pass.

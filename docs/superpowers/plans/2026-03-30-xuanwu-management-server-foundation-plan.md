@@ -213,7 +213,7 @@ git commit -m "feat: stabilize xuanwu proxy contract"
 
 - [ ] **Step 1: Run target tests**
 
-Run: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py tests/test_active_spec_index.py -q`
+Run: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-iot-gateway/tests/test_bootstrap.py main/xuanwu-iot-gateway/tests/test_registry.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-device-gateway/tests/test_local_control_plane.py main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_runtime_handler_unit.py tests/test_active_spec_index.py -q`
 Expected: PASS
 
 - [ ] **Step 2: Run syntax validation**
@@ -251,7 +251,7 @@ git commit -m "docs: record management server phase 1 completion"
 ```
 
 ## Verification
-- command: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-gateway/tests/test_bootstrap.py main/xuanwu-gateway/tests/test_registry.py main/xuanwu-gateway/tests/test_dispatch.py main/xuanwu-device-server/tests/test_local_control_plane.py main/xuanwu-device-server/tests/test_runtime_http_routes.py main/xuanwu-device-server/tests/test_runtime_handler_unit.py tests/test_active_spec_index.py -q`
+- command: `python -m pytest main/xuanwu-management-server/tests/test_local_control_plane.py main/xuanwu-management-server/tests/test_http_routes.py main/xuanwu-iot-gateway/tests/test_bootstrap.py main/xuanwu-iot-gateway/tests/test_registry.py main/xuanwu-iot-gateway/tests/test_dispatch.py main/xuanwu-device-gateway/tests/test_local_control_plane.py main/xuanwu-device-gateway/tests/test_runtime_http_routes.py main/xuanwu-device-gateway/tests/test_runtime_handler_unit.py tests/test_active_spec_index.py -q`
 - expected: 所有阶段一测试通过
 - actual: `64 passed`
 - command: `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-management-server/core/api/control_plane_handler.py main/xuanwu-management-server/core/api/xuanwu_proxy_handler.py main/xuanwu-management-server/core/store/local_store.py`
@@ -260,5 +260,5 @@ git commit -m "docs: record management server phase 1 completion"
 
 ## Handoff Notes
 - 本计划只覆盖 `xuanwu-management-server` 第一阶段基础控制面
-- `xuanwu-gateway`、事件遥测治理、`xuanwu-device-server` 边界收口应进入后续独立计划
+- `xuanwu-iot-gateway`、事件遥测治理、`xuanwu-device-gateway` 边界收口应进入后续独立计划
 - `XuanWu` 仍按契约集成，不在本计划中实现其真源逻辑

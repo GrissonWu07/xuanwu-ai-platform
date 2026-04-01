@@ -4,11 +4,11 @@
 
 本项目的测试平台`https://2662r3426b.vicp.fun`，从开放以来就使用了该方法，效果良好。
 
-> 当前源码部署的默认主路径已经是 `xuanwu-management-server + xuanwu-device-server + XuanWu`。
+> 当前源码部署的默认主路径已经是 `xuanwu-management-server + xuanwu-device-gateway + XuanWu`。
 >
 > `manager-api` / `manager-web` 在本文档里只作为 legacy 兼容模式说明，不再是推荐的新部署主线。
 
-教程可参考B站博主`毕乐labs`发布的视频教程：[《开源玄武AI服务器xuanwu-device-server自动更新以及最新版本MCP接入点配置保姆教程》](https://www.bilibili.com/video/BV15H37zHE7Q)
+教程可参考B站博主`毕乐labs`发布的视频教程：[《开源玄武AI服务器xuanwu-device-gateway自动更新以及最新版本MCP接入点配置保姆教程》](https://www.bilibili.com/video/BV15H37zHE7Q)
 
 # 开始条件
 - 你的电脑/服务器是linux操作系统
@@ -38,19 +38,19 @@ cd /home/system/xuanwu
 git clone https://ghproxy.net/https://github.com/GrissonWu07/ai-assist-deviceserver.git
 ```
 
-执行完后，你的项目目录会多了一个文件夹`xuanwu-device-server`，这个就是项目的源码
+执行完后，你的项目目录会多了一个文件夹`xuanwu-device-gateway`，这个就是项目的源码
 
 # 第三步 复制基础的文件
 
-如果你之前已经跑通了整个流程，对funasr的模型文件`xuanwu-device-server/models/SenseVoiceSmall/model.pt`和你的私有配置文件`xuanwu-device-server/data/.config.yaml`这两个文件不会陌生。
+如果你之前已经跑通了整个流程，对funasr的模型文件`xuanwu-device-gateway/models/SenseVoiceSmall/model.pt`和你的私有配置文件`xuanwu-device-gateway/data/.config.yaml`这两个文件不会陌生。
 
 此刻你需要把`model.pt`文件复制到新的目录去，你可以这样
 ```
 # 创建需要的目录
-mkdir -p /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/data/
+mkdir -p /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-gateway/data/
 
-cp 你原来的.config.yaml完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/data/.config.yaml
-cp 你原来的model.pt完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
+cp 你原来的.config.yaml完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-gateway/data/.config.yaml
+cp 你原来的model.pt完整路径 /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt
 ```
 
 # 第四步 建立三个自动编译文件
@@ -139,13 +139,13 @@ else
   kill -9 $PID
   echo "已杀掉进程 $PID"
 fi
-cd main/xuanwu-device-server
+cd main/xuanwu-device-gateway
 # 初始化conda环境
 source ~/.bashrc
-conda activate xuanwu-device-server
+conda activate xuanwu-device-gateway
 pip install -r requirements.txt
 nohup python app.py >/dev/null &
-tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
+tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-gateway/tmp/server.log
 ```
 
 保存好后执行赋权命令
@@ -171,7 +171,7 @@ cd /home/system/xuanwu
 # 后期想查看java日志，执行以下命令
 tail -f nohup.out
 # 后期想查看python日志，执行以下命令
-tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-server/tmp/server.log
+tail -f /home/system/xuanwu/ai-assist-deviceserver/main/xuanwu-device-gateway/tmp/server.log
 ```
 
 # 注意事项

@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEVICE_SERVER = ROOT / "main" / "xuanwu-device-server"
+DEVICE_SERVER = ROOT / "main" / "xuanwu-device-gateway"
 
 
 def test_legacy_manager_compatibility_files_are_removed_from_device_server():

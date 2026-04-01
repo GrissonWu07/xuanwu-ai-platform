@@ -14,14 +14,14 @@
 
 需要支持独立扩展的组件：
 
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
 - `xuanwu-management-server`
 - `XuanWu`
-- `xuanwu-gateway`
+- `xuanwu-iot-gateway`
 
 ## 3. 扩展策略
 
-### 3.1 `xuanwu-device-server`
+### 3.1 `xuanwu-device-gateway`
 
 按以下维度扩展：
 
@@ -61,7 +61,7 @@
 - Agent 真源共享
 - 模型配置共享
 
-### 3.4 `xuanwu-gateway`
+### 3.4 `xuanwu-iot-gateway`
 
 按以下维度扩展：
 

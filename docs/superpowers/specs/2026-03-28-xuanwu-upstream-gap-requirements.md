@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records the `XuanWu` changes that `ai-assist-device` still depends on, without blocking the local Python refactor. `xuanwu-device-server` and `xuanwu-management-server` now assume `XuanWu` is the only source of truth for agent-management objects.
+This document records the `XuanWu` changes that `ai-assist-device` still depends on, without blocking the local Python refactor. `xuanwu-device-gateway` and `xuanwu-management-server` now assume `XuanWu` is the only source of truth for agent-management objects.
 
 ## Required Admin APIs
 
@@ -58,11 +58,11 @@ The following capabilities are intentionally handled locally in `xuanwu-manageme
 - `/control-plane/v1/chat-history/report`
 - `/control-plane/v1/chat-summaries/{summary_id}:generate`
 
-If `XuanWu` later needs to own those resources, a follow-up migration can move storage ownership without changing the current `xuanwu-device-server` runtime boundary.
+If `XuanWu` later needs to own those resources, a follow-up migration can move storage ownership without changing the current `xuanwu-device-gateway` runtime boundary.
 
 ## Required Gateway Invocation Contract
 
-To complete the southbound refactor, `XuanWu` must call `xuanwu-gateway` with a standard command contract instead of routing IoT and Home Assistant capability execution through `xuanwu-device-server`.
+To complete the southbound refactor, `XuanWu` must call `xuanwu-iot-gateway` with a standard command contract instead of routing IoT and Home Assistant capability execution through `xuanwu-device-gateway`.
 
 Required upstream contract shape:
 
@@ -90,7 +90,7 @@ Expected response fields:
 
 ## Local Compatibility Paths Pending Upstream Adoption
 
-The following code still exists in `xuanwu-device-server` as temporary compatibility behavior until `XuanWu -> xuanwu-gateway` is adopted:
+The following code still exists in `xuanwu-device-gateway` as temporary compatibility behavior until `XuanWu -> xuanwu-iot-gateway` is adopted:
 
 - Home Assistant prompt injection in `core/providers/intent/intent_llm/intent_llm.py`
 - Home Assistant tool initialization in `core/providers/tools/unified_tool_handler.py`

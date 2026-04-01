@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_docker_compose_includes_single_xuanwu_jobs_service():
     compose_text = (
-        ROOT / "main" / "xuanwu-device-server" / "docker-compose_all.yml"
+        ROOT / "main" / "xuanwu-device-gateway" / "docker-compose_all.yml"
     ).read_text(encoding="utf-8")
 
     assert "xuanwu-jobs:" in compose_text
@@ -35,3 +35,5 @@ def test_jobs_docs_explain_lightweight_jobs_service():
     assert "scheduler-dispatcher" in jobs_readme_text
     assert "xuanwu-jobs" in main_readme_text
     assert "scheduler-dispatcher" in main_readme_text
+    assert "xuanwu-device-gateway" in main_readme_text
+    assert "xuanwu-iot-gateway" in main_readme_text

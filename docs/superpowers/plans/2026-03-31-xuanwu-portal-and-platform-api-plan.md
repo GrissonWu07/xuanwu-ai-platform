@@ -40,8 +40,8 @@
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\core\store\local_store.py`
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\tests\test_local_control_plane.py`
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\tests\test_http_routes.py`
-- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-gateway\core\http_server.py`
-- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-gateway\core\api\gateway_handler.py`
+- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-iot-gateway\core\http_server.py`
+- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-iot-gateway\core\api\gateway_handler.py`
 
 ## Parallel Track A: xuanwu-portal
 
@@ -197,7 +197,7 @@
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\core\http_server.py`
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\core\api\control_plane_handler.py`
 - Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\core\store\local_store.py`
-- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-gateway\core\api\gateway_handler.py`
+- Optional Modify: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-iot-gateway\core\api\gateway_handler.py`
 - Test: `C:\Projects\githubs\myaiagent\ai-assist-device\main\xuanwu-management-server\tests\test_local_control_plane.py`
 
 - [ ] Decide whether `Overview` can stay frontend-composed without a dedicated gateway overview. If not, write a failing test for `GET /control-plane/v1/gateway/overview`.

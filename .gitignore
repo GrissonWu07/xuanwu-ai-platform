@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 .idea/
 *.py[cod]
@@ -149,7 +149,7 @@ cython_debug/
 tmp
 .history
 .DS_Store
-main/xuanwu-device-server/data
+main/xuanwu-device-gateway/data
 
 main/manager-web/node_modules
 main/xuanwu-portal/node_modules/
@@ -160,23 +160,23 @@ main/xuanwu-portal/dist/
 .env.development
 
 # model files
-main/xuanwu-device-server/models/SenseVoiceSmall/model.pt
-main/xuanwu-device-server/models/sherpa-onnx*
-/main/xuanwu-device-server/audio_ref/
+main/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt
+main/xuanwu-device-gateway/models/sherpa-onnx*
+/main/xuanwu-device-gateway/audio_ref/
 /audio_ref/
 /asr-models/iic/SenseVoiceSmall/
-/main/xuanwu-device-server/asr-models/iic/SenseVoiceSmall/
+/main/xuanwu-device-gateway/asr-models/iic/SenseVoiceSmall/
 /models/SenseVoiceSmall/model.pt
 my_wakeup_words.mp3
-!main/xuanwu-device-server/config/assets/bind_code.wav
-!main/xuanwu-device-server/config/assets/wakeup_words.wav
-!main/xuanwu-device-server/config/assets/bind_not_found.wav
-!main/xuanwu-device-server/config/assets/bind_code/*.wav
-!main/xuanwu-device-server/config/assets/max_output_size.wav
+!main/xuanwu-device-gateway/config/assets/bind_code.wav
+!main/xuanwu-device-gateway/config/assets/wakeup_words.wav
+!main/xuanwu-device-gateway/config/assets/bind_not_found.wav
+!main/xuanwu-device-gateway/config/assets/bind_code/*.wav
+!main/xuanwu-device-gateway/config/assets/max_output_size.wav
 main/manager-api/.vscode
 # Ignore webpack cache directory
 main/manager-web/.webpack_cache/
-main/xuanwu-device-server/mysql
+main/xuanwu-device-gateway/mysql
 uploadfile
 *.json
 .vscode
@@ -187,5 +187,5 @@ uploadfile
 !main/xuanwu-portal/package-lock.json
 !main/xuanwu-portal/tsconfig.json
 
-!main/xuanwu-device-server/**/*.json
+!main/xuanwu-device-gateway/**/*.json
 

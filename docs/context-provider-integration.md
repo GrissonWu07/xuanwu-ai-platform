@@ -1,4 +1,4 @@
-﻿# 上下文源使用教程
+# 上下文源使用教程
 
 ## 概述
 
@@ -83,7 +83,7 @@
 
 ### 方式 2：配置文件配置（单模块部署）
 
-编辑 `xuanwu-device-server/data/.config.yaml` 文件，添加 `context_providers` 配置段：
+编辑 `xuanwu-device-gateway/data/.config.yaml` 文件，添加 `context_providers` 配置段：
 
 ```yaml
 # 上下文源配置

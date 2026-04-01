@@ -2,11 +2,11 @@
 
 ## Goal
 
-Replace the legacy Java management stack with a Python-first management service named `main/xuanwu-management-server`, while keeping `main/xuanwu-device-server` focused on runtime and device execution only.
+Replace the legacy Java management stack with a Python-first management service named `main/xuanwu-management-server`, while keeping `main/xuanwu-device-gateway` focused on runtime and device execution only.
 
 ## Final Module Boundaries
 
-### `main/xuanwu-device-server`
+### `main/xuanwu-device-gateway`
 
 Owns runtime-only responsibilities:
 
@@ -56,17 +56,17 @@ The target architecture is not in place yet.
 
 Current state:
 
-- `main/xuanwu-device-server` still hosts `/control-plane/v1/*`
+- `main/xuanwu-device-gateway` still hosts `/control-plane/v1/*`
 - `main/xuanwu-management-server` does not exist yet
 - `main/manager-api` and `main/manager-web` are still the legacy reference implementations
 
-This means the replacement work must start by extracting the embedded control-plane from `xuanwu-device-server` into a new standalone Python service.
+This means the replacement work must start by extracting the embedded control-plane from `xuanwu-device-gateway` into a new standalone Python service.
 
 ## Migration Strategy
 
 ### Stage 1: Create `main/xuanwu-management-server`
 
-Build a standalone Python service that initially hosts the exact management endpoints currently embedded in `main/xuanwu-device-server`.
+Build a standalone Python service that initially hosts the exact management endpoints currently embedded in `main/xuanwu-device-gateway`.
 
 Initial extracted domains:
 
@@ -77,13 +77,13 @@ Initial extracted domains:
 
 This stage is about changing the host boundary, not expanding features yet.
 
-### Stage 2: Move Management Ownership Out of `xuanwu-device-server`
+### Stage 2: Move Management Ownership Out of `xuanwu-device-gateway`
 
 After extraction:
 
-- remove `/control-plane/v1/*` routes from `main/xuanwu-device-server`
+- remove `/control-plane/v1/*` routes from `main/xuanwu-device-gateway`
 - move control-plane tests to `main/xuanwu-management-server`
-- keep runtime, OTA download, and vision routes in `xuanwu-device-server`
+- keep runtime, OTA download, and vision routes in `xuanwu-device-gateway`
 
 ### Stage 3: Replace Legacy Java Management Domains
 
@@ -181,7 +181,7 @@ No local truth is allowed for `Agent`, `Model Provider`, or `Model Config`.
 
 The target runtime deployment becomes:
 
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
 - `xuanwu-management-server`
 - `XuanWu`
 
@@ -192,8 +192,8 @@ Legacy Java services remain only as temporary reference implementations until th
 This replacement is complete only when all are true:
 
 - `main/xuanwu-management-server` exists and runs independently
-- `main/xuanwu-device-server` no longer hosts `/control-plane/v1/*`
+- `main/xuanwu-device-gateway` no longer hosts `/control-plane/v1/*`
 - management UI and admin API use `xuanwu-management-server`
 - `Agent`, `Model Provider`, and `Model Config` are managed only through `xuanwu-management-server` and proxied to `XuanWu`
 - `manager-api` and `manager-web` are no longer the primary management entrypoints
-- runtime behavior in `xuanwu-device-server` remains intact
+- runtime behavior in `xuanwu-device-gateway` remains intact

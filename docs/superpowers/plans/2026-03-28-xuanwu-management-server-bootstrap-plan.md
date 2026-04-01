@@ -4,9 +4,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create `main/xuanwu-management-server`, move embedded control-plane ownership out of `main/xuanwu-device-server`, and prepare the first replacement path for legacy `manager-api/web`.
+**Goal:** Create `main/xuanwu-management-server`, move embedded control-plane ownership out of `main/xuanwu-device-gateway`, and prepare the first replacement path for legacy `manager-api/web`.
 
-**Architecture:** Start by extracting the existing embedded control-plane code into a standalone Python service with the same behavior and tests. Then rewire `xuanwu-device-server` to runtime-only responsibilities and build forward from the new management host.
+**Architecture:** Start by extracting the existing embedded control-plane code into a standalone Python service with the same behavior and tests. Then rewire `xuanwu-device-gateway` to runtime-only responsibilities and build forward from the new management host.
 
 **Tech Stack:** Python, aiohttp, unittest/pytest, existing local control-plane store, existing runtime/config modules
 
@@ -35,10 +35,10 @@
 - Create: `main/xuanwu-management-server/core/store/import_bundle.py`
 - Create: `main/xuanwu-management-server/core/store/exceptions.py`
 - Create: `main/xuanwu-management-server/tests/test_local_control_plane.py`
-- Modify: `main/xuanwu-device-server/core/api/control_plane_handler.py`
-- Modify: `main/xuanwu-device-server/core/control_plane/local_store.py`
-- Modify: `main/xuanwu-device-server/core/control_plane/import_bundle.py`
-- Modify: `main/xuanwu-device-server/core/control_plane/exceptions.py`
+- Modify: `main/xuanwu-device-gateway/core/api/control_plane_handler.py`
+- Modify: `main/xuanwu-device-gateway/core/control_plane/local_store.py`
+- Modify: `main/xuanwu-device-gateway/core/control_plane/import_bundle.py`
+- Modify: `main/xuanwu-device-gateway/core/control_plane/exceptions.py`
 
 - [ ] **Step 1: Copy the current control-plane tests into the new service and adapt imports**
 - [ ] **Step 2: Run the new service tests to verify they fail because modules do not exist**
@@ -50,24 +50,24 @@
 **Files:**
 - Modify: `main/xuanwu-management-server/core/http_server.py`
 - Modify: `main/xuanwu-management-server/app.py`
-- Modify: `main/xuanwu-device-server/core/http_server.py`
+- Modify: `main/xuanwu-device-gateway/core/http_server.py`
 - Create: `main/xuanwu-management-server/tests/test_http_routes.py`
 
 - [ ] **Step 1: Write a failing route test asserting `xuanwu-management-server` exposes `/control-plane/v1/*`**
 - [ ] **Step 2: Run the route test and verify it fails for the intended missing-route reason**
 - [ ] **Step 3: Add the extracted HTTP routing to `xuanwu-management-server`**
-- [ ] **Step 4: Remove `/control-plane/v1/*` route registration from `xuanwu-device-server`**
+- [ ] **Step 4: Remove `/control-plane/v1/*` route registration from `xuanwu-device-gateway`**
 - [ ] **Step 5: Re-run route tests and existing runtime tests to confirm the split passes**
 
 ### Task 4: Rewire Tests and Imports Around the New Host
 
 **Files:**
-- Modify: `main/xuanwu-device-server/tests/test_local_control_plane.py`
+- Modify: `main/xuanwu-device-gateway/tests/test_local_control_plane.py`
 - Modify: `main/xuanwu-management-server/tests/test_local_control_plane.py`
-- Modify: `main/xuanwu-device-server/app.py`
-- Modify: `main/xuanwu-device-server/config/config_loader.py`
+- Modify: `main/xuanwu-device-gateway/app.py`
+- Modify: `main/xuanwu-device-gateway/config/config_loader.py`
 
-- [ ] **Step 1: Add a failing test that `xuanwu-device-server` no longer exposes management routes**
+- [ ] **Step 1: Add a failing test that `xuanwu-device-gateway` no longer exposes management routes**
 - [ ] **Step 2: Run that test and confirm it fails before final cleanup**
 - [ ] **Step 3: Update imports/config wiring to point management ownership at `xuanwu-management-server`**
 - [ ] **Step 4: Re-run both service test suites and confirm the boundary is green**
@@ -94,11 +94,11 @@
 
 - [ ] **Step 1: Run targeted verification**
   - `python -m pytest main/xuanwu-management-server/tests -q`
-  - `python -m pytest main/xuanwu-device-server/tests/test_local_control_plane.py -q`
+  - `python -m pytest main/xuanwu-device-gateway/tests/test_local_control_plane.py -q`
 - [ ] **Step 2: Run broader syntax verification**
-  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-device-server/core/http_server.py`
+  - `python -m py_compile main/xuanwu-management-server/app.py main/xuanwu-management-server/core/http_server.py main/xuanwu-device-gateway/core/http_server.py`
 - [ ] **Step 3: Review pass 1**
-  - confirm `xuanwu-device-server` no longer owns `/control-plane/v1/*`
+  - confirm `xuanwu-device-gateway` no longer owns `/control-plane/v1/*`
   - confirm `xuanwu-management-server` is the only management host
 - [ ] **Step 4: Review pass 2**
   - confirm `XuanWu` proxy contract headers and error mapping are present

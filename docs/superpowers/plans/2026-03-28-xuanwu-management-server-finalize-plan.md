@@ -4,7 +4,7 @@
 
 **Goal:** Remove all active `manager-api/web` compatibility logic from `ai-assist-device`, make `xuanwu-management-server` the only management API path, and document any remaining `XuanWu`-side requirements without blocking this repo.
 
-**Architecture:** `main/xuanwu-device-server` becomes runtime-only and never reads embedded control-plane or Java management state. `main/xuanwu-management-server` owns all management-side storage and APIs that still need to exist locally, and proxies `Agent` / `Model Provider` / `Model Config` to `XuanWu`. Any upstream gaps are captured in requirements docs rather than reintroducing compatibility code.
+**Architecture:** `main/xuanwu-device-gateway` becomes runtime-only and never reads embedded control-plane or Java management state. `main/xuanwu-management-server` owns all management-side storage and APIs that still need to exist locally, and proxies `Agent` / `Model Provider` / `Model Config` to `XuanWu`. Any upstream gaps are captured in requirements docs rather than reintroducing compatibility code.
 
 **Tech Stack:** Python, aiohttp, pytest, YAML file storage, docker compose.
 
@@ -13,10 +13,10 @@
 ### Task 1: Lock the no-compatibility config boundary
 
 **Files:**
-- Modify: `main/xuanwu-device-server/config/config_loader.py`
-- Modify: `main/xuanwu-device-server/config/settings.py`
-- Delete: `main/xuanwu-device-server/config/manage_api_client.py`
-- Modify: `main/xuanwu-device-server/tests/test_local_control_plane.py`
+- Modify: `main/xuanwu-device-gateway/config/config_loader.py`
+- Modify: `main/xuanwu-device-gateway/config/settings.py`
+- Delete: `main/xuanwu-device-gateway/config/manage_api_client.py`
+- Modify: `main/xuanwu-device-gateway/tests/test_local_control_plane.py`
 
 - [ ] **Step 1: Write the failing tests**
 - [ ] **Step 2: Run the targeted tests and verify they fail for the removed compatibility paths**
@@ -30,9 +30,9 @@
 - Modify: `main/xuanwu-management-server/core/store/local_store.py`
 - Modify: `main/xuanwu-management-server/core/api/control_plane_handler.py`
 - Modify: `main/xuanwu-management-server/core/http_server.py`
-- Modify: `main/xuanwu-device-server/config/xuanwu_management_client.py`
-- Modify: `main/xuanwu-device-server/core/handle/reportHandle.py`
-- Modify: `main/xuanwu-device-server/core/providers/memory/mem_local_short/mem_local_short.py`
+- Modify: `main/xuanwu-device-gateway/config/xuanwu_management_client.py`
+- Modify: `main/xuanwu-device-gateway/core/handle/reportHandle.py`
+- Modify: `main/xuanwu-device-gateway/core/providers/memory/mem_local_short/mem_local_short.py`
 - Modify: `main/xuanwu-management-server/tests/test_local_control_plane.py`
 - Modify: `main/xuanwu-management-server/tests/test_http_routes.py`
 
@@ -45,11 +45,11 @@
 ### Task 3: Retire remaining legacy control-message and runtime compatibility branches
 
 **Files:**
-- Modify: `main/xuanwu-device-server/core/connection.py`
-- Modify: `main/xuanwu-device-server/core/http_server.py`
-- Modify: `main/xuanwu-device-server/core/handle/textHandler/serverMessageHandler.py`
-- Modify: `main/xuanwu-device-server/tests/test_runtime_http_routes.py`
-- Modify: `main/xuanwu-device-server/tests/test_local_control_plane.py`
+- Modify: `main/xuanwu-device-gateway/core/connection.py`
+- Modify: `main/xuanwu-device-gateway/core/http_server.py`
+- Modify: `main/xuanwu-device-gateway/core/handle/textHandler/serverMessageHandler.py`
+- Modify: `main/xuanwu-device-gateway/tests/test_runtime_http_routes.py`
+- Modify: `main/xuanwu-device-gateway/tests/test_local_control_plane.py`
 
 - [ ] **Step 1: Write failing tests that assert runtime code no longer depends on manager-api compatibility toggles**
 - [ ] **Step 2: Run the targeted tests and verify they fail**
@@ -60,7 +60,7 @@
 ### Task 4: Remove legacy deployment leftovers and capture XuanWu-side requirements
 
 **Files:**
-- Modify: `main/xuanwu-device-server/docker-compose_all.yml`
+- Modify: `main/xuanwu-device-gateway/docker-compose_all.yml`
 - Modify: `docker-setup.sh`
 - Modify: `main/README.md`
 - Modify: `main/README_en.md`

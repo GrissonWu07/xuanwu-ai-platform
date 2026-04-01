@@ -18,7 +18,7 @@
 - 每种设备应该如何被建模
 - 每种设备支持什么协议类型
 - 网关应该如何配置
-- `xuanwu-device-server`、`xuanwu-management-server`、`XuanWu`、`xuanwu-gateway` 各自负责什么
+- `xuanwu-device-gateway`、`xuanwu-management-server`、`XuanWu`、`xuanwu-iot-gateway` 各自负责什么
 - 设备注册、设备管理、设备调用、事件与遥测分别归谁负责
 
 ## 2. 总体结论
@@ -60,12 +60,12 @@
   - 不允许每个接入方式各自维护一套事件口径
 - 网关与适配层
   - 作为独立模块实现
-  - 固定命名为 `xuanwu-gateway`
+  - 固定命名为 `xuanwu-iot-gateway`
   - 不再作为 `xuanwu-management-server` 的临时内嵌逻辑存在
 
 ## 3. 目标分层架构
 
-### 3.1 `xuanwu-device-server`
+### 3.1 `xuanwu-device-gateway`
 
 职责：
 
@@ -131,7 +131,7 @@
 - `XuanWu` 通过能力模型、设备引用、网关引用来调用设备
 - `XuanWu` 不能绕过 `xuanwu-management-server` 自建一套设备目录
 
-### 3.4 `xuanwu-gateway`
+### 3.4 `xuanwu-iot-gateway`
 
 职责：
 
@@ -144,11 +144,11 @@
 
 固定要求：
 
-- `xuanwu-gateway` 是独立模块
-- `xuanwu-gateway` 可以独立部署、水平扩展、按协议分片部署
-- 所有协议适配器、网关、桥接器都应收敛到 `xuanwu-gateway`
-- `xuanwu-management-server` 负责管理 `xuanwu-gateway` 的配置与元数据
-- `XuanWu` 负责通过标准能力调用接口使用 `xuanwu-gateway`
+- `xuanwu-iot-gateway` 是独立模块
+- `xuanwu-iot-gateway` 可以独立部署、水平扩展、按协议分片部署
+- 所有协议适配器、网关、桥接器都应收敛到 `xuanwu-iot-gateway`
+- `xuanwu-management-server` 负责管理 `xuanwu-iot-gateway` 的配置与元数据
+- `XuanWu` 负责通过标准能力调用接口使用 `xuanwu-iot-gateway`
 
 ### 3.5 分布式要求
 
@@ -156,7 +156,7 @@
 
 最小分布式拓扑：
 
-- `xuanwu-device-server`
+- `xuanwu-device-gateway`
   - 多实例横向扩展
   - 按会话或接入区域分片
 - `xuanwu-management-server`
@@ -165,7 +165,7 @@
 - `XuanWu`
   - 多实例部署
   - 共享 Agent 真源与编排能力
-- `xuanwu-gateway`
+- `xuanwu-iot-gateway`
   - 按协议类型分布式部署
   - 按站点、协议、区域独立扩展
 
@@ -312,7 +312,7 @@
 
 - 本 Spec 将这些协议列为目标能力
 - 不代表当前仓库已完整实现
-- 后续由独立模块 `xuanwu-gateway` 统一纳管
+- 后续由独立模块 `xuanwu-iot-gateway` 统一纳管
 
 ## 6. 网关架构规范
 
@@ -346,8 +346,8 @@
 必要时：
 
 - `xuanwu-management-server` 再把可用能力目录和设备元数据暴露给 `XuanWu`
-- `XuanWu` 通过标准设备调用接口实际驱动 `xuanwu-gateway`
-- `xuanwu-device-server` 只处理会话运行时，不直接成为通用南向网关宿主
+- `XuanWu` 通过标准设备调用接口实际驱动 `xuanwu-iot-gateway`
+- `xuanwu-device-gateway` 只处理会话运行时，不直接成为通用南向网关宿主
 
 ### 6.4 网关调用责任链
 
@@ -356,8 +356,8 @@
 1. 设备注册、设备能力定义、设备归属、设备分组在 `xuanwu-management-server`
 2. `xuanwu-management-server` 把设备引用、能力引用、网关路由暴露给 `XuanWu`
 3. `XuanWu` 在 Agent 推理和编排阶段决定是否调用设备
-4. `XuanWu` 通过标准接口调用 `xuanwu-gateway`
-5. `xuanwu-gateway` 完成协议转换并驱动实际设备
+4. `XuanWu` 通过标准接口调用 `xuanwu-iot-gateway`
+5. `xuanwu-iot-gateway` 完成协议转换并驱动实际设备
 6. 设备状态、执行结果、遥测和事件再统一回流到 `xuanwu-management-server`
 
 ## 7. 每类设备的接入与网关策略
@@ -725,13 +725,13 @@ trace_id: trace-002
 
 ## 9. 目录与模块规范
 
-`xuanwu-gateway` 必须采用分类型、分设备、分协议的目录布局。
+`xuanwu-iot-gateway` 必须采用分类型、分设备、分协议的目录布局。
 
 目标目录形态：
 
 ```text
 main/
-  xuanwu-gateway/
+  xuanwu-iot-gateway/
     core/
       models/
       contracts/
@@ -774,10 +774,10 @@ main/
 
 1. 设备通过 OTA 请求基础配置
 2. `xuanwu-management-server` 返回设备可用配置
-3. 设备连接 `xuanwu-device-server`
-4. `xuanwu-device-server` 调 `xuanwu-management-server` 解析运行配置与关系映射
+3. 设备连接 `xuanwu-device-gateway`
+4. `xuanwu-device-gateway` 调 `xuanwu-management-server` 解析运行配置与关系映射
 5. 管理面返回 `device + mapping + runtime_overrides`
-6. `xuanwu-device-server` 挂载会话到 `XuanWu` Agent
+6. `xuanwu-device-gateway` 挂载会话到 `XuanWu` Agent
 
 ### 10.2 执行型设备
 
@@ -785,14 +785,14 @@ main/
 2. 管理面维护 `user -> device`、`device -> gateway -> capability` 以及 `device -> agent` 关系
 3. 可选地再通过 `user -> channel -> device` 组织这些设备的控制入口
 4. `XuanWu` 中心 Agent 发出动作调用
-5. `XuanWu` 调用 `xuanwu-gateway`
-6. `xuanwu-gateway` 执行协议转换并驱动设备
+5. `XuanWu` 调用 `xuanwu-iot-gateway`
+6. `xuanwu-iot-gateway` 执行协议转换并驱动设备
 7. 执行结果统一回流到 `xuanwu-management-server`
 
 ### 10.3 传感器型设备
 
-1. 设备通过 `xuanwu-gateway` 上报 telemetry/event
-2. `xuanwu-gateway` 使用统一事件模型标准化消息
+1. 设备通过 `xuanwu-iot-gateway` 上报 telemetry/event
+2. `xuanwu-iot-gateway` 使用统一事件模型标准化消息
 3. `xuanwu-management-server` 统一入库、索引和发布事件
 4. 规则引擎、工作流或 `XuanWu` 消费事件
 5. 必要时由 `XuanWu` 再调用执行型设备
@@ -821,7 +821,7 @@ main/
 - 不直接成为设备注册真源
 - 不直接替代管理面和网关元数据层
 
-### 11.4 `xuanwu-gateway` 必须保持什么边界
+### 11.4 `xuanwu-iot-gateway` 必须保持什么边界
 
 - 作为独立协议与能力适配层
 - 不维护设备主档案真源
@@ -851,7 +851,7 @@ main/
 - 传感器型设备是事件源
 - `xuanwu-management-server` 是统一控制与治理平台
 - `XuanWu` 是中心认知与 Agent 平面
-- `xuanwu-gateway` 是统一南向协议与能力适配平台
+- `xuanwu-iot-gateway` 是统一南向协议与能力适配平台
 
 ## 13. 非目标
 

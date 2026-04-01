@@ -375,7 +375,7 @@ def test_control_plane_summary_generation_request_persists_payload():
             match_info={"summary_id": "sess-20260328-001"},
         )
         request._read_bytes = (
-            b'{"reason":"memory_rollup","requested_by":"xuanwu-device-server"}'
+            b'{"reason":"memory_rollup","requested_by":"xuanwu-device-gateway"}'
         )
 
         response = asyncio.run(handler.handle_generate_chat_summary(request))
@@ -385,7 +385,7 @@ def test_control_plane_summary_generation_request_persists_payload():
         assert payload["summary_id"] == "sess-20260328-001"
         summary_request = handler.store.get_summary_request("sess-20260328-001")
         assert summary_request["reason"] == "memory_rollup"
-        assert summary_request["requested_by"] == "xuanwu-device-server"
+        assert summary_request["requested_by"] == "xuanwu-device-gateway"
 
 
 def test_control_plane_create_user_and_channel_persists_payloads():

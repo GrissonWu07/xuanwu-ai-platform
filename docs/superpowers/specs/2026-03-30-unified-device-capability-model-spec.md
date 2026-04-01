@@ -9,7 +9,7 @@
 - 不同协议、不同设备、不同厂商都映射到统一能力模型
 - `XuanWu` 调用设备时不关心协议细节
 - `xuanwu-management-server` 可以统一管理设备能力
-- `xuanwu-gateway` 可以统一路由和执行
+- `xuanwu-iot-gateway` 可以统一路由和执行
 
 ## 2. 基本原则
 
@@ -320,7 +320,7 @@ mapping_profile: default-light-device
 
 - 只能调用标准能力代码
 - 不能直接构造厂商协议负载
-- 不能跳过 `xuanwu-gateway`
+- 不能跳过 `xuanwu-iot-gateway`
 - 不能绕过 `xuanwu-management-server` 的能力与路由视图
 
 ## 9. 配置校验规则
@@ -354,7 +354,7 @@ mapping_profile: default-light-device
 
 ## 11. 网关职责
 
-`xuanwu-gateway` 负责：
+`xuanwu-iot-gateway` 负责：
 
 - 把标准能力动作映射成协议动作
 - 把协议状态映射成标准属性
@@ -385,7 +385,7 @@ mapping_profile: default-light-device
 
 - `XuanWu` 会被迫理解各类协议细节
 - `xuanwu-management-server` 无法统一管理异构设备
-- `xuanwu-gateway` 无法形成可复用的标准适配框架
+- `xuanwu-iot-gateway` 无法形成可复用的标准适配框架
 
 有了这层：
 

@@ -4,7 +4,7 @@
 
 This document defines the standalone `xuanwu-bluetooth-bridge` service.
 
-The bridge exists to keep Bluetooth hardware access, device discovery, pairing, connection lifecycle, and BLE/GATT protocol handling outside the main `xuanwu-gateway` process while still exposing a stable API that `xuanwu-gateway` can call.
+The bridge exists to keep Bluetooth hardware access, device discovery, pairing, connection lifecycle, and BLE/GATT protocol handling outside the main `xuanwu-iot-gateway` process while still exposing a stable API that `xuanwu-iot-gateway` can call.
 
 ## Goal
 
@@ -12,7 +12,7 @@ The bridge exists to keep Bluetooth hardware access, device discovery, pairing, 
 
 - run as an independent service on common operating systems
 - manage local Bluetooth adapters and nearby Bluetooth devices
-- expose a stable HTTP API to `xuanwu-gateway`
+- expose a stable HTTP API to `xuanwu-iot-gateway`
 - normalize Bluetooth device metadata, connection state, characteristic reads/writes, and notifications
 - support production packaging as:
   - Linux RPM service
@@ -29,7 +29,7 @@ The bridge exists to keep Bluetooth hardware access, device discovery, pairing, 
 - GATT characteristic read
 - GATT characteristic write
 - notification subscription
-- event push back to `xuanwu-gateway`
+- event push back to `xuanwu-iot-gateway`
 - OS service packaging and deployment guidance
 
 ### Out of scope
@@ -59,7 +59,7 @@ Does not own:
 - gateway route truth
 - long-term telemetry/event truth
 
-### `xuanwu-gateway`
+### `xuanwu-iot-gateway`
 
 Owns:
 
@@ -69,7 +69,7 @@ Owns:
 - result normalization
 - event and telemetry forwarding to `xuanwu-management-server`
 
-`xuanwu-gateway` treats `xuanwu-bluetooth-bridge` as a local or remote execution dependency.
+`xuanwu-iot-gateway` treats `xuanwu-bluetooth-bridge` as a local or remote execution dependency.
 
 ## Deployment Modes
 
@@ -77,19 +77,19 @@ Owns:
 
 `xuanwu-bluetooth-bridge` runs on the host or edge node that has Bluetooth hardware access.
 
-`xuanwu-gateway` calls the bridge over HTTP.
+`xuanwu-iot-gateway` calls the bridge over HTTP.
 
 This is the default production model.
 
 ### Mode 2: same-host sidecar
 
-`xuanwu-bluetooth-bridge` runs on the same machine as `xuanwu-gateway` but still as a separate process or service.
+`xuanwu-bluetooth-bridge` runs on the same machine as `xuanwu-iot-gateway` but still as a separate process or service.
 
 This is acceptable for small installations and local development.
 
 ### Mode 3: embedded, deferred
 
-An embedded bridge mode inside `xuanwu-gateway` is explicitly deferred.
+An embedded bridge mode inside `xuanwu-iot-gateway` is explicitly deferred.
 
 This spec assumes standalone service boundaries only.
 
@@ -167,7 +167,7 @@ connections:
   idle_disconnect_seconds: 120
   max_active_devices: 50
 gateway:
-  callback_base_url: http://xuanwu-gateway:9510
+  callback_base_url: http://xuanwu-iot-gateway:9510
   callback_token: change-me
 platform:
   site_id: site-shanghai-01
@@ -176,7 +176,7 @@ platform:
 
 ## Northbound API
 
-All endpoints are intended for `xuanwu-gateway`.
+All endpoints are intended for `xuanwu-iot-gateway`.
 
 Base prefix:
 
@@ -262,11 +262,11 @@ Write request example:
 }
 ```
 
-## Callback Contract To xuanwu-gateway
+## Callback Contract To xuanwu-iot-gateway
 
-The bridge must support asynchronous callback to `xuanwu-gateway` for notifications and device events.
+The bridge must support asynchronous callback to `xuanwu-iot-gateway` for notifications and device events.
 
-Suggested callback endpoints in `xuanwu-gateway`:
+Suggested callback endpoints in `xuanwu-iot-gateway`:
 
 - `POST /gateway/v1/ingest/http-push`
 - `POST /gateway/v1/bridge/events`
@@ -295,10 +295,10 @@ Notification payload example:
 
 Instead:
 
-- `xuanwu-gateway` maps `capability_code` to a bridge route
+- `xuanwu-iot-gateway` maps `capability_code` to a bridge route
 - the bridge only executes the requested Bluetooth operation
 
-Example route payload from `xuanwu-gateway` to the bridge:
+Example route payload from `xuanwu-iot-gateway` to the bridge:
 
 ```json
 {
@@ -417,7 +417,7 @@ Completion requires:
 - Linux service packaging spec present
 - Windows service packaging spec present
 - health, scan, connect, read, write, subscribe APIs defined
-- callback contract to `xuanwu-gateway` defined
+- callback contract to `xuanwu-iot-gateway` defined
 - normalized error model defined
 - realistic integration test plan defined
 

@@ -56,8 +56,8 @@ In the full local Docker stack it is exposed as:
 Nginx forwards platform APIs to the local services:
 
 - `/control-plane` -> `xuanwu-management-server`
-- `/gateway` -> `xuanwu-gateway`
-- `/runtime` -> `xuanwu-device-server`
+- `/gateway` -> `xuanwu-iot-gateway`
+- `/runtime` -> `xuanwu-device-gateway`
 - `/jobs` -> `xuanwu-jobs`
 
 The portal container injects `X-Xuanwu-Control-Secret` into proxied API requests

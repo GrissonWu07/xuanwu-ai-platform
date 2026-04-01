@@ -2,14 +2,14 @@
 
 `xuanwu-bluetooth-bridge` is the standalone Bluetooth bridge service for the local XuanWu platform stack.
 
-It isolates host Bluetooth integration from `xuanwu-gateway` while exposing a stable HTTP API for:
+It isolates host Bluetooth integration from `xuanwu-iot-gateway` while exposing a stable HTTP API for:
 
 - adapter health
 - device discovery
 - connect/disconnect lifecycle
 - GATT characteristic read/write
 - notification subscription
-- callback into `xuanwu-gateway`
+- callback into `xuanwu-iot-gateway`
 
 ## Implemented APIs
 

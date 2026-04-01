@@ -1,6 +1,6 @@
 [![Banners](docs/images/banner1.png)](https://github.com/GrissonWu07/ai-assist-deviceserver)
 
-<h1 align="center">Dịch vụ Backend Xuanwu xuanwu-device-server</h1>
+<h1 align="center">Dịch vụ Backend Xuanwu xuanwu-device-gateway</h1>
 
 <p align="center">
 Dự án này dựa trên lý thuyết và công nghệ trí tuệ cộng sinh người-máy để phát triển hệ thống phần mềm và phần cứng thiết bị đầu cuối thông minh<br/>Cung cấp dịch vụ backend cho dự án phần cứng thông minh mã nguồn mở
@@ -225,8 +225,8 @@ Dự án này cung cấp các công cụ kiểm tra sau để giúp bạn xác m
 
 | Tên công cụ | Vị trí | Phương pháp sử dụng | Mô tả chức năng |
 |:---:|:---|:---:|:---:|
-| Công cụ kiểm tra tương tác âm thanh | main》xuanwu-device-server》test》test_page.html | Mở trực tiếp bằng trình duyệt Google Chrome | Kiểm tra chức năng phát và nhận âm thanh, xác minh xử lý âm thanh phía Python có bình thường không |
-| Công cụ kiểm tra phản hồi mô hình | main》xuanwu-device-server》performance_tester.py | Thực hiện `python performance_tester.py` | Kiểm tra tốc độ phản hồi của ba module cốt lõi ASR(Nhận dạng giọng nói), LLM(Mô hình lớn), VLLM(Mô hình thị giác), TTS(Tổng hợp giọng nói) |
+| Công cụ kiểm tra tương tác âm thanh | main》xuanwu-device-gateway》test》test_page.html | Mở trực tiếp bằng trình duyệt Google Chrome | Kiểm tra chức năng phát và nhận âm thanh, xác minh xử lý âm thanh phía Python có bình thường không |
+| Công cụ kiểm tra phản hồi mô hình | main》xuanwu-device-gateway》performance_tester.py | Thực hiện `python performance_tester.py` | Kiểm tra tốc độ phản hồi của ba module cốt lõi ASR(Nhận dạng giọng nói), LLM(Mô hình lớn), VLLM(Mô hình thị giác), TTS(Tổng hợp giọng nói) |
 
 > 💡 Gợi ý: Khi kiểm tra tốc độ mô hình, chỉ kiểm tra các mô hình đã cấu hình khóa.
 
