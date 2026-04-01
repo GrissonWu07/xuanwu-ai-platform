@@ -121,18 +121,34 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    Portal["xuanwu-portal"]
-    Mgmt["xuanwu-management-server"]
-    Jobs["xuanwu-jobs"]
-    Device["xuanwu-device-gateway"]
-    IoT["xuanwu-iot-gateway"]
-    BT["xuanwu-bluetooth-bridge"]
-    NL["xuanwu-nearlink-bridge"]
-    XW["XuanWu"]
+    subgraph UX["统一运营入口"]
+        Portal["xuanwu-portal"]
+    end
 
-    Conv["会话型设备"]
-    IotDev["IoT / 工业设备"]
-    Wireless["蓝牙 / 星闪设备"]
+    subgraph Control["控制面与调度面"]
+        Mgmt["xuanwu-management-server"]
+        Jobs["xuanwu-jobs"]
+    end
+
+    subgraph Ingress["设备接入与执行面"]
+        Device["xuanwu-device-gateway"]
+        IoT["xuanwu-iot-gateway"]
+    end
+
+    subgraph Bridge["无线桥接面"]
+        BT["xuanwu-bluetooth-bridge"]
+        NL["xuanwu-nearlink-bridge"]
+    end
+
+    subgraph World["设备世界"]
+        Conv["会话型设备"]
+        IotDev["IoT / 工业设备"]
+        Wireless["蓝牙 / 星闪设备"]
+    end
+
+    subgraph AgentLayer["智能体域"]
+        XW["XuanWu"]
+    end
 
     Portal --> Mgmt
     Portal --> Jobs
@@ -153,6 +169,20 @@ flowchart TB
     IoT --> Mgmt
     Mgmt --> XW
     XW --> IoT
+
+    classDef ux fill:#f7edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
+    classDef control fill:#edf6ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
+    classDef ingress fill:#edf9f2,stroke:#2f9b62,color:#17452c,stroke-width:1.5px;
+    classDef bridge fill:#fff7e8,stroke:#d98b2b,color:#5f3a08,stroke-width:1.5px;
+    classDef world fill:#f5f6fa,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
+    classDef agent fill:#fff0f5,stroke:#d4577f,color:#5b1830,stroke-width:1.5px;
+
+    class Portal ux;
+    class Mgmt,Jobs control;
+    class Device,IoT ingress;
+    class BT,NL bridge;
+    class Conv,IotDev,Wireless world;
+    class XW agent;
 ```
 
 ## 服务组成
