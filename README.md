@@ -2,80 +2,50 @@
 
 [English](./README_en.md) | [Deutsch](./README_de.md) | [Português (Brasil)](./README_pt_BR.md) | [Tiếng Việt](./README_vi.md)
 
-玄武AI智能设备平台，是一套面向智能终端、IoT 设备、工业设备与无线边缘设备的统一平台底座。它不是某一个设备后端的简单集合，而是围绕“设备接入、设备管理、设备执行、任务调度、统一运营入口、智能体协同”建立起来的平台体系。这个仓库承接的是本地平台层，目标是把复杂的设备世界收敛成清晰、统一、可扩展的服务边界。
+玄武AI智能设备平台，是一套围绕 `XuanWu AI Agent` 构建的智能设备平台。它的目标，不只是把设备连上来，而是让智能代理真正理解人的意图、协调不同设备、调度不同网关，并把原本零散的设备能力，组织成一个可以感知、决策、执行和运营的统一系统。这个仓库承接的是本地平台层，负责把复杂的设备世界收敛成清晰、统一、可扩展的服务边界。
 
 ## 平台愿景图
 
 ```mermaid
-flowchart TB
-    subgraph UX["统一运营入口"]
-        Portal["xuanwu-portal"]
-    end
+flowchart LR
+    User["用户的目标"]
+    Agent["XuanWu AI Agent"]
+    Platform["玄武AI平台"]
+    Devices["设备世界"]
+    Ops["持续运营"]
 
-    subgraph Control["控制面与调度面"]
-        Mgmt["xuanwu-management-server"]
-        Jobs["xuanwu-jobs"]
-    end
+    User -->|"表达需求"| Agent
+    Agent -->|"理解、规划、编排"| Platform
+    Platform -->|"接入、管理、执行、调度"| Devices
+    Devices -->|"状态、事件、遥测、结果"| Platform
+    Platform -->|"运营、观测、治理"| Ops
+    Ops -->|"持续优化"| Agent
 
-    subgraph Ingress["设备接入与执行面"]
-        Device["xuanwu-device-gateway"]
-        IoT["xuanwu-iot-gateway"]
-        BT["xuanwu-bluetooth-bridge"]
-        NL["xuanwu-nearlink-bridge"]
-    end
+    classDef user fill:#fff4e8,stroke:#d98b2b,color:#5f3a08,stroke-width:1.5px;
+    classDef agent fill:#f4edff,stroke:#8b5ad9,color:#43236e,stroke-width:1.5px;
+    classDef platform fill:#edf6ff,stroke:#3a74e8,color:#17355e,stroke-width:1.5px;
+    classDef devices fill:#edf9f2,stroke:#2f9b62,color:#17452c,stroke-width:1.5px;
+    classDef ops fill:#f5f6fa,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
 
-    subgraph Devices["设备世界"]
-        Conv["会话型设备"]
-        IoTDev["IoT / 工业设备"]
-        Wireless["蓝牙 / 星闪设备"]
-    end
-
-    subgraph Agent["智能体域"]
-        XW["XuanWu"]
-    end
-
-    subgraph Truth["统一平台真源"]
-        Domain["用户 / 设备 / 通道 / 映射 / 遥测 / 事件 / 告警 / Jobs"]
-    end
-
-    Portal --> Mgmt
-    Portal --> Jobs
-
-    Jobs --> Mgmt
-    Jobs --> Device
-    Jobs --> IoT
-
-    Conv --> Device
-    IoTDev --> IoT
-    Wireless --> BT
-    Wireless --> NL
-    BT --> IoT
-    NL --> IoT
-
-    Device --> Mgmt
-    IoT --> Mgmt
-    Mgmt --> Domain
-    Mgmt --> XW
-    XW --> IoT
-
-    classDef ux fill:#f8f5ff,stroke:#7c58d6,color:#221a3b,stroke-width:1.5px;
-    classDef control fill:#eef7ff,stroke:#2f6fed,color:#16315f,stroke-width:1.5px;
-    classDef ingress fill:#eefaf3,stroke:#2e9b62,color:#163f2a,stroke-width:1.5px;
-    classDef devices fill:#fff8eb,stroke:#c68a1f,color:#5b3a06,stroke-width:1.5px;
-    classDef agent fill:#fff0f3,stroke:#d4577f,color:#5b1830,stroke-width:1.5px;
-    classDef truth fill:#f6f7fb,stroke:#6b7280,color:#1f2937,stroke-width:1.5px;
-
-    class Portal ux;
-    class Mgmt,Jobs control;
-    class Device,IoT,BT,NL ingress;
-    class Conv,IoTDev,Wireless devices;
-    class XW agent;
-    class Domain truth;
+    class User user;
+    class Agent agent;
+    class Platform platform;
+    class Devices devices;
+    class Ops ops;
 ```
 
 ## 项目是什么
 
-这个项目是玄武设备生态中的本地平台层。它负责把不同类型的设备、不同协议的接入能力、统一设备管理、统一运营入口以及调度编排能力，收敛到一套一致的架构里。你可以把它理解成一套设备平台基础设施：
+这个项目是玄武设备生态中的本地平台层。它真正要解决的问题，不是“设备怎么连上来”这么简单，而是“设备接入之后，怎样让 XuanWu AI Agent 持续地产生价值”。
+
+`XuanWu AI Agent` 最大的价值，在于把用户的语言、目标和上下文，转成对设备世界真正有意义的行动：
+
+- 理解用户到底想完成什么，而不是只识别一条命令
+- 协调多个设备、多个通道、多个网关去完成同一个目标
+- 结合知识、Workflow、Model 和规则做持续决策
+- 让设备从“被动响应”变成“可编排、可协同、可运营”的系统能力
+
+而这个仓库的角色，就是为这种智能代理能力提供坚实的平台基础。它负责把不同类型的设备、不同协议的接入能力、统一设备管理、统一运营入口以及调度编排能力，收敛到一套一致的架构里。你可以把它理解成一套设备平台基础设施：
 
 - 用 `xuanwu-device-gateway` 承接会话型设备与运行时终端
 - 用 `xuanwu-iot-gateway` 承接 IoT、工业与无线桥接设备
