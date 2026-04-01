@@ -32,7 +32,7 @@
 - 一台已安装 Docker 和 Docker Compose Plugin 的 Linux 主机，或支持 Docker 的开发机
 - 本仓库源码
 - `SenseVoiceSmall` 的 `model.pt`
-- 一个可选但推荐的 `deploy/data/.config.yaml`
+- 一个可选但推荐的 `deploy/data/device-gateway/.config.yaml`
 - 一个可访问的 `XuanWu` 上游地址
 - 根目录 `.env`
 
@@ -57,7 +57,7 @@ deploy/
 其中：
 
 - 根目录 `docker-compose.yml` 是唯一推荐的部署入口
-- `deploy/data` 存放本地覆盖配置和运行时落盘数据
+- `deploy/data/device-gateway` 存放 `xuanwu-device-gateway` 的本地覆盖配置和运行时落盘数据
 - `deploy/models/SenseVoiceSmall/model.pt` 存放本地模型文件
 
 这层包装不会改变服务内部代码结构，只是把“用户如何部署”统一到了仓库根目录。
@@ -69,6 +69,7 @@ deploy/
 ```text
 deploy/
 ├─ data
+│  └─ device-gateway
 └─ models
    └─ SenseVoiceSmall
       └─ model.pt
@@ -77,7 +78,7 @@ deploy/
 创建目录：
 
 ```bash
-mkdir -p deploy/data
+mkdir -p deploy/data/device-gateway
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 
@@ -119,7 +120,7 @@ XUANWU_CONTROL_PLANE_SECRET=你的-control-plane-secret
 如果你需要做本地覆盖，请创建：
 
 ```text
-deploy/data/.config.yaml
+deploy/data/device-gateway/.config.yaml
 ```
 
 当前 `xuanwu-device-gateway` 的配置加载顺序是：
@@ -128,10 +129,16 @@ deploy/data/.config.yaml
 2. 容器内 `/opt/xuanwu-device-gateway/data/.config.yaml`
 3. 环境变量覆盖
 
-在根目录部署模式下，`deploy/data/.config.yaml` 会通过 Docker 挂载映射到：
+在根目录部署模式下，`deploy/data/device-gateway/.config.yaml` 会通过 Docker 挂载映射到：
 
 ```text
 /opt/xuanwu-device-gateway/data/.config.yaml
+```
+
+`xuanwu-device-gateway` 运行期间产生的本地短期记忆也会写回宿主机：
+
+```text
+deploy/data/device-gateway/.memory.yaml
 ```
 
 所以你不需要再复制：
@@ -140,7 +147,7 @@ deploy/data/.config.yaml
 
 也不需要再进入服务目录操作。
 
-如果你只想先把整套平台拉起来做联通验证，`deploy/data/.config.yaml` 可以先留空文件。
+如果你只想先把整套平台拉起来做联通验证，`deploy/data/device-gateway/.config.yaml` 可以先留空文件。
 
 如果暂时没有 `XuanWu`，本地平台层大部分服务仍然可以启动，但以下能力会受影响：
 
@@ -208,7 +215,7 @@ docker logs -f xuanwu-portal
 最常见原因是：
 
 - `deploy/models/SenseVoiceSmall/model.pt` 不存在
-- `deploy/data/.config.yaml` 里有错误配置
+- `deploy/data/device-gateway/.config.yaml` 里有错误配置
 - 挂载目录权限不正确
 
 ### 3. 为什么 `xuanwu-portal` 能打开，但部分页面没有数据

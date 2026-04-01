@@ -32,13 +32,13 @@ cd xuanwu-ai-platform
 当前仓库已经把部署入口提到了仓库根目录。你只需要准备：
 
 ```bash
-mkdir -p deploy/data
+mkdir -p deploy/data/device-gateway
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 
 这两个目录的用途分别是：
 
-- `deploy/data`：本地覆盖配置、运行时落盘数据
+- `deploy/data/device-gateway`：`xuanwu-device-gateway` 的本地覆盖配置和运行时落盘数据
 - `deploy/models/SenseVoiceSmall`：会话设备网关需要的本地模型文件
 
 ### 3. 下载模型文件
@@ -80,7 +80,7 @@ XUANWU_BASE_URL=http://你的-xuanwu-地址
 如果你需要覆盖默认配置，请在根目录创建：
 
 ```text
-deploy/data/.config.yaml
+deploy/data/device-gateway/.config.yaml
 ```
 
 这一步是可选的。
@@ -88,10 +88,12 @@ deploy/data/.config.yaml
 当前设计里：
 
 - 服务默认配置仍然在各自服务目录中维护
-- 根目录的 `deploy/data/.config.yaml` 通过 Docker 挂载映射到 `xuanwu-device-gateway`
+- 根目录的 `deploy/data/device-gateway/.config.yaml` 会映射到容器内 `data/.config.yaml`
 - 这样你不需要直接修改服务内默认配置文件
+- `xuanwu-device-gateway` 产生的本地短期记忆也会落到宿主机：
+  - `deploy/data/device-gateway/.memory.yaml`
 
-如果你只是先把整套平台拉起来做联通验证，`deploy/data/.config.yaml` 可以先留空文件。
+如果你只是先把整套平台拉起来做联通验证，`deploy/data/device-gateway/.config.yaml` 可以先留空文件。
 
 ### 6. 启动
 

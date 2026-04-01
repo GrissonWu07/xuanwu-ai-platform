@@ -44,7 +44,7 @@ services:
       - XUANWU_MANAGEMENT_SERVER_SECRET=${XUANWU_MANAGEMENT_SERVER_AUTH_KEY:-xuanwu-management-local-secret}
       - XUANWU_MANAGEMENT_SERVER_ENABLED=true
     volumes:
-      - ./deploy/data:/opt/xuanwu-device-gateway/data
+      - ./deploy/data/device-gateway:/opt/xuanwu-device-gateway/data
       - ./deploy/models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt
     depends_on:
       - xuanwu-management-server

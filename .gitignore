@@ -151,6 +151,9 @@ tmp
 .DS_Store
 main/xuanwu-device-gateway/data
 deploy/data/
+!deploy/data/
+!deploy/data/device-gateway/
+!deploy/data/device-gateway/.gitkeep
 
 main/manager-web/node_modules
 main/xuanwu-portal/node_modules/

@@ -3,7 +3,7 @@
 set -eu
 
 PROJECT_ROOT="/opt/xuanwu-ai-platform"
-DATA_DIR="$PROJECT_ROOT/deploy/data"
+DATA_DIR="$PROJECT_ROOT/deploy/data/device-gateway"
 MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
 COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"
