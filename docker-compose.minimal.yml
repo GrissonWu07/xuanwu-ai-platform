@@ -20,8 +20,6 @@ services:
     restart: always
     networks:
       - default
-    ports:
-      - "15432:5432"
     environment:
       - POSTGRES_DB=${XUANWU_PG_DB:-xuanwu_platform}
       - POSTGRES_USER=${XUANWU_PG_USER:-xuanwu}

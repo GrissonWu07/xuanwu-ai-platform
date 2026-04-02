@@ -40,6 +40,7 @@ def test_minimal_compose_exists_for_device_and_management_validation() -> None:
         "mosquitto:",
     ]:
         assert excluded_service not in content
+    assert '"15432:5432"' not in content
 
 
 def test_root_compose_uses_root_deploy_mounts() -> None:
@@ -62,6 +63,7 @@ def test_root_compose_uses_root_deploy_mounts() -> None:
     assert "XUANWU_PG_DB=" in content
     assert "XUANWU_MGMT_PG_SCHEMA=" in content
     assert "XUANWU_IOT_PG_SCHEMA=" in content
+    assert '"15432:5432"' not in content
 
 
 def test_root_setup_script_bootstraps_repo_root() -> None:
@@ -103,6 +105,11 @@ def test_deployment_docs_mention_minimal_validation_stack() -> None:
         assert "docker-compose.minimal.yml" in text
         assert "xuanwu-management-server" in text
         assert "xuanwu-device-gateway" in text
+        assert "18081" in text
+        assert "8000" in text
+        assert "8003" in text
+        assert "1883" in text
+        assert "15432" not in text
 
 
 def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:

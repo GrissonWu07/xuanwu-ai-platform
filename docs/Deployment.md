@@ -247,6 +247,23 @@ docker logs -f xuanwu-portal
 - `deploy/logs/iot-gateway/iot-gateway.log`
 - `deploy/logs/jobs/jobs.log`
 
+## 端口开放建议
+
+默认全模块部署中，如果你需要对外开放端口，推荐只开放：
+
+- `18081`：`xuanwu-portal`
+- `8000`：`xuanwu-device-gateway` WebSocket
+- `8003`：`xuanwu-device-gateway` OTA / runtime HTTP / vision explain
+- `1883`：`mosquitto`，仅在需要 MQTT 设备接入时开放
+
+这些端口更适合只在容器网络或内网中使用：
+
+- `18082`：`xuanwu-management-server`
+- `18083`：`xuanwu-jobs`
+- `18084`：`xuanwu-iot-gateway`
+
+PostgreSQL 只在 Docker 内部网络中使用，不再映射宿主机端口。
+
 ## 默认端口
 
 默认会暴露这些入口：

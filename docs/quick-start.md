@@ -186,6 +186,23 @@ docker logs -f xuanwu-jobs
 - `deploy/logs/iot-gateway/iot-gateway.log`
 - `deploy/logs/jobs/jobs.log`
 
+## 端口开放建议
+
+如果你需要对外开放端口，当前推荐只开放：
+
+- `18081`：给用户访问 `xuanwu-portal`
+- `8000`：给设备接入 `xuanwu-device-gateway` WebSocket
+- `8003`：给设备使用 OTA / runtime HTTP / vision explain
+- `1883`：仅在需要 MQTT 设备接入时开放给 `mosquitto`
+
+以下端口不建议直接对公网开放：
+
+- `18082`：`xuanwu-management-server`
+- `18083`：`xuanwu-jobs`
+- `18084`：`xuanwu-iot-gateway`
+
+PostgreSQL 现在只在 Docker 内部网络中使用，不再映射宿主机端口。
+
 ## 默认入口
 
 - `xuanwu-portal`: `http://127.0.0.1:18081`
