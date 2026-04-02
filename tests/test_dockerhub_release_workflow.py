@@ -14,12 +14,14 @@ def test_dockerhub_release_workflow_contract() -> None:
     text = workflow.read_text(encoding="utf-8")
 
     assert "docker/login-action" in text
+    assert "DOCKERHUB_NAMESPACE: xuanwu" in text
     assert "DOCKERHUB_USERNAME" in text
     assert "DOCKERHUB_TOKEN" in text
     assert "workflow_dispatch:" in text
     assert "push:" in text
     assert "main" in text
     assert 'v*.*.*' in text or '"v*.*.*"' in text
+    assert "images: ${{ env.DOCKERHUB_NAMESPACE }}/${{ matrix.image }}" in text
     assert "xuanwu-portal" in text
     assert "xuanwu-device-gateway" in text
     assert "xuanwu-management-server" in text

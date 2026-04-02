@@ -322,18 +322,20 @@ flowchart TB
 
 - `v0.7.1`
 
-发布的镜像包括：
+发布的镜像统一进入固定的 Docker Hub 命名空间 `xuanwu`：
 
-- `${DOCKERHUB_USERNAME}/xuanwu-portal`
-- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
-- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+- `xuanwu/xuanwu-portal`
+- `xuanwu/xuanwu-device-gateway`
+- `xuanwu/xuanwu-management-server`
+- `xuanwu/xuanwu-iot-gateway`
+- `xuanwu/xuanwu-jobs`
 
 GitHub 仓库需要配置的 secrets：
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+其中 `DOCKERHUB_USERNAME` 只用于登录 Docker Hub，不再决定镜像仓库前缀。
 
 发布规则：
 

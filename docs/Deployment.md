@@ -349,16 +349,20 @@ docker compose up -d --build
 
 发布镜像：
 
-- `${DOCKERHUB_USERNAME}/xuanwu-portal`
-- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
-- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+- `xuanwu/xuanwu-portal`
+- `xuanwu/xuanwu-device-gateway`
+- `xuanwu/xuanwu-management-server`
+- `xuanwu/xuanwu-iot-gateway`
+- `xuanwu/xuanwu-jobs`
 
 你需要在 GitHub 仓库里配置：
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+说明：
+- `DOCKERHUB_USERNAME` 只用于登录 Docker Hub
+- 发布目标固定为 `xuanwu/<service>`
 
 工作流触发规则：
 

@@ -322,18 +322,20 @@ The first public version tag is:
 
 - `v0.7.1`
 
-The release workflow publishes these images:
+The release workflow publishes these images under the fixed Docker Hub namespace `xuanwu`:
 
-- `${DOCKERHUB_USERNAME}/xuanwu-portal`
-- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
-- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+- `xuanwu/xuanwu-portal`
+- `xuanwu/xuanwu-device-gateway`
+- `xuanwu/xuanwu-management-server`
+- `xuanwu/xuanwu-iot-gateway`
+- `xuanwu/xuanwu-jobs`
 
 Required GitHub repository secrets:
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+`DOCKERHUB_USERNAME` is used only for Docker Hub login. It no longer changes the published repository path.
 
 Publishing behavior:
 

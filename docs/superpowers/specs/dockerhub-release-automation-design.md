@@ -20,18 +20,20 @@ It does not attempt to publish infrastructure images such as PostgreSQL or Mosqu
 
 The target registry is Docker Hub.
 
-Each service is published as an independent repository under the Docker Hub namespace configured by the GitHub Actions secret `DOCKERHUB_USERNAME`:
+Each service is published as an independent repository under the fixed Docker Hub namespace `xuanwu`:
 
-- `${DOCKERHUB_USERNAME}/xuanwu-portal`
-- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
-- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
-- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+- `xuanwu/xuanwu-portal`
+- `xuanwu/xuanwu-device-gateway`
+- `xuanwu/xuanwu-management-server`
+- `xuanwu/xuanwu-iot-gateway`
+- `xuanwu/xuanwu-jobs`
 
 Authentication uses:
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+`DOCKERHUB_USERNAME` is used only for authentication. It must have permission to push into the `xuanwu` namespace, but it does not control the published image path.
 
 ## Tag Strategy
 
