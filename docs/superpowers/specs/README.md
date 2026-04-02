@@ -47,8 +47,9 @@ Current implementation status:
 ### Upstream contracts
 
 21. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
-22. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
-23. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+22. [XuanWu AI Agent API Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/xuanwu-ai-agent-api-spec.md)
+23. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
+24. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
 
 ## What To Read For Current Delivery
 
