@@ -6,7 +6,7 @@ The unified intelligent device platform for `XuanWu AI Agent`
 
 Make the intelligent agent do more than understand intent: connect devices, coordinate gateways, schedule jobs, and support continuous operations.
 
-[简体中文](./README.md)
+[简体中文](./README_zh.md)
 
 </div>
 
