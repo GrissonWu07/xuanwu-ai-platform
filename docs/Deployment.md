@@ -12,6 +12,18 @@
 - `mosquitto`
 - `postgres`
 
+如果你只想验证当前最小闭环，也可以使用：
+
+```bash
+docker compose -f docker-compose.minimal.yml up -d
+```
+
+这条最小验证栈只拉起：
+
+- `postgres`
+- `xuanwu-management-server`
+- `xuanwu-device-gateway`
+
 注意：
 
 - 这套 Compose 启动的是本仓库内的本地平台层，不包含 `XuanWu` 本体。
@@ -200,6 +212,12 @@ deploy/data/device-gateway/.memory.yaml
 
 ```bash
 docker compose up -d
+```
+
+如果只做最小验证：
+
+```bash
+docker compose -f docker-compose.minimal.yml up -d
 ```
 
 查看容器状态：

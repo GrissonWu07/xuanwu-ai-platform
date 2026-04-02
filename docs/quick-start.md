@@ -8,6 +8,10 @@
 
 - 全模块 Docker 部署
 
+如果你只是验证当前最小闭环，也可以使用：
+
+- 最小验证栈：`docker compose -f docker-compose.minimal.yml up -d`
+
 ## 默认持久化
 
 当前根目录部署默认会一起启动 PostgreSQL，并作为平台主持久化层：
@@ -147,6 +151,12 @@ deploy/data/device-gateway/.config.yaml
 
 ```bash
 docker compose up -d
+```
+
+如果你只想验证 `xuanwu-management-server + xuanwu-device-gateway`，不拉起 `xuanwu-iot-gateway` 和 `xuanwu-jobs`，可以改用：
+
+```bash
+docker compose -f docker-compose.minimal.yml up -d
 ```
 
 ### 7. 验证

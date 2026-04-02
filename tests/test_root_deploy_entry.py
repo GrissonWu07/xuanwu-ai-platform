@@ -21,6 +21,27 @@ def test_root_compose_exists_and_hosts_platform_stack() -> None:
         assert service_name in content
 
 
+def test_minimal_compose_exists_for_device_and_management_validation() -> None:
+    compose_file = ROOT / "docker-compose.minimal.yml"
+    assert compose_file.exists()
+
+    content = compose_file.read_text(encoding="utf-8")
+    for service_name in [
+        "postgres:",
+        "xuanwu-management-server:",
+        "xuanwu-device-gateway:",
+    ]:
+        assert service_name in content
+
+    for excluded_service in [
+        "xuanwu-portal:",
+        "xuanwu-jobs:",
+        "xuanwu-iot-gateway:",
+        "mosquitto:",
+    ]:
+        assert excluded_service not in content
+
+
 def test_root_compose_uses_root_deploy_mounts() -> None:
     compose_file = ROOT / "docker-compose.yml"
     content = compose_file.read_text(encoding="utf-8")
@@ -74,6 +95,14 @@ def test_root_env_example_exposes_xuanwu_endpoint() -> None:
     assert "XUANWU_PG_DB=" in env_example
     assert "XUANWU_MGMT_PG_SCHEMA=xw_mgmt" in env_example
     assert "XUANWU_IOT_PG_SCHEMA=xw_iot" in env_example
+
+
+def test_deployment_docs_mention_minimal_validation_stack() -> None:
+    for relative_path in ("docs/quick-start.md", "docs/Deployment.md"):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "docker-compose.minimal.yml" in text
+        assert "xuanwu-management-server" in text
+        assert "xuanwu-device-gateway" in text
 
 
 def test_gitignore_covers_root_deploy_runtime_artifacts() -> None:
