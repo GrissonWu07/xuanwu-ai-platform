@@ -42,12 +42,13 @@ Current implementation status:
 17. [xuanwu-portal Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-design.md)
 18. [xuanwu-portal Frontend Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-portal-frontend-spec.md)
 19. [Platform API Completion Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-platform-api-completion-spec.md)
+20. [Docker Hub Release Automation Design](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/dockerhub-release-automation-design.md)
 
 ### Upstream contracts
 
-20. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
-21. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
-22. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
+21. [XuanWu Agent Domain API Contract Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-30-xuanwu-agent-domain-api-contract-spec.md)
+22. [XuanWu Upstream Unified Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-upstream-unified-requirements-spec.md)
+23. [XuanWu Agent Worker Requirements Spec](/C:/Projects/githubs/myaiagent/ai-assist-device/docs/superpowers/specs/2026-03-31-xuanwu-agent-worker-requirements-spec.md)
 
 ## What To Read For Current Delivery
 

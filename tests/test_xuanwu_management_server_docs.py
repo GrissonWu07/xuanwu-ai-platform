@@ -89,3 +89,16 @@ def test_docs_describe_sensevoice_model_download_commands():
         assert "modelscope.cn/models/iic/SenseVoiceSmall" in text
         assert "huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt" in text
         assert "pip install -U modelscope" in text
+
+
+def test_docs_describe_dockerhub_release() -> None:
+    deployment_text = (ROOT / "docs" / "Deployment.md").read_text(encoding="utf-8")
+    readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh_text = (ROOT / "README_zh.md").read_text(encoding="utf-8")
+
+    for text in (deployment_text, readme_text, readme_zh_text):
+        assert "DOCKERHUB_USERNAME" in text
+        assert "DOCKERHUB_TOKEN" in text
+        assert "v0.7.1" in text
+        assert "xuanwu-portal" in text
+        assert "xuanwu-device-gateway" in text

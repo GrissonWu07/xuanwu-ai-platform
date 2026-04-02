@@ -338,3 +338,30 @@ docker compose up -d --build
 - [快速开始](./quick-start.md)
 - [平台交付总览](./platform-delivery-overview.md)
 - [设备接入与纳管指南](./device-ingress-and-management-guide.md)
+
+## Docker Hub 自动发布
+
+当前仓库已经提供 GitHub Actions 自动打包并推送到 Docker Hub 的工作流。
+
+首个公开版本标签：
+
+- `v0.7.1`
+
+发布镜像：
+
+- `${DOCKERHUB_USERNAME}/xuanwu-portal`
+- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
+- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
+- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
+- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+
+你需要在 GitHub 仓库里配置：
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+工作流触发规则：
+
+- 推送到 `main`：发布 `latest` 与 `sha-<shortsha>`
+- 推送语义化标签，例如 `v0.7.1`：发布 `v0.7.1`、`0.7.1` 与 `latest`
+- `workflow_dispatch`：手动触发

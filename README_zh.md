@@ -314,6 +314,33 @@ flowchart TB
 - [当前项目状态](./docs/project/state/current.md)
 - [Spec 索引](./docs/superpowers/specs/README.md)
 
+## Docker Hub 发布
+
+仓库已经补齐基于 GitHub Actions 的 Docker Hub 自动发布链，用来打包并发布当前活跃平台服务镜像。
+
+首个公开版本标签为：
+
+- `v0.7.1`
+
+发布的镜像包括：
+
+- `${DOCKERHUB_USERNAME}/xuanwu-portal`
+- `${DOCKERHUB_USERNAME}/xuanwu-device-gateway`
+- `${DOCKERHUB_USERNAME}/xuanwu-management-server`
+- `${DOCKERHUB_USERNAME}/xuanwu-iot-gateway`
+- `${DOCKERHUB_USERNAME}/xuanwu-jobs`
+
+GitHub 仓库需要配置的 secrets：
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+发布规则：
+
+- 推送到 `main`：发布 `latest` 和 `sha-<shortsha>`
+- 推送标签 `v0.7.1`：发布 `v0.7.1`、`0.7.1` 和 `latest`
+- `workflow_dispatch`：支持手动触发发布
+
 核心设计参考：
 
 - [平台蓝图](./docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
