@@ -314,35 +314,6 @@ Recommended reading order:
 - [Current Project State](./docs/project/state/current.md)
 - [Spec Index](./docs/superpowers/specs/README.md)
 
-## Docker Hub Release
-
-This repository now ships a GitHub Actions based Docker Hub release workflow for the active platform services.
-
-The first public version tag is:
-
-- `v0.7.1`
-
-The release workflow publishes these images under the fixed Docker Hub namespace `xuanwu`:
-
-- `xuanwu/xuanwu-portal`
-- `xuanwu/xuanwu-device-gateway`
-- `xuanwu/xuanwu-management-server`
-- `xuanwu/xuanwu-iot-gateway`
-- `xuanwu/xuanwu-jobs`
-
-Required GitHub repository secrets:
-
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
-
-`DOCKERHUB_USERNAME` is used only for Docker Hub login. It no longer changes the published repository path.
-
-Publishing behavior:
-
-- push to `main` -> publishes `latest` and `sha-<shortsha>`
-- push tag `v0.7.1` -> publishes `v0.7.1`, `0.7.1`, and `latest`
-- `workflow_dispatch` -> allows manual publish runs
-
 Core design references:
 
 - [Platform Blueprint](./docs/superpowers/specs/2026-03-30-xuanwu-platform-blueprint.md)
