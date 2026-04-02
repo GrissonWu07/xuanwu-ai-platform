@@ -88,6 +88,7 @@ deploy/
 
 ```bash
 mkdir -p deploy/data/device-gateway
+mkdir -p deploy/data/pg
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 

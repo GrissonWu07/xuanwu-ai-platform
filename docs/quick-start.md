@@ -41,12 +41,14 @@ cd xuanwu-ai-platform
 
 ```bash
 mkdir -p deploy/data/device-gateway
+mkdir -p deploy/data/pg
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 
 这两个目录的用途分别是：
 
 - `deploy/data/device-gateway`：`xuanwu-device-gateway` 的本地覆盖配置和运行时落盘数据
+- `deploy/data/pg`：PostgreSQL 的宿主机数据目录
 - `deploy/models/SenseVoiceSmall`：会话设备网关需要的本地模型文件
 
 ### 3. 下载模型文件

@@ -48,6 +48,16 @@ def test_root_setup_script_bootstraps_repo_root() -> None:
     assert 'ENV_PATH="$PROJECT_ROOT/.env"' in setup_script
 
 
+def test_root_compose_keeps_postgres_dependency_chain() -> None:
+    content = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "depends_on:\n      - postgres" in content
+    assert "xuanwu-management-server" in content
+    assert "xuanwu-iot-gateway" in content
+    assert "      - xuanwu-management-server" in content
+    assert "      - mosquitto" in content
+
+
 def test_root_env_example_exposes_xuanwu_endpoint() -> None:
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
 
