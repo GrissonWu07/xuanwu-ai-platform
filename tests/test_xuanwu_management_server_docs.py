@@ -78,3 +78,13 @@ def test_quick_start_mentions_pg_directory_preparation():
     text = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
 
     assert "deploy/data/pg" in text
+
+
+def test_docs_describe_sensevoice_model_download_commands():
+    for relative_path in ("docs/quick-start.md", "docs/Deployment.md"):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "deploy/models/SenseVoiceSmall/model.pt" in text
+        assert "modelscope.cn/models/iic/SenseVoiceSmall" in text
+        assert "huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt" in text
+        assert "pip install -U modelscope" in text

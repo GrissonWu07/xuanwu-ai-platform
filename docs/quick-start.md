@@ -53,15 +53,45 @@ mkdir -p deploy/models/SenseVoiceSmall
 
 ### 3. 下载模型文件
 
-下载 `SenseVoiceSmall` 的 `model.pt`，保存到：
+当前仓库里已经自带了 `SenseVoiceSmall` 的辅助配置文件：
+
+- `main/xuanwu-device-gateway/models/SenseVoiceSmall/config.yaml`
+- `main/xuanwu-device-gateway/models/SenseVoiceSmall/configuration.json`
+
+本地部署时还缺的只有模型权重文件：
 
 ```text
 deploy/models/SenseVoiceSmall/model.pt
 ```
 
-下载地址：
+推荐下载方案如下。
 
-- [ModelScope - SenseVoiceSmall model.pt](https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/model.pt)
+国内网络优先，推荐使用 ModelScope：
+
+```bash
+python -m pip install -U modelscope
+python -m modelscope.cli download --model iic/SenseVoiceSmall --file model.pt --local_dir deploy/models/SenseVoiceSmall
+```
+
+官方页面：
+
+- [ModelScope - iic/SenseVoiceSmall](https://modelscope.cn/models/iic/SenseVoiceSmall)
+
+如果你所在环境访问 Hugging Face 更稳定，也可以直接下载：
+
+```bash
+curl -L "https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/model.pt" -o deploy/models/SenseVoiceSmall/model.pt
+```
+
+官方页面：
+
+- [Hugging Face - FunAudioLLM/SenseVoiceSmall](https://huggingface.co/FunAudioLLM/SenseVoiceSmall)
+
+下载完成后，请确认文件存在：
+
+```bash
+ls -lh deploy/models/SenseVoiceSmall/model.pt
+```
 
 ### 4. 准备根目录环境配置
 
