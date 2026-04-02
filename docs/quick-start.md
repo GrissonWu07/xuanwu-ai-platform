@@ -42,6 +42,13 @@ cd xuanwu-ai-platform
 ```bash
 mkdir -p deploy/data/device-gateway
 mkdir -p deploy/data/pg
+mkdir -p deploy/logs/postgres
+mkdir -p deploy/logs/mosquitto
+mkdir -p deploy/logs/portal
+mkdir -p deploy/logs/device-gateway
+mkdir -p deploy/logs/management-server
+mkdir -p deploy/logs/iot-gateway
+mkdir -p deploy/logs/jobs
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 
@@ -49,6 +56,7 @@ mkdir -p deploy/models/SenseVoiceSmall
 
 - `deploy/data/device-gateway`：`xuanwu-device-gateway` 的本地覆盖配置和运行时落盘数据
 - `deploy/data/pg`：PostgreSQL 的宿主机数据目录
+- `deploy/logs/*`：各服务的宿主机日志目录
 - `deploy/models/SenseVoiceSmall`：会话设备网关需要的本地模型文件
 
 ### 3. 下载模型文件
@@ -156,6 +164,17 @@ docker logs -f xuanwu-device-gateway
 docker logs -f xuanwu-iot-gateway
 docker logs -f xuanwu-jobs
 ```
+
+宿主机文件日志默认会写到：
+
+- `deploy/logs/postgres/postgresql.log`
+- `deploy/logs/mosquitto/mosquitto.log`
+- `deploy/logs/portal/access.log`
+- `deploy/logs/portal/error.log`
+- `deploy/logs/device-gateway/server.log`
+- `deploy/logs/management-server/management-server.log`
+- `deploy/logs/iot-gateway/iot-gateway.log`
+- `deploy/logs/jobs/jobs.log`
 
 ## 默认入口
 

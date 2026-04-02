@@ -5,6 +5,7 @@ set -eu
 PROJECT_ROOT="/opt/xuanwu-ai-platform"
 DATA_DIR="$PROJECT_ROOT/deploy/data/device-gateway"
 POSTGRES_DATA_DIR="$PROJECT_ROOT/deploy/data/pg"
+LOG_ROOT="$PROJECT_ROOT/deploy/logs"
 MODEL_DIR="$PROJECT_ROOT/deploy/models/SenseVoiceSmall"
 MODEL_PATH="$MODEL_DIR/model.pt"
 COMPOSE_PATH="$PROJECT_ROOT/docker-compose.yml"
@@ -67,7 +68,17 @@ ensure_curl
 ensure_git
 sync_repo
 
-mkdir -p "$DATA_DIR" "$POSTGRES_DATA_DIR" "$MODEL_DIR"
+mkdir -p \
+    "$DATA_DIR" \
+    "$POSTGRES_DATA_DIR" \
+    "$MODEL_DIR" \
+    "$LOG_ROOT/postgres" \
+    "$LOG_ROOT/mosquitto" \
+    "$LOG_ROOT/portal" \
+    "$LOG_ROOT/device-gateway" \
+    "$LOG_ROOT/management-server" \
+    "$LOG_ROOT/iot-gateway" \
+    "$LOG_ROOT/jobs"
 
 if [ ! -f "$CONFIG_PATH" ]; then
     : > "$CONFIG_PATH"

@@ -156,6 +156,22 @@ deploy/data/
 !deploy/data/device-gateway/.gitkeep
 !deploy/data/pg/
 !deploy/data/pg/.gitkeep
+deploy/logs/
+!deploy/logs/
+!deploy/logs/postgres/
+!deploy/logs/postgres/.gitkeep
+!deploy/logs/mosquitto/
+!deploy/logs/mosquitto/.gitkeep
+!deploy/logs/portal/
+!deploy/logs/portal/.gitkeep
+!deploy/logs/device-gateway/
+!deploy/logs/device-gateway/.gitkeep
+!deploy/logs/management-server/
+!deploy/logs/management-server/.gitkeep
+!deploy/logs/iot-gateway/
+!deploy/logs/iot-gateway/.gitkeep
+!deploy/logs/jobs/
+!deploy/logs/jobs/.gitkeep
 
 main/manager-web/node_modules
 main/xuanwu-portal/node_modules/

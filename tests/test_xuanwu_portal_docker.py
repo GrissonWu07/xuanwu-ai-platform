@@ -24,6 +24,8 @@ def test_compose_includes_xuanwu_portal_service() -> None:
 def test_nginx_proxies_local_platform_routes() -> None:
     nginx_conf = REPO_ROOT / "main" / "xuanwu-portal" / "nginx.conf.template"
     content = nginx_conf.read_text(encoding="utf-8")
+    assert "access_log /var/log/nginx/access.log" in content
+    assert "error_log /var/log/nginx/error.log" in content
     for route in ["/control-plane/", "/gateway/", "/runtime/", "/jobs/"]:
         assert route in content
     assert "X-Xuanwu-Control-Secret" in content

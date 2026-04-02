@@ -89,6 +89,13 @@ deploy/
 ```bash
 mkdir -p deploy/data/device-gateway
 mkdir -p deploy/data/pg
+mkdir -p deploy/logs/postgres
+mkdir -p deploy/logs/mosquitto
+mkdir -p deploy/logs/portal
+mkdir -p deploy/logs/device-gateway
+mkdir -p deploy/logs/management-server
+mkdir -p deploy/logs/iot-gateway
+mkdir -p deploy/logs/jobs
 mkdir -p deploy/models/SenseVoiceSmall
 ```
 
@@ -210,6 +217,17 @@ docker logs -f xuanwu-iot-gateway
 docker logs -f xuanwu-jobs
 docker logs -f xuanwu-portal
 ```
+
+除了 `docker logs`，宿主机也会保留每个服务的文件日志：
+
+- `deploy/logs/postgres/postgresql.log`
+- `deploy/logs/mosquitto/mosquitto.log`
+- `deploy/logs/portal/access.log`
+- `deploy/logs/portal/error.log`
+- `deploy/logs/device-gateway/server.log`
+- `deploy/logs/management-server/management-server.log`
+- `deploy/logs/iot-gateway/iot-gateway.log`
+- `deploy/logs/jobs/jobs.log`
 
 ## 默认端口
 

@@ -78,6 +78,7 @@ def test_quick_start_mentions_pg_directory_preparation():
     text = (ROOT / "docs" / "quick-start.md").read_text(encoding="utf-8")
 
     assert "deploy/data/pg" in text
+    assert "deploy/logs" in text
 
 
 def test_docs_describe_sensevoice_model_download_commands():

@@ -3,6 +3,20 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres
+    command:
+      - postgres
+      - -c
+      - logging_collector=on
+      - -c
+      - log_directory=/var/log/postgresql
+      - -c
+      - log_filename=postgresql.log
+      - -c
+      - log_truncate_on_rotation=on
+      - -c
+      - log_rotation_age=1d
+      - -c
+      - log_rotation_size=10MB
     restart: always
     networks:
       - default
@@ -14,6 +28,7 @@ services:
       - POSTGRES_PASSWORD=${XUANWU_PG_PASSWORD:-xuanwu_local_password}
     volumes:
       - ./deploy/data/pg:/var/lib/postgresql/data
+      - ./deploy/logs/postgres:/var/log/postgresql
 
   mosquitto:
     image: eclipse-mosquitto:2
@@ -23,6 +38,9 @@ services:
       - default
     ports:
       - "1883:1883"
+    volumes:
+      - ./deploy/config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./deploy/logs/mosquitto:/mosquitto/log
 
   xuanwu-portal:
     build:
@@ -36,6 +54,8 @@ services:
       - "18081:80"
     environment:
       - XUANWU_PORTAL_CONTROL_SECRET=${XUANWU_PORTAL_CONTROL_SECRET:-xuanwu-management-local-secret}
+    volumes:
+      - ./deploy/logs/portal:/var/log/nginx
     depends_on:
       - xuanwu-management-server
       - xuanwu-iot-gateway
@@ -61,6 +81,7 @@ services:
     volumes:
       - ./deploy/data/device-gateway:/opt/xuanwu-device-gateway/data
       - ./deploy/models/SenseVoiceSmall/model.pt:/opt/xuanwu-device-gateway/models/SenseVoiceSmall/model.pt
+      - ./deploy/logs/device-gateway:/opt/xuanwu-device-gateway/tmp
     depends_on:
       - xuanwu-management-server
 
@@ -74,7 +95,9 @@ services:
       - "18082:18082"
     working_dir: /opt/xuanwu-management-server
     command: >
-      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx sqlalchemy psycopg[binary] && python app.py"
+      sh -c "mkdir -p /opt/logs &&
+      pip install --no-cache-dir aiohttp pyyaml httpx sqlalchemy psycopg[binary] &&
+      python app.py >> /opt/logs/management-server.log 2>&1"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_HOST=0.0.0.0
@@ -90,6 +113,7 @@ services:
       - XUANWU_MGMT_PG_SCHEMA=${XUANWU_MGMT_PG_SCHEMA:-xw_mgmt}
     volumes:
       - ./main/xuanwu-management-server:/opt/xuanwu-management-server
+      - ./deploy/logs/management-server:/opt/logs
     depends_on:
       - postgres
 
@@ -103,6 +127,9 @@ services:
       - default
     ports:
       - "18084:18084"
+    command: >
+      sh -c "mkdir -p /opt/logs &&
+      python app.py >> /opt/logs/iot-gateway.log 2>&1"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_MANAGEMENT_SERVER_URL=http://xuanwu-management-server:18082
@@ -119,6 +146,8 @@ services:
       - postgres
       - xuanwu-management-server
       - mosquitto
+    volumes:
+      - ./deploy/logs/iot-gateway:/opt/logs
 
   xuanwu-jobs:
     image: python:3.11-slim
@@ -130,7 +159,9 @@ services:
       - "18083:18083"
     working_dir: /opt/xuanwu-jobs
     command: >
-      sh -c "pip install --no-cache-dir aiohttp pyyaml httpx && python app.py"
+      sh -c "mkdir -p /opt/logs &&
+      pip install --no-cache-dir aiohttp pyyaml httpx &&
+      python app.py >> /opt/logs/jobs.log 2>&1"
     environment:
       - TZ=Asia/Shanghai
       - XUANWU_JOBS_HOST=0.0.0.0
@@ -145,6 +176,7 @@ services:
       - XUANWU_JOBS_POLL_INTERVAL_SECONDS=2
     volumes:
       - ./main/xuanwu-jobs:/opt/xuanwu-jobs
+      - ./deploy/logs/jobs:/opt/logs
     depends_on:
       - xuanwu-management-server
       - xuanwu-iot-gateway
